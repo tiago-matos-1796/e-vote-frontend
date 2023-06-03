@@ -9,7 +9,7 @@
                 <q-table
                     flat bordered
                     ref="tableRef"
-                    title="Elections"
+                    title="My Elections"
                     :rows="rows"
                     :columns="columns"
                     row-key="id"
@@ -20,14 +20,115 @@
                     @request="onRequest"
                 >
                   <template v-slot:top-right>
-                    <q-input borderless dense debounce="300" v-model="filter" placeholder="Search">
+                    <q-space />
+                    <q-input filled debounce="300" color="primary" v-model="filter">
                       <template v-slot:append>
                         <q-icon name="search" />
                       </template>
                     </q-input>
                   </template>
-
+                  <template v-slot:body="props">
+                    <q-tr :props="props">
+                      <q-td key="title" :props="props">
+                        {{props.row.title}}
+                      </q-td>
+                      <q-td key="startDate" :props="props">
+                        {{props.row.startDate}}
+                      </q-td>
+                      <q-td key="endDate" :props="props">
+                        {{props.row.endDate}}
+                      </q-td>
+                      <q-td key="actions" :props="props">
+                        <q-btn square size="sm" name="edit" color="primary" :disabled="props.row.voted" label='' icon='how_to_vote' @click="openBallot(props.row)">
+                          <q-tooltip>
+                            Vote
+                          </q-tooltip>
+                        </q-btn>
+                      </q-td>
+                    </q-tr>
+                  </template>
                 </q-table>
+                <q-dialog
+                    v-model="ballot"
+                    persistent
+                    full-width
+                >
+                  <div class="flex flex-center column">
+                    <div id="parent" class="fit wrap justify-center items-start content-start" style="overflow: hidden;">
+                      <q-card class="no-border-radius">
+                        <q-toolbar>
+                          <q-toolbar-title><span class="text-weight-bold">{{selected_row.title}}</span></q-toolbar-title>
+                          <q-btn flat round dense icon="close" v-close-popup />
+                        </q-toolbar>
+                        <q-card-section>
+                          <div class="q-pa-md">
+                            <q-table
+                                :rows="candidateRows"
+                                :columns="candidateColumns"
+                                row-key="id"
+                                selection="single"
+                                v-model:selected="selected"
+                                :filter="filter"
+                                rows-per-page-options="0"
+                                grid
+                                hide-header
+                            >
+                              <template v-slot:item="props">
+                                <div
+                                    class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3 grid-style-transition"
+                                    :style="props.selected ? 'transform: scale(0.95);' : ''"
+                                >
+                                  <q-card bordered flat :class="props.selected ? ($q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2') : ''">
+                                    <q-card-section>
+                                      <q-checkbox dense v-model="props.selected" :label="props.row.name" />
+                                    </q-card-section>
+                                    <q-separator />
+                                    <q-list dense>
+                                      <q-item v-for="col in props.cols.filter(col => col.name !== 'title')" :key="col.name">
+                                        <q-item-section>
+                                          <q-item-label>{{ col.label }}</q-item-label>
+                                        </q-item-section>
+                                        <q-item-section side>
+                                          <q-item-label caption>{{ col.value }}</q-item-label>
+                                        </q-item-section>
+                                      </q-item>
+                                    </q-list>
+                                  </q-card>
+                          </div>
+                              </template>
+
+                            </q-table>
+                          </div>
+                        </q-card-section>
+                        <q-card-actions align="center">
+                          <q-btn label="Vote" type="submit" color="primary" @click="voteConfirm(selected)" v-close-popup/>
+                          <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
+                        </q-card-actions>
+                      </q-card>
+                    </div>
+                  </div>
+                </q-dialog>
+                <q-dialog v-model="sign">
+                  <q-card>
+                    <q-card-section>
+                      <div class="text-h6">Please confirm your vote {{selected.length > 0 ? selected : "Blank"}}</div>
+                    </q-card-section>
+
+                    <q-card-section class="q-pt-none">
+                      <q-form
+                          class="q-gutter-md"
+                      >
+                        <q-input v-model="password" type="password" filled hint="Vote key" :rules="[ val => val && val.length > 0 || 'Please insert your vote key']">
+                        </q-input>
+                      </q-form>
+                    </q-card-section>
+
+                    <q-card-actions align="right">
+                      <q-btn flat label="Confirm" color="primary" @click="sign=false" v-close-popup />
+                      <q-btn flat label="Cancel" color="negative" @click="sign=false" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
               </div>
             </q-card-section>
           </q-card>
@@ -42,7 +143,7 @@ import { ref, onMounted } from 'vue'
 
 const columns = [
   {
-    name: 'desc',
+    name: 'title',
     required: true,
     label: 'Title',
     align: 'left',
@@ -52,6 +153,7 @@ const columns = [
   },
   { name: 'startDate', align: 'center', label: 'Start Date', field: 'startDate', sortable: true },
   { name: 'endDate', label: 'End Date', field: 'endDate', sortable: true },
+  { name: 'actions', align: 'right',label: 'Actions', field: 'actions', sortable: false },
 ]
 
 const originalRows = [
@@ -59,6 +161,28 @@ const originalRows = [
   { id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023', endDate: '15-06-2032', voted: true},
   { id: 3, title: 'Eclair', startDate: '13-02-2023', endDate: '15-06-2032', voted: false },
   { id: 4, title: 'Cupcake', startDate: '13-02-2023', endDate: '15-06-2032', voted: false }
+]
+
+const candidateColumns = [
+  {
+    name: 'name',
+    required: true,
+    label: 'Candidate',
+    align: 'left',
+    field: row => row.name,
+    format: val => `${val}`,
+    sortable: true
+  },
+  {
+    name: 'image',
+    label: 'Image',
+  }
+]
+
+const candidateRows = [
+  {id: 1, name: 'candidate1', image: ''},
+  {id: 2, name: 'candidate2', image: ''},
+  {id: 3, name: 'candidate3', image: ''}
 ]
 
 export default {
@@ -160,8 +284,24 @@ export default {
       pagination,
       columns,
       rows,
-
+      candidateRows,
+      candidateColumns,
+      sign: ref(false),
+      selected: ref([]),
+      selected_row: ref({}),
+      ballot: ref(false),
+      vote: ref(false),
       onRequest
+    }
+  },
+  methods: {
+    openBallot(row) {
+      this.selected_row = row;
+      this.ballot = true;
+    },
+    voteConfirm(selected) {
+      this.selected = selected;
+      this.sign=true;
     }
   }
 }

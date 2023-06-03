@@ -102,8 +102,10 @@
     <q-page-container class="GPL__page-container">
       <Register />
       <Login />
+      <ElectionList />
       <ElectionManager />
       <Auditing />
+      <Admin />
       <q-page-sticky v-if="$q.screen.gt.sm" expand position="left">
         <div class="fit q-pt-xl q-px-sm column">
           <q-btn round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn">
@@ -141,10 +143,11 @@ import Register from "@/components/Register.vue";
 import ElectionList from '@/components/ElectionList.vue';
 import ElectionManager from "@/components/ElectionManager.vue";
 import Auditing from "@/components/Auditing.vue";
+import Admin from "@/components/Admin.vue";
 
 export default {
   name: 'Layout',
-  components: {Auditing, ElectionManager, ElectionList, Register, Login},
+  components: {Admin, Auditing, ElectionManager, ElectionList, Register, Login},
 
   setup () {
     const leftDrawerOpen = ref(false)
