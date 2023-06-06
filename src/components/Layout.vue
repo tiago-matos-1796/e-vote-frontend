@@ -27,7 +27,7 @@
             </q-badge>
             <q-tooltip>Notifications</q-tooltip>
           </q-btn>
-          <q-btn round flat>
+          <q-btn round flat @click="openSettings">
             <q-avatar size="26px">
               <img src="https://cdn.quasar.dev/img/boy-avatar.png">
             </q-avatar>
@@ -134,6 +134,34 @@
       </q-page-sticky>
     </q-page-container>
   </q-layout>
+  <q-dialog v-model="settings" position="right">
+    <q-card style="width: 350px">
+
+      <q-card-section class="row items-center no-wrap">
+        <div class="column items-center">
+          <q-avatar size="72px">
+            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+          </q-avatar>
+
+          <div class="text-subtitle1 q-mt-md q-mb-xs">John Doe</div>
+          <q-btn
+              color="primary"
+              label="Profile"
+              push
+              size="sm"
+              v-close-popup
+          />
+          <q-btn
+              color="negative"
+              label="Logout"
+              push
+              size="sm"
+              v-close-popup
+          />
+        </div>
+      </q-card-section>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
@@ -153,6 +181,7 @@ export default {
     const leftDrawerOpen = ref(false)
     const search = ref('')
     const storage = ref(0.26)
+    const settings = ref(false)
 
     function toggleLeftDrawer () {
       leftDrawerOpen.value = !leftDrawerOpen.value
@@ -162,7 +191,10 @@ export default {
       leftDrawerOpen,
       search,
       storage,
-
+      settings,
+      openSettings() {
+        settings.value = true
+      },
       links1: [
         { icon: 'photo', text: 'Photos' },
         { icon: 'photo_album', text: 'Albums' },

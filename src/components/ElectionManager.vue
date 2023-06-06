@@ -6,7 +6,7 @@
           <q-card class="no-border-radius">
             <q-card-section>
               <div class="q-pa-md q-gutter-sm">
-                <q-btn color="green" :disable="loading" icon="add" label="Add election" @click="AddElection" />
+                <q-btn color="green" :disable="loading" icon="add" label="Add election" @click="showElectionWindow" />
               </div>
               <div class="q-pa-md">
                 <q-table
@@ -68,6 +68,105 @@
 
                 </q-table>
                 <q-dialog
+                    v-model="newElection"
+                    persistent
+                    :maximized="maximizedToggle"
+                    transition-show="slide-up"
+                    transition-hide="slide-down"
+                >
+                  <q-card class="bg-blue-grey-2 text-black">
+                    <q-bar>
+                      <div class="text-h6">Create new election</div>
+                      <q-space />
+                      <q-btn dense flat icon="close" v-close-popup>
+                        <q-tooltip class="bg-white text-primary">Close</q-tooltip>
+                      </q-btn>
+                    </q-bar>
+                    <q-card-section class="q-pt-none">
+                      <div class="flex flex-center column">
+                        <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
+                          <div id="parent" class="fit wrap justify-center items-start content-start" style="overflow: hidden;">
+                            <div class=" bg-grey-6" style="overflow: auto;">
+                              <q-card class="no-border-radius">
+                                <q-card-section>
+                                  <div class="q-pa-md">
+                                    <q-form
+                                        class="q-gutter-md" style="min-width: 400px; padding: 24px;"
+                                    >
+                                      <q-input filled v-model="ph" label="Title" placeholder="Election title" hint="Election title"></q-input>
+                                      <div class="row">
+                                        <div class="col">
+                                          <q-input v-model="date" filled type="date" hint="Election start date" />
+                                        </div>
+                                        <div class="col">
+                                          <q-input v-model="time" filled type="time" hint="Election start time" />
+                                        </div>
+                                      </div>
+                                      <div class="row">
+                                        <div class="col">
+                                          <q-input v-model="date" filled type="date" hint="Election end date" />
+                                        </div>
+                                        <div class="col">
+                                          <q-input v-model="time" filled type="time" hint="Election end time" />
+                                        </div>
+                                      </div>
+                                    </q-form>
+                                    <q-table
+                                        flat bordered
+                                        title="Candidates"
+                                        :rows="candidateRows"
+                                        :columns="candidateColumns"
+                                        row-key="id"
+                                        :selected-rows-label="getSelectedString"
+                                        selection="multiple"
+                                        :selected="selected"
+                                        @selection="onSelection"
+                                        :filter="filter"
+                                        :loading="loading"
+                                    >
+
+                                      <template v-slot:top-right>
+                                        <q-btn color="green" :disable="loading" label="Add candidate" @click="newCandidate" />
+                                        <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove candidates" @click="removeRow" />
+                                        <q-space />
+                                      </template>
+
+                                    </q-table>
+                                    <q-table
+                                        flat bordered
+                                        title="Voters"
+                                        :rows="voterRows"
+                                        :columns="userColumns"
+                                        row-key="id"
+                                        :selected-rows-label="getSelectedString"
+                                        selection="multiple"
+                                        :selected="selected"
+                                        @selection="onSelection"
+                                        :filter="filter"
+                                        :loading="loading"
+                                    >
+
+                                      <template v-slot:top-right>
+                                        <q-btn color="green" :disable="loading" label="Add voter" @click="showVoterAdd" />
+                                        <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove voter" @click="removeRow" />
+                                        <q-space />
+                                      </template>
+                                    </q-table>
+                                  </div>
+                                </q-card-section>
+                                <q-card-actions align="center">
+                                  <q-btn label="Create election" type="submit" color="primary"/>
+                                  <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
+                                </q-card-actions>
+                              </q-card>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </q-dialog>
+                <q-dialog
                     v-model="alert"
                     persistent
                     :maximized="maximizedToggle"
@@ -126,17 +225,57 @@
                                     >
 
                                       <template v-slot:top-right>
-                                        <q-btn color="green" :disable="loading" label="Add candidate" @click="addRow" />
+                                        <q-btn color="green" :disable="loading" label="Add candidate" @click="newCandidate" />
                                         <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove candidates" @click="removeRow" />
                                         <q-space />
                                       </template>
 
                                     </q-table>
+                                    <q-table
+                                        flat bordered
+                                        title="Voters"
+                                        :rows="voterRows"
+                                        :columns="userColumns"
+                                        row-key="id"
+                                        :selected-rows-label="getSelectedString"
+                                        selection="multiple"
+                                        :selected="selected"
+                                        @selection="onSelection"
+                                        :filter="filter"
+                                        :loading="loading"
+                                    >
+
+                                      <template v-slot:top-right>
+                                        <q-btn color="green" :disable="loading" label="Add voter" @click="showVoterAdd" />
+                                        <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove voter" @click="removeRow" />
+                                        <q-space />
+                                      </template>
+                                    </q-table>
+                                    <q-table
+                                        flat bordered
+                                        title="Managers"
+                                        :rows="managerRows"
+                                        :columns="userColumns"
+                                        row-key="id"
+                                        :selected-rows-label="getSelectedString"
+                                        selection="multiple"
+                                        :selected="selected"
+                                        @selection="onSelection"
+                                        :filter="filter"
+                                        :loading="loading"
+                                    >
+
+                                      <template v-slot:top-right>
+                                        <q-btn color="green" :disable="loading" label="Add manager" @click="showManagerAdd" />
+                                        <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove manager" @click="removeRow" />
+                                        <q-space />
+                                      </template>
+                                    </q-table>
                                   </div>
                                 </q-card-section>
                                 <q-card-actions align="center">
                                   <q-btn label="Confirm changes" type="submit" color="primary"/>
-                                  <q-btn label="Cancel" type="reset" color="negative" />
+                                  <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
                                 </q-card-actions>
                               </q-card>
                             </div>
@@ -204,6 +343,103 @@
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
+                <q-dialog v-model="addCandidate">
+                  <q-card>
+                    <q-card-section>
+                      <div class="text-h6">Please insert the name of the new candidate</div>
+                    </q-card-section>
+
+                    <q-card-section class="q-pt-none">
+                      <q-form
+                          class="q-gutter-md"
+                      >
+                        <q-input v-model="candidateName" type="text" filled hint="Candidate name">
+                        </q-input>
+                      </q-form>
+                    </q-card-section>
+
+                    <q-card-actions align="right">
+                      <q-btn flat label="Confirm" color="primary" @click="insertNewCandidate" v-close-popup />
+                      <q-btn flat label="Cancel" color="negative" @click="addCandidate=false" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+                <q-dialog
+                    v-model="newVoter"
+                    persistent
+                    full-width
+                >
+                  <div class="flex flex-center column">
+                    <div id="parent" class="fit wrap justify-center items-start content-start" style="overflow: hidden;">
+                      <q-card class="no-border-radius">
+                        <q-toolbar>
+                          <q-toolbar-title><span class="text-weight-bold">{{selected_row.title}}</span></q-toolbar-title>
+                          <q-btn flat round dense icon="close" v-close-popup />
+                        </q-toolbar>
+                        <q-card-section>
+                          <div class="q-pa-md">
+                            <q-table
+                                flat bordered
+                                title="Users"
+                                :rows="managerRows"
+                                :columns="userColumns"
+                                row-key="id"
+                                :selected-rows-label="getSelectedString"
+                                selection="multiple"
+                                :selected="selected"
+                                @selection="onSelection"
+                                :filter="filter"
+                                :loading="loading"
+                            >
+                            </q-table>
+                          </div>
+                        </q-card-section>
+                        <q-card-actions align="center">
+                          <q-btn label="Add selected voters" type="submit" color="primary"/>
+                          <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
+                        </q-card-actions>
+                      </q-card>
+                    </div>
+                  </div>
+                </q-dialog>
+                <q-dialog
+                    v-model="newManager"
+                    persistent
+                    full-width
+                >
+                  <div class="flex flex-center column">
+                    <div id="parent" class="fit wrap justify-center items-start content-start" style="overflow: hidden;">
+                      <q-card class="no-border-radius">
+                        <q-toolbar>
+                          <q-toolbar-title><span class="text-weight-bold">{{selected_row.title}}</span></q-toolbar-title>
+                          <q-btn flat round dense icon="close" v-close-popup />
+                        </q-toolbar>
+                        <q-card-section>
+                          <div class="q-pa-md">
+                            <q-table
+                                flat bordered
+                                title="Users"
+                                :rows="managerRows"
+                                :columns="userColumns"
+                                row-key="id"
+                                :selected-rows-label="getSelectedString"
+                                selection="multiple"
+                                :selected="selected"
+                                @selection="onSelection"
+                                :filter="filter"
+                                :loading="loading"
+                            >
+                            </q-table>
+                          </div>
+                        </q-card-section>
+                        <q-card-actions align="center">
+                          <q-btn label="Add selected managers" type="submit" color="primary"/>
+                          <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
+                        </q-card-actions>
+                      </q-card>
+                    </div>
+                  </div>
+                </q-dialog>
               </div>
             </q-card-section>
           </q-card>
@@ -257,6 +493,38 @@ const candidateRows = [
   {id: 2, name: 'candidate2'},
   {id: 3, name: 'candidate3'},
   {id: 4, name: 'candidate4'}
+]
+
+const userColumns= [
+  {
+    name: 'displayName',
+    required: true,
+    label: 'Display Name',
+    align: 'center',
+    field: row => row.displayName,
+    format: val => `${val}`,
+    sortable: true
+  },
+  {
+    name: 'email',
+    required: true,
+    label: 'Email',
+    align: 'center',
+    field: row => row.email,
+    format: val => `${val}`,
+    sortable: true
+  }
+]
+
+const voterRows = [
+  {id: 1, displayName: 'A', email: 'a@a.a'},
+  {id: 2, displayName: 'B', email: 'b@b.b'},
+  {id: 3, displayName: 'C', email: 'c@c.c'},
+]
+
+const managerRows = [
+  {id: 1, displayName: 'Manager1', email: 'manager1@man.man'},
+  {id: 2, displayName: 'Manager2', email: 'manager2@man.man'}
 ]
 
 export default {
@@ -372,10 +640,18 @@ export default {
       rows,
       candidateColumns,
       candidateRows,
+      userColumns,
+      voterRows,
+      managerRows,
+      newVoter: ref(false),
+      newManager: ref(false),
+      candidateName: ref(null),
+      addCandidate: ref(false),
       maximizedToggle: ref(true),
       AddElection,
       onRequest,
       alert:ref(false),
+      newElection: ref(false),
       selected_row:ref({}),
       deleteConfirm: ref(false),
       ph: ref(''),
@@ -426,6 +702,23 @@ export default {
     showResults(row) {
       this.selected_row = row.title;
       this.electionResults=true;
+    },
+    newCandidate() {
+      this.addCandidate = true;
+    },
+    showVoterAdd() {
+      this.newVoter = true;
+    },
+    showManagerAdd() {
+      this.newManager = true;
+    },
+    showElectionWindow() {
+      this.newElection = true;
+    },
+    insertNewCandidate() {
+      const candidateName = this.candidateName;
+      this.candidateRows.push({id: 5, name: candidateName});
+      this.addCandidate = false;
     }
   }
 }
