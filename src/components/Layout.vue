@@ -100,25 +100,20 @@
     </q-drawer>
 
     <q-page-container class="GPL__page-container">
-      <Register />
-      <Login />
-      <ElectionList />
-      <ElectionManager />
-      <Auditing />
-      <Admin />
+      <router-view></router-view>
       <q-page-sticky v-if="$q.screen.gt.sm" expand position="left">
         <div class="fit q-pt-xl q-px-sm column">
-          <q-btn round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn">
+          <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('elections')">
             <q-icon size="22px" name="ballot" />
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn">
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document" />
             <div class="GPL__side-btn__label">Election Manager</div>
           </q-btn>
 
-          <q-btn round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn">
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check" />
             <div class="GPL__side-btn__label">Auditing</div>
             <q-badge floating color="red" text-color="white" style="top: 8px; right: 16px">
@@ -126,7 +121,7 @@
             </q-badge>
           </q-btn>
 
-          <q-btn round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn">
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('admin')">
             <q-icon size="22px" name="admin_panel_settings" />
             <div class="GPL__side-btn__label">Admin</div>
           </q-btn>
@@ -150,6 +145,7 @@
               push
               size="sm"
               v-close-popup
+              @click="$router.push('profile')"
           />
           <q-btn
               color="negative"
@@ -157,6 +153,7 @@
               push
               size="sm"
               v-close-popup
+              @click="logout"
           />
         </div>
       </q-card-section>
@@ -172,10 +169,12 @@ import ElectionList from '@/components/ElectionList.vue';
 import ElectionManager from "@/components/ElectionManager.vue";
 import Auditing from "@/components/Auditing.vue";
 import Admin from "@/components/Admin.vue";
-
+import Profile from "@/components/Profile.vue";
+import { LocalStorage, SessionStorage } from 'quasar';
+import {useRouter as router} from 'vue-router';
 export default {
   name: 'Layout',
-  components: {Admin, Auditing, ElectionManager, ElectionList, Register, Login},
+  components: {Admin, Auditing, ElectionManager, ElectionList, Register, Login, Profile},
 
   setup () {
     const leftDrawerOpen = ref(false)
@@ -221,6 +220,14 @@ export default {
       ],
 
       toggleLeftDrawer
+    }
+  },
+  methods: {
+    logout() {
+      SessionStorage.set('token', '');
+      SessionStorage.set('permission', '');
+      router.push('/');
+      location.reload();
     }
   }
 }

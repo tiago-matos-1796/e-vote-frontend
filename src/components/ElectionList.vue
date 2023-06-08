@@ -45,7 +45,7 @@
                             Vote
                           </q-tooltip>
                         </q-btn>
-                        <q-btn square size="sm" name="results" color="primary" :disabled="!props.row.voted" label=''
+                        <q-btn square size="sm" name="results" color="info" :disabled="!props.row.voted" label=''
                                icon='summarize' @click="showResults(props.row)">
                           <q-tooltip>
                             Show election results

@@ -59,6 +59,11 @@
                         </q-btn>
                         <q-btn square size="sm" name="results" color="primary" label='' icon='data_thresholding' @click="showResults(props.row)">
                           <q-tooltip>
+                            Check election results
+                          </q-tooltip>
+                        </q-btn>
+                        <q-btn square size="sm" name="results" color="info" label='' icon='summarize' @click="showElectionResults(props.row)">
+                          <q-tooltip>
                             Show election results
                           </q-tooltip>
                         </q-btn>
@@ -440,6 +445,98 @@
                     </div>
                   </div>
                 </q-dialog>
+                <q-dialog
+                    v-model="electionResultsShow"
+                    persistent
+                    :maximized="maximizedToggle"
+                    transition-show="slide-up"
+                    transition-hide="slide-down"
+                >
+                  <q-card class="bg-blue-grey-2 text-black">
+                    <q-bar>
+                      <div class="text-h6">Results for election {{ selected_row.title }}</div>
+                      <q-space/>
+                      <q-btn dense flat icon="close" v-close-popup>
+                        <q-tooltip class="bg-white text-primary">Close</q-tooltip>
+                      </q-btn>
+                    </q-bar>
+                    <q-card-section class="q-pt-none">
+                      <div class="flex flex-center column">
+                        <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
+                          <div id="parent" class="fit wrap justify-center items-start content-start"
+                               style="overflow: hidden;">
+                            <div class=" bg-grey-6" style="overflow: auto;">
+                              <q-card class="no-border-radius">
+                                <q-card-section>
+                                  <div class="q-pa-md example-row-equal-width">
+                                    <div class="row">
+                                      <div class="col">
+                                        <q-card
+                                            class="my-card"
+                                        >
+                                          <q-card-section>
+                                            <div class="text-h6">Votes</div>
+                                          </q-card-section>
+
+                                          <q-card-section class="q-pt-none">
+                                            <Pie :data="chartData" :options="chartOptions"/>
+                                          </q-card-section>
+                                        </q-card>
+
+                                      </div>
+                                      <div class="col">
+                                        <q-card
+                                            class="my-card"
+                                        >
+                                          <q-card-section>
+                                            <div class="text-h6">Abstention</div>
+                                          </q-card-section>
+
+                                          <q-card-section class="q-pt-none">
+                                            <Pie :data="abstainData" :options="abstainOptions"/>
+                                          </q-card-section>
+                                        </q-card>
+
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="q-pa-md">
+                                    <q-table
+                                        flat bordered
+                                        title="Results"
+                                        :rows="resultsRows"
+                                        :columns="resultsColumns"
+                                        row-key="candidate"
+                                        :filter="filter"
+                                        :loading="loading"
+                                    >
+                                    </q-table>
+                                  </div>
+                                  <div class="q-pa-md">
+                                    <q-table
+                                        flat bordered
+                                        title="Voters"
+                                        :rows="voterResultsRows"
+                                        :columns="voterColumns"
+                                        row-key="email"
+                                        :filter="filter"
+                                        :loading="loading"
+                                    >
+                                    </q-table>
+                                  </div>
+                                </q-card-section>
+                                <q-card-actions align="center">
+                                  <q-btn label="Download PDF" color="primary" />
+                                  <q-btn label="Close" color="negative" v-close-popup/>
+                                </q-card-actions>
+                              </q-card>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </q-dialog>
               </div>
             </q-card-section>
           </q-card>
@@ -453,6 +550,10 @@
 import { ref, onMounted } from 'vue'
 import {useQuasar} from 'quasar'
 import addElection from '@/components/AddElection.vue'
+import {Chart as ChartJS, ArcElement, Tooltip, Legend} from 'chart.js'
+import {Pie} from 'vue-chartjs'
+
+ChartJS.register(ArcElement, Tooltip, Legend)
 
 const columns = [
   {
@@ -522,13 +623,107 @@ const voterRows = [
   {id: 3, displayName: 'C', email: 'c@c.c'},
 ]
 
+const voterColumns = [
+  {
+    name: 'displayName',
+    required: true,
+    label: 'Display Name',
+    align: 'center',
+    field: row => row.displayName,
+    format: val => `${val}`,
+    sortable: true
+  },
+  {
+    name: 'email',
+    required: true,
+    label: 'Email',
+    align: 'center',
+    field: row => row.email,
+    format: val => `${val}`,
+    sortable: true
+  },
+  {
+    name: 'voted',
+    required: true,
+    label: 'Voted',
+    align: 'center',
+    field: row => row.voted,
+    format: val => `${val ? 'yes' : 'no'}`,
+    sortable: true
+  }
+]
+
+const voterResultsRows = [
+  {displayName: 'A', email: 'a@a.a', voted: true},
+  {displayName: 'B', email: 'b@b.b', voted: true},
+  {displayName: 'C', email: 'c@c.c', voted: false},
+]
+
 const managerRows = [
   {id: 1, displayName: 'Manager1', email: 'manager1@man.man'},
   {id: 2, displayName: 'Manager2', email: 'manager2@man.man'}
 ]
 
+const resultsColumns = [
+  {
+    name: 'candidate',
+    required: true,
+    label: 'Candidate',
+    align: 'left',
+    field: row => row.candidate,
+    format: val => `${val}`,
+    sortable: true
+  },
+  {
+    name: 'votes',
+    required: true,
+    label: 'Votes',
+    align: 'right',
+    field: row => row.votes,
+    sortable: true,
+  }
+]
+
+const resultsRows = [
+  {candidate: 'candidate1', votes: 13},
+  {candidate: 'candidate2', votes: 17},
+  {candidate: 'candidate3', votes: 10},
+]
+
+const abstainData = {
+  labels: ['Votes', 'Abstention'],
+  datasets: [
+    {
+      backgroundColor: ['#41B883', '#E46651'],
+      data: [40, 10]
+    }
+  ]
+}
+const abstainOptions = {
+  responsive: true,
+  maintainAspectRatio: false
+}
+
+const chartData = {
+  labels: ['candidate1', 'candidate2', 'candidate3'],
+  datasets: [
+    {
+      backgroundColor: ['#41B883', '#E46651', '#00D8FF'],
+      data: [13, 17, 10]
+    }
+  ]
+}
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+}
+
 export default {
   name: 'ElectionManager',
+  components: {
+    Pie
+  },
   setup () {
     const $q = useQuasar()
     const tableRef = ref()
@@ -657,6 +852,15 @@ export default {
       ph: ref(''),
       renewKey: ref(false),
       electionResults: ref(false),
+      electionResultsShow: ref(false),
+      resultsRows,
+      resultsColumns,
+      chartData,
+      chartOptions,
+      abstainData,
+      abstainOptions,
+      voterColumns,
+      voterResultsRows,
       addRow () {
         loading.value = true
         setTimeout(() => {
@@ -719,7 +923,11 @@ export default {
       const candidateName = this.candidateName;
       this.candidateRows.push({id: 5, name: candidateName});
       this.addCandidate = false;
-    }
+    },
+    showElectionResults(row) {
+      this.selected_row = row;
+      this.electionResultsShow = true;
+    },
   }
 }
 </script>

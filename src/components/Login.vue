@@ -20,7 +20,7 @@
                       type="email"
                       label="Email *"
                       lazy-rules
-                      hint="Email"
+                      hint="Please insert your email"
                       :rules="[ val => !!val || 'Please insert your email']"
                   />
 
@@ -31,7 +31,7 @@
                       :type="isPwd ? 'password' : 'text'"
                       v-model="password"
                       label="Password *"
-                      hint="Password"
+                      hint="Please insert your password"
                       lazy-rules
                       :rules="[
               val => !!val || 'Please insert your password',
@@ -53,7 +53,7 @@
                     <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
                   </div>
                 </q-form>
-
+                <router-link to="register">Don't have an account?</router-link>
               </div>
             </q-card-section>
           </q-card>
@@ -86,7 +86,11 @@ export default {
           textColor: 'white',
           icon: 'cloud_done',
           message: 'Submitted'
-        })
+        });
+        $q.sessionStorage.set('token', 'aaaaaaaabbbbbb');
+        $q.sessionStorage.set('permission', 'MANAGER');
+        this.$router.push('elections');
+        location.reload();
       },
 
       onReset () {

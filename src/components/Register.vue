@@ -16,11 +16,23 @@
                       filled
                       clearable
                       clear-icon="close"
+                      v-model="displayName"
+                      type="text"
+                      label="Display Name *"
+                      lazy-rules
+                      hint="Please insert your display name"
+                      :rules="[ val => !!val || 'Please insert your display name']"
+                  />
+
+                  <q-input
+                      filled
+                      clearable
+                      clear-icon="close"
                       v-model="email"
                       type="email"
                       label="Email *"
                       lazy-rules
-                      hint="Email"
+                      hint="Please insert your email"
                       :rules="[ val => !!val || 'Please insert your email']"
                   />
 
@@ -31,7 +43,7 @@
                       :type="isPwd ? 'password' : 'text'"
                       v-model="password"
                       label="Password *"
-                      hint="Password"
+                      hint="Please insert your password"
                       lazy-rules
                       :rules="[
               val => !!val || 'Please insert your password',
@@ -52,13 +64,61 @@
                       filled
                       clearable
                       clear-icon="close"
+                      :type="isPwd ? 'password' : 'text'"
+                      v-model="passwordConfirm"
+                      label="Password *"
+                      hint="Please reinsert your password"
+                      lazy-rules
+                      :rules="[
+              val => !!val || 'Please reinsert your password',
+              val => val.length >= 8 || 'Password must be at least 8 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Password must have upper and lower case characters, special characters and digits',
+          ]"
+                  >
+                    <template v-slot:append>
+                      <q-icon
+                          :name="isPwd ? 'visibility_off' : 'visibility'"
+                          class="cursor-pointer"
+                          @click="isPwd = !isPwd"
+                      />
+                    </template>
+                  </q-input>
+
+                  <q-input
+                      filled
+                      clearable
+                      clear-icon="close"
                       :type="isVk ? 'password' : 'text'"
                       v-model="voteKey"
                       label="Voting Key *"
-                      hint="Voting Key"
+                      hint="Please insert your voting key"
                       lazy-rules
                       :rules="[
               val => !!val || 'Please insert your voting key',
+              val => val.length === 16 || 'Voting key must be exactly 16 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
+          ]"
+                  >
+                    <template v-slot:append>
+                      <q-icon
+                          :name="isVk ? 'visibility_off' : 'visibility'"
+                          class="cursor-pointer"
+                          @click="isVk = !isVk"
+                      />
+                    </template>
+                  </q-input>
+
+                  <q-input
+                      filled
+                      clearable
+                      clear-icon="close"
+                      :type="isVk ? 'password' : 'text'"
+                      v-model="voteKeyConfirm"
+                      label="Voting Key *"
+                      hint="Please reinsert your voting key"
+                      lazy-rules
+                      :rules="[
+              val => !!val || 'Please reinsert your voting key',
               val => val.length === 16 || 'Voting key must be exactly 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
           ]"
@@ -91,7 +151,7 @@
                     <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
                   </div>
                 </q-form>
-
+                <router-link to="login">Already have an account?</router-link>
               </div>
             </q-card-section>
           </q-card>
