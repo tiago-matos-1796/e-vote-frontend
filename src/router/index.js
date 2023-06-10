@@ -13,7 +13,7 @@ const router = createRouter({
     routes: [
         {
             path: "/",
-            redirect: SessionStorage.getItem('token') ? 'elections' : 'login',
+            redirect: SessionStorage.getItem('permission') ? 'elections' : 'login',
         },
         {
             path: "/login",
