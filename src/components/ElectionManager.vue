@@ -138,7 +138,7 @@
                                                 <template v-slot:prepend>
                                                   <q-icon name="event" class="cursor-pointer">
                                                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                                      <q-date v-model="startDate" mask="YYYY-MM-DD HH:mm">
+                                                      <q-date v-model="startDate" mask="YYYY-MM-DD HH:mm" :options="startDateOptions">
                                                         <div class="row items-center justify-end">
                                                           <q-btn v-close-popup label="Close" color="primary" flat />
                                                         </div>
@@ -161,11 +161,11 @@
                                               </q-input>
                                             </div>
                                             <div class="col">
-                                              <q-input filled v-model="endDate" label="End date and time" hint="End date and time">
+                                              <q-input filled v-model="endDate" label="End date and time" hint="End date and time" :disable="allowEndDate" :rules="[ val => confirmDates(val) || 'End date must be after start date']">
                                                 <template v-slot:prepend>
                                                   <q-icon name="event" class="cursor-pointer">
                                                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                                      <q-date v-model="endDate" mask="YYYY-MM-DD HH:mm">
+                                                      <q-date v-model="endDate" mask="YYYY-MM-DD HH:mm" :options="endDateOptions">
                                                         <div class="row items-center justify-end">
                                                           <q-btn v-close-popup label="Close" color="primary" flat />
                                                         </div>
@@ -194,7 +194,6 @@
                                             title="Candidates"
                                             :rows="candidateRows"
                                             :columns="candidateColumns"
-                                            row-key="id"
                                             :selected-rows-label="getSelectedString"
                                             selection="multiple"
                                             :selected="selected"
@@ -207,6 +206,19 @@
                                             <q-btn color="green" :disable="loading" label="Add candidate" @click="newCandidate" />
                                             <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove candidates" @click="removeRow" />
                                             <q-space />
+                                          </template>
+                                          <template v-slot:body="props">
+                                            <q-tr :props="props">
+                                              <q-td>
+                                                <q-checkbox v-model="props.selected" />
+                                              </q-td>
+                                              <q-td key="name" :props="props">
+                                                {{props.row.name}}
+                                                <q-popup-edit v-model="props.row.name" v-slot="scope">
+                                                  <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set"></q-input>
+                                                </q-popup-edit>
+                                              </q-td>
+                                            </q-tr>
                                           </template>
 
                                         </q-table>
@@ -233,7 +245,7 @@
                                       </div>
                                     </q-card-section>
                                     <q-card-actions align="center">
-                                      <q-btn label="Create election" type="submit" color="primary"/>
+                                      <q-btn label="Create election" @click="createElection" color="primary"/>
                                       <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
                                     </q-card-actions>
                                   </q-card>
@@ -683,6 +695,7 @@ import {SessionStorage, useQuasar} from 'quasar'
 import addElection from '@/components/AddElection.vue'
 import {Chart as ChartJS, ArcElement, Tooltip, Legend} from 'chart.js'
 import {Pie} from 'vue-chartjs'
+import moment from 'moment'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -713,7 +726,7 @@ const candidateColumns = [
     name: 'name',
     required: true,
     label: 'Name',
-    align: 'left',
+    align: 'center',
     field: row => row.name,
     format: val => `${val}`,
     sortable: true
@@ -862,6 +875,9 @@ export default {
     const filter = ref('')
     const loading = ref(false)
     const settings = ref(false)
+    const startDate = ref('')
+    const allowEndDate = ref(true)
+    const minEndDate = ref('')
     const pagination = ref({
       sortBy: 'desc',
       descending: false,
@@ -958,6 +974,14 @@ export default {
        })
     }
 
+    function confirmDates(date) {
+      if(date.length === 0) {
+        return true;
+      } else {
+        return moment(this.startDate).isBefore(date)
+      }
+    }
+
     return {
       tableRef,
       filter,
@@ -966,7 +990,7 @@ export default {
       columns,
       rows,
       candidateColumns,
-      candidateRows,
+      candidateRows: ref(candidateRows),
       userColumns,
       voterRows,
       managerRows,
@@ -976,6 +1000,7 @@ export default {
       addCandidate: ref(false),
       maximizedToggle: ref(true),
       AddElection,
+      confirmDates,
       onRequest,
       alert:ref(false),
       newElection: ref(false),
@@ -994,8 +1019,19 @@ export default {
       voterColumns,
       voterResultsRows,
       settings,
-      startDate: ref(''),
+      electionTitle: ref(''),
+      startDate,
+      startDateOptions(date) {
+        const today = moment().add(1, 'day').format('YYYY/MM/DD')
+        return date > today
+      },
+      minEndDate,
       endDate: ref(''),
+      allowEndDate,
+      endDateOptions(date) {
+          const minDate = moment().add(1, 'day').format('YYYY/MM/DD')
+          return date > minDate
+      },
       openSettings() {
         settings.value = true
       },
@@ -1026,6 +1062,14 @@ export default {
         }, 500)
       }
     }
+  },
+  watch: {
+    startDate: function (value) {
+        this.allowEndDate = value
+        this.minEndDate = moment(value).add(2, 'days').format('YYYY/MM/DD')
+    }
+  },
+  computed: {
   },
   methods: {
     openmodel(row){
@@ -1069,6 +1113,11 @@ export default {
     logout() {
       SessionStorage.set('permission', '');
       this.$router.push('login');
+    },
+    createElection() {
+      const start = this.startDate
+      const end = this.endDate
+      console.log({start, end})
     }
   }
 }

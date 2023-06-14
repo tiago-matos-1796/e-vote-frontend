@@ -155,6 +155,8 @@
 import { useQuasar, Cookies, SessionStorage } from 'quasar'
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import {storeToRefs} from 'pinia'
+import {useAuthStore} from '@/stores/auth'
 
 
 export default {
@@ -166,6 +168,7 @@ export default {
     const settings = ref(false)
     const email = ref(null)
     const password = ref(null)
+    const store = useAuthStore();
 
     return {
       email,
@@ -188,6 +191,7 @@ export default {
           httpOnly: true,
         });*/
         SessionStorage.set('permission', 'MANAGER');
+        store.logIn();
         router.push({name: 'Elections'});
       },
       onReset () {
@@ -198,7 +202,9 @@ export default {
   },
   methods: {
     logout() {
+      const store = useAuthStore();
       SessionStorage.set('permission', '');
+      store.logOut();
       this.$router.push('login');
     }
   }

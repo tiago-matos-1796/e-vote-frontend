@@ -7,6 +7,8 @@ import Auditing from "@/components/Auditing.vue";
 import Admin from "@/components/Admin.vue";
 import Profile from "@/components/Profile.vue";
 import {SessionStorage} from 'quasar';
+import {useAuthStore} from "@/stores/auth";
+import {storeToRefs} from 'pinia';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -29,26 +31,44 @@ const router = createRouter({
             path: "/elections",
             name: "Elections",
             component: Elections,
+            meta: {
+                requiresAuth: true,
+            }
         },
         {
             path: "/election-manager",
             name: "ElectionManager",
             component: ElectionManager,
+            meta: {
+                requiresAuth: true,
+                permission: 'MANAGER',
+            }
         },
         {
             path: "/auditing",
             name: "Auditing",
             component: Auditing,
+            meta: {
+                requiresAuth: true,
+                permission: 'AUDITOR',
+            }
         },
         {
             path: "/admin",
             name: "Admin",
             component: Admin,
+            meta: {
+                requiresAuth: true,
+                permission: 'ADMIN',
+            }
         },
         {
             path: "/profile",
             name: "Profile",
             component: Profile,
+            meta: {
+                requiresAuth: true,
+            }
         }
         /* {
           path: '/about',
@@ -60,5 +80,4 @@ const router = createRouter({
         }*/
     ],
 });
-
 export default router;
