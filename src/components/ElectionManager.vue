@@ -194,17 +194,17 @@
                                             title="Candidates"
                                             :rows="candidateRows"
                                             :columns="candidateColumns"
+                                            row-key="id"
                                             :selected-rows-label="getSelectedString"
                                             selection="multiple"
-                                            :selected="selected"
-                                            @selection="onSelection"
+                                            v-model:selected="selectedCandidates"
                                             :filter="filter"
-                                            :loading="loading"
+                                            :loading="candidateLoading"
                                         >
 
                                           <template v-slot:top-right>
-                                            <q-btn color="green" :disable="loading" label="Add candidate" @click="newCandidate" />
-                                            <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove candidates" @click="removeRow" />
+                                            <q-btn color="green" :disable="candidateLoading" label="Add candidate" @click="newCandidate" />
+                                            <q-btn class="q-ml-sm" color="negative" :disable="candidateLoading" label="Remove candidates" @click="removeCandidate" />
                                             <q-space />
                                           </template>
                                           <template v-slot:body="props">
@@ -443,7 +443,7 @@
                           <q-form
                               class="q-gutter-md"
                           >
-                            <q-input v-model="candidateName" type="text" filled hint="Candidate name">
+                            <q-input v-model="candidateName" type="text" filled hint="Candidate name" :rules="[ val => !!val || 'Candidate name must not be empty']">
                             </q-input>
                           </q-form>
                         </q-card-section>
@@ -696,6 +696,7 @@ import addElection from '@/components/AddElection.vue'
 import {Chart as ChartJS, ArcElement, Tooltip, Legend} from 'chart.js'
 import {Pie} from 'vue-chartjs'
 import moment from 'moment'
+import {v1} from 'uuid'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -857,7 +858,6 @@ const chartData = {
     }
   ]
 }
-
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -872,8 +872,12 @@ export default {
     const $q = useQuasar()
     const tableRef = ref()
     const rows = ref([])
+    const candidateRows = ref([])
     const filter = ref('')
     const loading = ref(false)
+    const candidateLoading = ref(false)
+    const selected = ref([])
+    const selectedCandidates = ref([])
     const settings = ref(false)
     const startDate = ref('')
     const allowEndDate = ref(true)
@@ -990,7 +994,11 @@ export default {
       columns,
       rows,
       candidateColumns,
-      candidateRows: ref(candidateRows),
+      candidateRows,
+      selected,
+      getSelectedString () {
+        return selected.value.length === 0 ? '' : `${selected.value.length} record${selected.value.length > 1 ? 's' : ''} selected of ${candidateRows.length}`
+      },
       userColumns,
       voterRows,
       managerRows,
@@ -1034,6 +1042,40 @@ export default {
       },
       openSettings() {
         settings.value = true
+      },
+      selectedCandidates,
+      candidateLoading,
+      newCandidate() {
+        loading.value = true
+        setTimeout(() => {
+          const
+              index = Math.floor(Math.random() * (rows.value.length + 1)),
+              row = candidateRows[ Math.floor(Math.random() * originalRows.length) ]
+
+          if (rows.value.length === 0) {
+            rowCount.value = 0
+          }
+
+          row.id = ++rowCount.value
+          const newRow = { ...row } // extend({}, row, { name: `${row.name} (${row.__count})` })
+          rows.value = [ ...rows.value.slice(0, index), newRow, ...rows.value.slice(index) ]
+          loading.value = false
+        }, 500)
+      },
+      removeCandidate() {
+        candidateLoading.value = true
+        setTimeout(() => {
+          console.log(selectedCandidates.value)
+          for (const sc of selectedCandidates.value) {
+            const index = candidateRows.value.findIndex(object => {
+              return object.id === sc.id;
+            });
+
+            candidateRows.value.splice(index, 1)
+          }
+          selectedCandidates.value = []
+          candidateLoading.value = false
+        }, 500)
       },
       addRow () {
         loading.value = true
@@ -1102,9 +1144,12 @@ export default {
       this.newElection = true;
     },
     insertNewCandidate() {
+      this.candidateLoading = true
       const candidateName = this.candidateName;
-      this.candidateRows.push({id: 5, name: candidateName});
+      this.candidateRows.push({id: v1(), name: candidateName});
+      this.candidateName = '';
       this.addCandidate = false;
+      this.candidateLoading = false
     },
     showElectionResults(row) {
       this.selected_row = row;
