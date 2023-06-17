@@ -188,6 +188,12 @@
                                               </q-input>
                                             </div>
                                           </div>
+                                          <q-input filled v-model="electionKey" type="password" label="Election Key" placeholder="Election Key" hint="Election Key"
+                                                   :rules="[ val => !!val || 'Election title must not be empty']"
+                                          ></q-input>
+                                          <q-input filled v-model="electionKey1" type="password" label="Confirm Election Key" placeholder="Election Key" hint="Confirm Election Key"
+                                                   :rules="[ val => !!val || 'Election title must not be empty']"
+                                          ></q-input>
                                         </q-form>
                                         <q-table
                                             flat bordered
@@ -230,15 +236,14 @@
                                             row-key="id"
                                             :selected-rows-label="getSelectedString"
                                             selection="multiple"
-                                            :selected="selected"
-                                            @selection="onSelection"
+                                            v-model:selected="selectedVoters"
                                             :filter="filter"
-                                            :loading="loading"
+                                            :loading="voterLoading"
                                         >
 
                                           <template v-slot:top-right>
-                                            <q-btn color="green" :disable="loading" label="Add voter" @click="showVoterAdd" />
-                                            <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove voter" @click="removeRow" />
+                                            <q-btn color="green" :disable="voterLoading" label="Add voter" @click="showVoterAdd" />
+                                            <q-btn class="q-ml-sm" color="negative" :disable="voterLoading" label="Remove voter" @click="removeVoters" />
                                             <q-space />
                                           </template>
                                         </q-table>
@@ -445,6 +450,15 @@
                           >
                             <q-input v-model="candidateName" type="text" filled hint="Candidate name" :rules="[ val => !!val || 'Candidate name must not be empty']">
                             </q-input>
+                            <q-file
+                                v-model="candidateImage"
+                                label="Choose image (max 2MB)"
+                                filled
+                                counter
+                                accept=".jpg, .png, .svg, image/*"
+                                max-file-size="2097152"
+                                @rejected="rejectCandidateImage"
+                            />
                           </q-form>
                         </q-card-section>
 
@@ -471,22 +485,21 @@
                                 <q-table
                                     flat bordered
                                     title="Users"
-                                    :rows="managerRows"
+                                    :rows="userRows"
                                     :columns="userColumns"
                                     row-key="id"
                                     :selected-rows-label="getSelectedString"
                                     selection="multiple"
-                                    :selected="selected"
-                                    @selection="onSelection"
+                                    v-model:selected="newVoterSelected"
                                     :filter="filter"
-                                    :loading="loading"
+                                    :loading="newVoterLoading"
                                 >
                                 </q-table>
                               </div>
                             </q-card-section>
                             <q-card-actions align="center">
-                              <q-btn label="Add selected voters" type="submit" color="primary"/>
-                              <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
+                              <q-btn label="Add selected voters" type="submit" color="primary" @click="insertNewVoter"/>
+                              <q-btn label="Cancel" type="reset" color="negative" @click="this.newVoterSelected = []" v-close-popup/>
                             </q-card-actions>
                           </q-card>
                         </div>
@@ -611,6 +624,7 @@
                                       </div>
                                     </q-card-section>
                                     <q-card-actions align="center">
+                                      <q-btn label="Download XLS" color="secondary" />
                                       <q-btn label="Download PDF" color="primary" />
                                       <q-btn label="Close" color="negative" v-close-popup/>
                                     </q-card-actions>
@@ -762,7 +776,7 @@ const userColumns= [
   }
 ]
 
-const voterRows = [
+const userRows = [
   {id: 1, displayName: 'A', email: 'a@a.a'},
   {id: 2, displayName: 'B', email: 'b@b.b'},
   {id: 3, displayName: 'C', email: 'c@c.c'},
@@ -878,12 +892,17 @@ export default {
     const candidateLoading = ref(false)
     const selected = ref([])
     const selectedCandidates = ref([])
+    const voterLoading = ref(false)
+    const newVoterSelected = ref([])
+    const newVoterLoading = ref(false)
+    const selectedVoters = ref([])
+    const voterRows = ref([])
     const settings = ref(false)
     const startDate = ref('')
     const allowEndDate = ref(true)
     const minEndDate = ref('')
     const pagination = ref({
-      sortBy: 'desc',
+      sortBy: 'id',
       descending: false,
       page: 1,
       rowsPerPage: 3,
@@ -1000,7 +1019,7 @@ export default {
         return selected.value.length === 0 ? '' : `${selected.value.length} record${selected.value.length > 1 ? 's' : ''} selected of ${candidateRows.length}`
       },
       userColumns,
-      voterRows,
+      userRows,
       managerRows,
       newVoter: ref(false),
       newManager: ref(false),
@@ -1043,6 +1062,13 @@ export default {
       openSettings() {
         settings.value = true
       },
+      candidateImage: ref(null),
+      rejectCandidateImage () {
+        $q.notify({
+          type: 'negative',
+          message: `Invalid image, please make sure the image is in accepted format (jpeg, png, svg) and has a size of up to 2MB`
+        })
+      },
       selectedCandidates,
       candidateLoading,
       newCandidate() {
@@ -1065,7 +1091,6 @@ export default {
       removeCandidate() {
         candidateLoading.value = true
         setTimeout(() => {
-          console.log(selectedCandidates.value)
           for (const sc of selectedCandidates.value) {
             const index = candidateRows.value.findIndex(object => {
               return object.id === sc.id;
@@ -1075,6 +1100,25 @@ export default {
           }
           selectedCandidates.value = []
           candidateLoading.value = false
+        }, 500)
+      },
+      newVoterSelected,
+      newVoterLoading,
+      voterRows,
+      voterLoading,
+      selectedVoters,
+      removeVoters() {
+          voterLoading.value = true
+        setTimeout(() => {
+          for (const sv of selectedVoters.value) {
+            const index = voterRows.value.findIndex(object => {
+              return object.id === sv.id;
+            });
+            voterRows.value.splice(index, 1);
+            userRows.push(sv)
+          }
+          selectedVoters.value = []
+          voterLoading.value = false
         }, 500)
       },
       addRow () {
@@ -1150,6 +1194,21 @@ export default {
       this.candidateName = '';
       this.addCandidate = false;
       this.candidateLoading = false
+    },
+    insertNewVoter() {
+      this.newVoterLoading = true
+      setTimeout(() => {
+        for(const nv of this.newVoterSelected) {
+          const index = this.userRows.findIndex(object => {
+            return object.id === nv.id;
+          });
+          this.userRows.splice(index, 1)
+          this.voterRows.push(nv);
+        }
+        this.newVoterSelected = []
+        this.newVoterLoading = false
+      }, 500)
+      this.newVoter = false
     },
     showElectionResults(row) {
       this.selected_row = row;
