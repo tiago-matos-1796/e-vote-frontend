@@ -69,7 +69,7 @@
                             {{ props.row.endDate }}
                           </q-td>
                           <q-td key="actions" :props="props">
-                            <q-btn square size="sm" name="vote" color="primary" :disabled="props.row.voted" label=''
+                            <q-btn square size="sm" name="vote" color="primary" :disabled="canVote(props.row)" label=''
                                    icon='how_to_vote' @click="openBallot(props.row)">
                               <q-tooltip>
                                 Vote
@@ -323,6 +323,7 @@ import {ref, onMounted} from 'vue'
 import {Chart as ChartJS, ArcElement, Tooltip, Legend} from 'chart.js'
 import {Pie} from 'vue-chartjs'
 import {SessionStorage} from "quasar";
+import moment from 'moment'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -342,10 +343,11 @@ const columns = [
 ]
 
 const originalRows = [
-  {id: 1, title: 'Election1', startDate: '13-02-2023', endDate: '15-06-2032', voted: true},
-  {id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023', endDate: '15-06-2032', voted: true},
-  {id: 3, title: 'Eclair', startDate: '13-02-2023', endDate: '15-06-2032', voted: false},
-  {id: 4, title: 'Cupcake', startDate: '13-02-2023', endDate: '15-06-2032', voted: false}
+  {id: 1, title: 'Election1', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true},
+  {id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true},
+  {id: 3, title: 'Eclair', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false},
+  {id: 4, title: 'Cupcake', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false},
+  {id: 5, title: 'Election2', startDate: '13-06-2023 00:00', endDate: '19-06-2023 00:00', voted: false},
 ]
 
 const candidateColumns = [
@@ -554,6 +556,15 @@ export default {
     openBallot(row) {
       this.selected_row = row;
       this.ballot = true;
+    },
+    canVote(row) {
+      console.log(moment().isAfter(moment(row.startDate).format('yyyy-mm-dd HH:mm')))
+      if(row.voted) {
+        return true
+      }
+      if(moment().isAfter(moment(row.endDate)) || moment().isBefore(row.startDate)) {
+        return true
+      }
     },
     voteConfirm(selected) {
       this.selected = selected;

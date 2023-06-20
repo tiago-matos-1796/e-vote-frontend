@@ -188,12 +188,32 @@
                                               </q-input>
                                             </div>
                                           </div>
-                                          <q-input filled v-model="electionKey" type="password" label="Election Key" placeholder="Election Key" hint="Election Key"
-                                                   :rules="[ val => !!val || 'Election title must not be empty']"
-                                          ></q-input>
-                                          <q-input filled v-model="electionKey1" type="password" label="Confirm Election Key" placeholder="Election Key" hint="Confirm Election Key"
-                                                   :rules="[ val => !!val || 'Election title must not be empty']"
-                                          ></q-input>
+                                          <q-input filled v-model="electionKey" label="Election Key" placeholder="Election Key" hint="Election Key" clear-icon="close"
+                                                   :type="isPwd ? 'password' : 'text'"
+                                                   :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be at least 16 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits',]"
+                                          >
+                                            <template v-slot:append>
+                                              <q-icon
+                                                  :name="isPwd ? 'visibility_off' : 'visibility'"
+                                                  class="cursor-pointer"
+                                                  @click="isPwd = !isPwd"
+                                              />
+                                            </template>
+                                          </q-input>
+                                          <q-input filled v-model="electionKey1" label="Confirm Election Key" placeholder="Election Key" hint="Confirm Election Key" clear-icon="close"
+                                                   :type="isPwd1 ? 'password' : 'text'"
+                                                   :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be at least 16 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits', val => val === electionKey || 'Election key must be the same as above']"
+                                          >
+                                            <template v-slot:append>
+                                              <q-icon
+                                                  :name="isPwd1 ? 'visibility_off' : 'visibility'"
+                                                  class="cursor-pointer"
+                                                  @click="isPwd1 = !isPwd1"
+                                              />
+                                            </template>
+                                          </q-input>
                                         </q-form>
                                         <q-table
                                             flat bordered
@@ -251,7 +271,7 @@
                                     </q-card-section>
                                     <q-card-actions align="center">
                                       <q-btn label="Create election" @click="createElection" color="primary"/>
-                                      <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
+                                      <q-btn label="Cancel" type="reset" color="negative" @click="undoElection" v-close-popup/>
                                     </q-card-actions>
                                   </q-card>
                                 </div>
@@ -287,21 +307,64 @@
                                         <q-form
                                             class="q-gutter-md" style="min-width: 400px; padding: 24px;"
                                         >
-                                          <q-input filled v-model="ph" label="Title" placeholder="Election title" hint="Election title"></q-input>
+                                          <q-input filled v-model="editElectionTitle" label="Title" placeholder="Election title" hint="Election title"
+                                                   :rules="[ val => !!val || 'Election title must not be empty']"
+                                          ></q-input>
+
                                           <div class="row">
                                             <div class="col">
-                                              <q-input v-model="date" filled type="date" hint="Election start date" />
+                                              <q-input filled v-model="editStartDate" label="Start date and time" hint="Start date and time">
+                                                <template v-slot:prepend>
+                                                  <q-icon name="event" class="cursor-pointer">
+                                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                                      <q-date v-model="editStartDate" mask="YYYY-MM-DD HH:mm" :options="startDateOptions">
+                                                        <div class="row items-center justify-end">
+                                                          <q-btn v-close-popup label="Close" color="primary" flat />
+                                                        </div>
+                                                      </q-date>
+                                                    </q-popup-proxy>
+                                                  </q-icon>
+                                                </template>
+
+                                                <template v-slot:append>
+                                                  <q-icon name="access_time" class="cursor-pointer">
+                                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                                      <q-time v-model="editStartDate" mask="YYYY-MM-DD HH:mm" format24h>
+                                                        <div class="row items-center justify-end">
+                                                          <q-btn v-close-popup label="Close" color="primary" flat />
+                                                        </div>
+                                                      </q-time>
+                                                    </q-popup-proxy>
+                                                  </q-icon>
+                                                </template>
+                                              </q-input>
                                             </div>
                                             <div class="col">
-                                              <q-input v-model="time" filled type="time" hint="Election start time" />
-                                            </div>
-                                          </div>
-                                          <div class="row">
-                                            <div class="col">
-                                              <q-input v-model="date" filled type="date" hint="Election end date" />
-                                            </div>
-                                            <div class="col">
-                                              <q-input v-model="time" filled type="time" hint="Election end time" />
+                                              <q-input filled v-model="editEndDate" label="End date and time" hint="End date and time" :disable="allowEndDate" :rules="[ val => confirmDates(val) || 'End date must be after start date']">
+                                                <template v-slot:prepend>
+                                                  <q-icon name="event" class="cursor-pointer">
+                                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                                      <q-date v-model="editEndDate" mask="YYYY-MM-DD HH:mm" :options="endDateOptions">
+                                                        <div class="row items-center justify-end">
+                                                          <q-btn v-close-popup label="Close" color="primary" flat />
+                                                        </div>
+                                                      </q-date>
+                                                    </q-popup-proxy>
+                                                  </q-icon>
+                                                </template>
+
+                                                <template v-slot:append>
+                                                  <q-icon name="access_time" class="cursor-pointer">
+                                                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                                      <q-time v-model="editEndDate" mask="YYYY-MM-DD HH:mm" format24h>
+                                                        <div class="row items-center justify-end">
+                                                          <q-btn v-close-popup label="Close" color="primary" flat />
+                                                        </div>
+                                                      </q-time>
+                                                    </q-popup-proxy>
+                                                  </q-icon>
+                                                </template>
+                                              </q-input>
                                             </div>
                                           </div>
                                         </q-form>
@@ -705,7 +768,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import {SessionStorage, useQuasar} from 'quasar'
+import {SessionStorage, useQuasar, Notify} from 'quasar'
 import addElection from '@/components/AddElection.vue'
 import {Chart as ChartJS, ArcElement, Tooltip, Legend} from 'chart.js'
 import {Pie} from 'vue-chartjs'
@@ -1059,6 +1122,10 @@ export default {
           const minDate = moment().add(1, 'day').format('YYYY/MM/DD')
           return date > minDate
       },
+      electionKey: ref(null),
+      electionKey1: ref(null),
+      isPwd: ref(true),
+      isPwd1: ref(true),
       openSettings() {
         settings.value = true
       },
@@ -1219,9 +1286,50 @@ export default {
       this.$router.push('login');
     },
     createElection() {
+      const title = this.electionTitle
       const start = this.startDate
       const end = this.endDate
-      console.log({start, end})
+      const key = this.electionKey
+      const keyConfirm = this.electionKey1
+      const candidates = []
+      const voters = []
+      for(const candidate of this.candidateRows) {
+        candidates.push({name: candidate.name})
+      }
+      for(const voter of this.voterRows) {
+        voters.push(voter)
+      }
+      if(key !== null && key === keyConfirm && moment(start).isBefore(moment(end))) {
+        this.newElection = false
+        this.loading = true
+        setTimeout(() => {
+          console.log({title, start, end, key, candidates, voters})
+          Notify.create({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: 'Election created with success'
+          })
+          this.undoElection()
+          this.loading = false
+        })
+      } else  {
+        Notify.create({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: 'Cannot create election; Errors are present'
+        })
+      }
+    },
+    undoElection() {
+      this.electionTitle = ''
+      this.startDate = ''
+      this.endDate = ''
+      this.electionKey = null
+      this.electionKey1 = null
+      this.candidateRows = []
+      this.voterRows = []
     }
   }
 }
