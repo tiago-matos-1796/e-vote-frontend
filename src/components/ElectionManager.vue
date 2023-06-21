@@ -340,7 +340,7 @@
                                               </q-input>
                                             </div>
                                             <div class="col">
-                                              <q-input filled v-model="editEndDate" label="End date and time" hint="End date and time" :disable="allowEndDate" :rules="[ val => confirmDates(val) || 'End date must be after start date']">
+                                              <q-input filled v-model="editEndDate" label="End date and time" hint="End date and time" :disable="allowEditEndDate" :rules="[ val => confirmDates(val) || 'End date must be after start date']">
                                                 <template v-slot:prepend>
                                                   <q-icon name="event" class="cursor-pointer">
                                                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -371,41 +371,52 @@
                                         <q-table
                                             flat bordered
                                             title="Candidates"
-                                            :rows="candidateRows"
+                                            :rows="editCandidateRows"
                                             :columns="candidateColumns"
                                             row-key="id"
                                             :selected-rows-label="getSelectedString"
                                             selection="multiple"
-                                            :selected="selected"
-                                            @selection="onSelection"
+                                            v-model:selected="editSelectedCandidates"
                                             :filter="filter"
-                                            :loading="loading"
+                                            :loading="editCandidateLoading"
                                         >
 
                                           <template v-slot:top-right>
-                                            <q-btn color="green" :disable="loading" label="Add candidate" @click="newCandidate" />
-                                            <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove candidates" @click="removeRow" />
+                                            <q-btn color="green" :disable="editCandidateLoading" label="Add candidate" @click="showEditNewCandidate" />
+                                            <q-btn class="q-ml-sm" color="negative" :disable="editCandidateLoading" label="Remove candidates" @click="editRemoveCandidate" />
                                             <q-space />
+                                          </template>
+                                          <template v-slot:body="props">
+                                            <q-tr :props="props">
+                                              <q-td>
+                                                <q-checkbox v-model="props.selected" />
+                                              </q-td>
+                                              <q-td key="name" :props="props">
+                                                {{props.row.name}}
+                                                <q-popup-edit v-model="props.row.name" v-slot="scope">
+                                                  <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set"></q-input>
+                                                </q-popup-edit>
+                                              </q-td>
+                                            </q-tr>
                                           </template>
 
                                         </q-table>
                                         <q-table
                                             flat bordered
                                             title="Voters"
-                                            :rows="voterRows"
+                                            :rows="editVoterRows"
                                             :columns="userColumns"
                                             row-key="id"
                                             :selected-rows-label="getSelectedString"
                                             selection="multiple"
-                                            :selected="selected"
-                                            @selection="onSelection"
+                                            v-model:selected="editSelectedVoters"
                                             :filter="filter"
-                                            :loading="loading"
+                                            :loading="editVoterLoading"
                                         >
 
                                           <template v-slot:top-right>
-                                            <q-btn color="green" :disable="loading" label="Add voter" @click="showVoterAdd" />
-                                            <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove voter" @click="removeRow" />
+                                            <q-btn color="green" :disable="editVoterLoading" label="Add voter" @click="editShowVoterAdd" />
+                                            <q-btn class="q-ml-sm" color="negative" :disable="editVoterLoading" label="Remove voter" @click="editRemoveVoters" />
                                             <q-space />
                                           </template>
                                         </q-table>
@@ -417,10 +428,9 @@
                                             row-key="id"
                                             :selected-rows-label="getSelectedString"
                                             selection="multiple"
-                                            :selected="selected"
-                                            @selection="onSelection"
+                                            v-model:selected="selectedManager"
                                             :filter="filter"
-                                            :loading="loading"
+                                            :loading="managerLoading"
                                         >
 
                                           <template v-slot:top-right>
@@ -531,6 +541,36 @@
                         </q-card-actions>
                       </q-card>
                     </q-dialog>
+                    <q-dialog v-model="editAddCandidate">
+                      <q-card>
+                        <q-card-section>
+                          <div class="text-h6">Please insert the name of the new candidate</div>
+                        </q-card-section>
+
+                        <q-card-section class="q-pt-none">
+                          <q-form
+                              class="q-gutter-md"
+                          >
+                            <q-input v-model="editCandidateName" type="text" filled hint="Candidate name" :rules="[ val => !!val || 'Candidate name must not be empty']">
+                            </q-input>
+                            <q-file
+                                v-model="editCandidateImage"
+                                label="Choose image (max 2MB)"
+                                filled
+                                counter
+                                accept=".jpg, .png, .svg, image/*"
+                                max-file-size="2097152"
+                                @rejected="rejectCandidateImage"
+                            />
+                          </q-form>
+                        </q-card-section>
+
+                        <q-card-actions align="right">
+                          <q-btn flat label="Confirm" color="primary" @click="editInsertNewCandidate" v-close-popup />
+                          <q-btn flat label="Cancel" color="negative" @click="editAddCandidate=false" v-close-popup />
+                        </q-card-actions>
+                      </q-card>
+                    </q-dialog>
                     <q-dialog
                         v-model="newVoter"
                         persistent
@@ -585,22 +625,21 @@
                                 <q-table
                                     flat bordered
                                     title="Users"
-                                    :rows="managerRows"
+                                    :rows="userManagerRows"
                                     :columns="userColumns"
                                     row-key="id"
                                     :selected-rows-label="getSelectedString"
                                     selection="multiple"
-                                    :selected="selected"
-                                    @selection="onSelection"
+                                    v-model:selected="newManagerSelected"
                                     :filter="filter"
-                                    :loading="loading"
+                                    :loading="newManagerLoading"
                                 >
                                 </q-table>
                               </div>
                             </q-card-section>
                             <q-card-actions align="center">
-                              <q-btn label="Add selected managers" type="submit" color="primary"/>
-                              <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
+                              <q-btn label="Add selected voters" type="submit" color="primary" @click="editInsertNewVoter"/>
+                              <q-btn label="Cancel" type="reset" color="negative" @click="this.newVoterSelected = []" v-close-popup/>
                             </q-card-actions>
                           </q-card>
                         </div>
@@ -699,6 +738,43 @@
                         </q-card-section>
                       </q-card>
                     </q-dialog>
+                    <q-dialog
+                        v-model="editNewVoter"
+                        persistent
+                        full-width
+                    >
+                      <div class="flex flex-center column">
+                        <div id="parent" class="fit wrap justify-center items-start content-start" style="overflow: hidden;">
+                          <q-card class="no-border-radius">
+                            <q-toolbar>
+                              <q-toolbar-title><span class="text-weight-bold">{{selected_row.title}}</span></q-toolbar-title>
+                              <q-btn flat round dense icon="close" v-close-popup />
+                            </q-toolbar>
+                            <q-card-section>
+                              <div class="q-pa-md">
+                                <q-table
+                                    flat bordered
+                                    title="Users"
+                                    :rows="editUserRows"
+                                    :columns="userColumns"
+                                    row-key="id"
+                                    :selected-rows-label="getSelectedString"
+                                    selection="multiple"
+                                    v-model:selected="editNewVoterSelected"
+                                    :filter="filter"
+                                    :loading="editNewVoterLoading"
+                                >
+                                </q-table>
+                              </div>
+                            </q-card-section>
+                            <q-card-actions align="center">
+                              <q-btn label="Add selected voters" type="submit" color="primary" @click="editInsertNewVoter"/>
+                              <q-btn label="Cancel" type="reset" color="negative" @click="this.newVoterSelected = []" v-close-popup/>
+                            </q-card-actions>
+                          </q-card>
+                        </div>
+                      </div>
+                    </q-dialog>
                   </div>
                 </q-card-section>
               </q-card>
@@ -793,10 +869,10 @@ const columns = [
 ]
 
 const originalRows = [
-  { id: 1, title: 'Election1', startDate: '13-02-2023', endDate: '15-06-2032', voted: true },
-  { id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023', endDate: '15-06-2032', voted: true},
-  { id: 3, title: 'Eclair', startDate: '13-02-2023', endDate: '15-06-2032', voted: false },
-  { id: 4, title: 'Cupcake', startDate: '13-02-2023', endDate: '15-06-2032', voted: false }
+  { id: 1, title: 'Election1', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true },
+  { id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true},
+  { id: 3, title: 'Eclair', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false },
+  { id: 4, title: 'Cupcake', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false }
 ]
 
 const candidateColumns = [
@@ -809,13 +885,6 @@ const candidateColumns = [
     format: val => `${val}`,
     sortable: true
   }
-]
-
-const candidateRows = [
-  {id: 1, name: 'candidate1'},
-  {id: 2, name: 'candidate2'},
-  {id: 3, name: 'candidate3'},
-  {id: 4, name: 'candidate4'}
 ]
 
 const userColumns= [
@@ -879,11 +948,6 @@ const voterResultsRows = [
   {displayName: 'A', email: 'a@a.a', voted: true},
   {displayName: 'B', email: 'b@b.b', voted: true},
   {displayName: 'C', email: 'c@c.c', voted: false},
-]
-
-const managerRows = [
-  {id: 1, displayName: 'Manager1', email: 'manager1@man.man'},
-  {id: 2, displayName: 'Manager2', email: 'manager2@man.man'}
 ]
 
 const resultsColumns = [
@@ -964,6 +1028,36 @@ export default {
     const startDate = ref('')
     const allowEndDate = ref(true)
     const minEndDate = ref('')
+    const allowEditEndDate = ref(true)
+    const editCandidateRows = ref([
+      {id: 1, name: 'candidate1'},
+      {id: 2, name: 'candidate2'},
+      {id: 3, name: 'candidate3'},
+      {id: 4, name: 'candidate4'}
+    ])
+    const editVoterRows = ref([
+      {id: 1, displayName: 'A', email: 'a@a.a'},
+      {id: 2, displayName: 'B', email: 'b@b.b'},
+      {id: 3, displayName: 'C', email: 'c@c.c'},
+    ])
+    const editUserRows = ref([
+      {id: 4, displayName: 'D', email: 'd@d.d'},
+      {id: 5, displayName: 'E', email: 'e@e.e'}
+    ])
+    const editSelectedCandidates = ref([])
+    const editCandidateLoading = ref(false)
+    const editNewVoterSelected = ref([])
+    const editNewVoterLoading = ref(false)
+    const editSelectedVoters = ref([])
+    const editVoterLoading = ref(false)
+    const managerRows = ref([
+      {id: 1, displayName: 'Manager1', email: 'manager1@man.man'},
+      {id: 2, displayName: 'Manager2', email: 'manager2@man.man'}
+    ])
+    const userManagerRows = ref([
+      {id: 3, displayName: 'Manager3', email: 'manager3@man.man'},
+      {id: 4, displayName: 'Manager4', email: 'manager4@man.man'}
+    ])
     const pagination = ref({
       sortBy: 'id',
       descending: false,
@@ -1138,23 +1232,6 @@ export default {
       },
       selectedCandidates,
       candidateLoading,
-      newCandidate() {
-        loading.value = true
-        setTimeout(() => {
-          const
-              index = Math.floor(Math.random() * (rows.value.length + 1)),
-              row = candidateRows[ Math.floor(Math.random() * originalRows.length) ]
-
-          if (rows.value.length === 0) {
-            rowCount.value = 0
-          }
-
-          row.id = ++rowCount.value
-          const newRow = { ...row } // extend({}, row, { name: `${row.name} (${row.__count})` })
-          rows.value = [ ...rows.value.slice(0, index), newRow, ...rows.value.slice(index) ]
-          loading.value = false
-        }, 500)
-      },
       removeCandidate() {
         candidateLoading.value = true
         setTimeout(() => {
@@ -1162,7 +1239,6 @@ export default {
             const index = candidateRows.value.findIndex(object => {
               return object.id === sc.id;
             });
-
             candidateRows.value.splice(index, 1)
           }
           selectedCandidates.value = []
@@ -1188,38 +1264,60 @@ export default {
           voterLoading.value = false
         }, 500)
       },
-      addRow () {
-        loading.value = true
+      editElectionTitle: ref(''),
+      editStartDate: ref(''),
+      editEndDate: ref(''),
+      allowEditEndDate,
+      editCandidateRows,
+      editSelectedCandidates,
+      editCandidateLoading,
+      editAddCandidate: ref(false),
+      editCandidateName: ref(null),
+      editCandidateImage: ref(null),
+      editRemoveCandidate() {
+        editCandidateLoading.value = true
         setTimeout(() => {
-          const
-              index = Math.floor(Math.random() * (rows.value.length + 1)),
-              row = originalRows[ Math.floor(Math.random() * originalRows.length) ]
-
-          if (rows.value.length === 0) {
-            rowCount.value = 0
+          for(const sc of editSelectedCandidates.value) {
+            const index = editCandidateRows.value.findIndex(object => {
+              return object.id === sc.id;
+            });
+            editCandidateRows.value.splice(index, 1)
           }
-
-          row.id = ++rowCount.value
-          const newRow = { ...row } // extend({}, row, { name: `${row.name} (${row.__count})` })
-          rows.value = [ ...rows.value.slice(0, index), newRow, ...rows.value.slice(index) ]
-          loading.value = false
+          editSelectedCandidates.value = []
+          editCandidateLoading.value = false
         }, 500)
       },
-
-      removeRow () {
-        loading.value = true
+      editVoterRows,
+      editNewVoter: ref(false),
+      editUserRows,
+      editNewVoterSelected,
+      editNewVoterLoading,
+      editSelectedVoters,
+      editVoterLoading,
+      editRemoveVoters() {
+        editVoterLoading.value = true
         setTimeout(() => {
-          const index = Math.floor(Math.random() * rows.value.length)
-          rows.value = [ ...rows.value.slice(0, index), ...rows.value.slice(index + 1) ]
-          loading.value = false
+          for (const esv of editSelectedVoters.value) {
+            const index = editVoterRows.value.findIndex(object => {
+              return object.id === esv.id;
+            });
+            editVoterRows.value.splice(index, 1);
+            editUserRows.value.push(esv)
+          }
+          editSelectedVoters.value = []
+          editVoterLoading.value = false
         }, 500)
-      }
+      },
+      userManagerRows
     }
   },
   watch: {
     startDate: function (value) {
         this.allowEndDate = value
         this.minEndDate = moment(value).add(2, 'days').format('YYYY/MM/DD')
+    },
+    editStartDate: function (value) {
+      this.allowEditEndDate = value
     }
   },
   computed: {
@@ -1227,7 +1325,9 @@ export default {
   methods: {
     openmodel(row){
       this.selected_row = row;
-      this.ph = row.title;
+      this.editElectionTitle = row.title;
+      this.editStartDate = row.startDate;
+      this.editEndDate = row.endDate;
       this.alert=true;
     },
     deleteElection(row) {
@@ -1254,6 +1354,12 @@ export default {
     showElectionWindow() {
       this.newElection = true;
     },
+    showEditNewCandidate() {
+      this.editAddCandidate = true
+    },
+    editShowVoterAdd() {
+      this.editNewVoter = true
+    },
     insertNewCandidate() {
       this.candidateLoading = true
       const candidateName = this.candidateName;
@@ -1261,6 +1367,16 @@ export default {
       this.candidateName = '';
       this.addCandidate = false;
       this.candidateLoading = false
+    },
+    editInsertNewCandidate() {
+      this.editCandidateLoading = true
+      setTimeout(() => {
+        const name = this.editCandidateName
+        this.editCandidateRows.push({id: v1(), name: name})
+        this.editCandidateName = ''
+        this.editAddCandidate = false
+        this.editCandidateLoading = false
+      }, 500)
     },
     insertNewVoter() {
       this.newVoterLoading = true
@@ -1276,6 +1392,21 @@ export default {
         this.newVoterLoading = false
       }, 500)
       this.newVoter = false
+    },
+    editInsertNewVoter() {
+        this.editNewVoterLoading = true
+      setTimeout(() => {
+        for(const env of this.editNewVoterSelected) {
+          const index = this.editVoterRows.findIndex(object => {
+            return object.id === env.id;
+          });
+          this.editUserRows.splice(index, 1)
+          this.editVoterRows.push(env)
+        }
+        this.editNewVoterSelected = []
+        this.editNewVoterLoading = false
+      }, 500)
+      this.editNewVoter = false
     },
     showElectionResults(row) {
       this.selected_row = row;
