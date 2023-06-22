@@ -72,27 +72,27 @@
                             {{props.row.endDate}}
                           </q-td>
                           <q-td key="actions" :props="props">
-                            <q-btn square size="sm" name="edit" color="amber" label='' icon='edit' @click="openmodel(props.row)">
+                            <q-btn square size="sm" name="edit" color="amber" :disable="isAfterStart(props.row.startDate)" label='' icon='edit' @click="openmodel(props.row)">
                               <q-tooltip>
                                 Edit election
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="delete" color="negative" label='' icon='delete' @click="deleteElection(props.row)">
+                            <q-btn square size="sm" name="delete" color="negative" :disable="isAfterStart(props.row.startDate)" label='' icon='delete' @click="deleteElection(props.row)">
                               <q-tooltip>
                                 Delete election
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="renew" color="secondary" label='' icon='key' @click="regenerateKey(props.row)">
+                            <q-btn square size="sm" name="renew" color="secondary" :disable="isAfterStart(props.row.startDate)" label='' icon='key' @click="regenerateKey(props.row)">
                               <q-tooltip>
                                 Regenerate election key
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="results" color="primary" label='' icon='data_thresholding' @click="showResults(props.row)">
+                            <q-btn square size="sm" name="results" color="primary" :disable="isAfterEnd(props.row.endDate)" label='' icon='data_thresholding' @click="showResults(props.row)">
                               <q-tooltip>
                                 Check election results
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="results" color="info" label='' icon='summarize' @click="showElectionResults(props.row)">
+                            <q-btn square size="sm" name="results" color="info" :disable="hasResults(props.row.results)" label='' icon='summarize' @click="showElectionResults(props.row)">
                               <q-tooltip>
                                 Show election results
                               </q-tooltip>
@@ -161,7 +161,7 @@
                                               </q-input>
                                             </div>
                                             <div class="col">
-                                              <q-input filled v-model="endDate" label="End date and time" hint="End date and time" :disable="allowEndDate" :rules="[ val => confirmDates(val) || 'End date must be after start date']">
+                                              <q-input filled v-model="endDate" label="End date and time" hint="End date and time" :disable="allowEndDate" :rules="[ val => confirmDates(val, 'INSERT') || 'End date must be after start date']">
                                                 <template v-slot:prepend>
                                                   <q-icon name="event" class="cursor-pointer">
                                                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -340,7 +340,7 @@
                                               </q-input>
                                             </div>
                                             <div class="col">
-                                              <q-input filled v-model="editEndDate" label="End date and time" hint="End date and time" :disable="allowEditEndDate" :rules="[ val => confirmDates(val) || 'End date must be after start date']">
+                                              <q-input filled v-model="editEndDate" label="End date and time" hint="End date and time" :disable="allowEditEndDate" :rules="[ val => confirmDates(val, 'EDIT') || 'End date must be after start date']">
                                                 <template v-slot:prepend>
                                                   <q-icon name="event" class="cursor-pointer">
                                                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -434,15 +434,15 @@
                                         >
 
                                           <template v-slot:top-right>
-                                            <q-btn color="green" :disable="loading" label="Add manager" @click="showManagerAdd" />
-                                            <q-btn class="q-ml-sm" color="negative" :disable="loading" label="Remove manager" @click="removeRow" />
+                                            <q-btn color="green" :disable="managerLoading" label="Add manager" @click="showManagerAdd" />
+                                            <q-btn class="q-ml-sm" color="negative" :disable="managerLoading" label="Remove manager" @click="editRemoveManagers" />
                                             <q-space />
                                           </template>
                                         </q-table>
                                       </div>
                                     </q-card-section>
                                     <q-card-actions align="center">
-                                      <q-btn label="Confirm changes" type="submit" color="primary"/>
+                                      <q-btn label="Confirm changes" type="submit" color="primary" @click="confirmElectionEdit(selected_row.id)"/>
                                       <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
                                     </q-card-actions>
                                   </q-card>
@@ -460,11 +460,11 @@
                         </q-card-section>
 
                         <q-card-section class="q-pt-none">
-                          Are you sure you want to delete election {{selected_row}}?
+                          Are you sure you want to delete election {{selected_row.title}}?
                         </q-card-section>
 
                         <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="deleteConfirm=false" v-close-popup />
+                          <q-btn flat label="Confirm" color="primary" @click="removeElection(selected_row.id)" v-close-popup />
                           <q-btn flat label="Cancel" color="negative" @click="deleteConfirm=false" v-close-popup />
                         </q-card-actions>
                       </q-card>
@@ -472,21 +472,21 @@
                     <q-dialog v-model="renewKey">
                       <q-card>
                         <q-card-section>
-                          <div class="text-h6">Please insert the new election key for election {{selected_row}}</div>
+                          <div class="text-h6">Please insert the new election key for election {{selected_row.title}}</div>
                         </q-card-section>
 
                         <q-card-section class="q-pt-none">
                           <q-form
                               class="q-gutter-md"
                           >
-                            <q-input v-model="password" type="password" filled hint="Election key">
+                            <q-input v-model="newElectionKey" type="password" filled hint="Election key">
                             </q-input>
                           </q-form>
                         </q-card-section>
 
                         <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="renewKey=false" v-close-popup />
-                          <q-btn flat label="Cancel" color="negative" @click="renewKey=false" v-close-popup />
+                          <q-btn flat label="Confirm" color="primary" @click="renewElectionKey(selected_row.id)" v-close-popup />
+                          <q-btn flat label="Cancel" color="negative" @click="newElectionKey='';renewKey=false" v-close-popup />
                         </q-card-actions>
                       </q-card>
                     </q-dialog>
@@ -638,8 +638,8 @@
                               </div>
                             </q-card-section>
                             <q-card-actions align="center">
-                              <q-btn label="Add selected voters" type="submit" color="primary" @click="editInsertNewVoter"/>
-                              <q-btn label="Cancel" type="reset" color="negative" @click="this.newVoterSelected = []" v-close-popup/>
+                              <q-btn label="Add selected voters" type="submit" color="primary" @click="editInsertNewManager"/>
+                              <q-btn label="Cancel" type="reset" color="negative" @click="this.newManagerSelected = []" v-close-popup/>
                             </q-card-actions>
                           </q-card>
                         </div>
@@ -869,10 +869,12 @@ const columns = [
 ]
 
 const originalRows = [
-  { id: 1, title: 'Election1', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true },
-  { id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true},
-  { id: 3, title: 'Eclair', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false },
-  { id: 4, title: 'Cupcake', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false }
+  { id: 1, title: 'Election1', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true, results: null },
+  { id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true, results: null},
+  { id: 3, title: 'Eclair', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false, results: null },
+  { id: 4, title: 'Cupcake', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false, results: null },
+  { id: 5, title: 'Election2', startDate: '13-07-2023 00:00', endDate: '15-06-2032 00:00', voted: false, results: null },
+  { id: 6, title: 'Election3', startDate: '13-05-2023 00:00', endDate: '15-06-2023 00:00', voted: true, results: '{a:1,b:2}' }
 ]
 
 const candidateColumns = [
@@ -1058,6 +1060,11 @@ export default {
       {id: 3, displayName: 'Manager3', email: 'manager3@man.man'},
       {id: 4, displayName: 'Manager4', email: 'manager4@man.man'}
     ])
+    const newManagerSelected = ref([])
+    const newManagerLoading = ref(false)
+    const managerLoading = ref(false)
+    const selectedManager = ref([])
+    const newElectionKey = ref('')
     const pagination = ref({
       sortBy: 'id',
       descending: false,
@@ -1154,12 +1161,29 @@ export default {
        })
     }
 
-    function confirmDates(date) {
+    function confirmDates(date, type) {
       if(date.length === 0) {
         return true;
       } else {
-        return moment(this.startDate).isBefore(date)
+        if(type === 'INSERT') {
+          return moment(this.startDate).isBefore(date)
+        }
+        if(type === 'EDIT') {
+          return moment(this.editStartDate).isBefore(date)
+        }
       }
+    }
+
+    function isAfterStart(date) {
+        return moment().isAfter(moment(date, 'DD-MM-YYYY HH:mm'));
+    }
+
+    function isAfterEnd(date) {
+        return !moment().isAfter(moment(date,'DD-MM-YYYY HH:mm'));
+    }
+
+    function hasResults(results) {
+        return !results;
     }
 
     return {
@@ -1172,6 +1196,9 @@ export default {
       candidateColumns,
       candidateRows,
       selected,
+      isAfterStart,
+      isAfterEnd,
+      hasResults,
       getSelectedString () {
         return selected.value.length === 0 ? '' : `${selected.value.length} record${selected.value.length > 1 ? 's' : ''} selected of ${candidateRows.length}`
       },
@@ -1206,15 +1233,15 @@ export default {
       electionTitle: ref(''),
       startDate,
       startDateOptions(date) {
-        const today = moment().add(1, 'day').format('YYYY/MM/DD')
-        return date > today
+        const today = moment().format('YYYY/MM/DD')
+        return date >= today
       },
       minEndDate,
       endDate: ref(''),
       allowEndDate,
       endDateOptions(date) {
-          const minDate = moment().add(1, 'day').format('YYYY/MM/DD')
-          return date > minDate
+          const minDate = moment().format('YYYY/MM/DD')
+          return date >= minDate
       },
       electionKey: ref(null),
       electionKey1: ref(null),
@@ -1308,13 +1335,32 @@ export default {
           editVoterLoading.value = false
         }, 500)
       },
-      userManagerRows
+      userManagerRows,
+      newManagerSelected,
+      newManagerLoading,
+      managerLoading,
+      selectedManager,
+      editRemoveManagers() {
+        managerLoading.value = true
+        setTimeout(() => {
+          for(const sm of selectedManager.value) {
+            const index = managerRows.value.findIndex(object => {
+              return object.id === sm.id;
+            });
+            managerRows.value.splice(index, 1)
+            userManagerRows.value.push(sm)
+          }
+          selectedManager.value = []
+          managerLoading.value = false
+        }, 500)
+      },
+      newElectionKey
     }
   },
   watch: {
     startDate: function (value) {
         this.allowEndDate = value
-        this.minEndDate = moment(value).add(2, 'days').format('YYYY/MM/DD')
+        this.minEndDate = moment(value).format('YYYY/MM/DD')
     },
     editStartDate: function (value) {
       this.allowEditEndDate = value
@@ -1331,11 +1377,11 @@ export default {
       this.alert=true;
     },
     deleteElection(row) {
-      this.selected_row = row.id;
+      this.selected_row = row;
       this.deleteConfirm=true;
     },
     regenerateKey(row) {
-      this.selected_row = row.title;
+      this.selected_row = row;
       this.renewKey=true;
     },
     showResults(row) {
@@ -1408,6 +1454,21 @@ export default {
       }, 500)
       this.editNewVoter = false
     },
+    editInsertNewManager() {
+        this.managerLoading = true
+      setTimeout(() => {
+        for(const ms of this.newManagerSelected) {
+          const index = this.userManagerRows.findIndex(object => {
+            return object.id === ms.id;
+          });
+          this.userManagerRows.splice(index, 1)
+          this.managerRows.push(ms)
+        }
+        this.newManagerSelected = []
+        this.managerLoading = false
+      }, 500)
+      this.newManager = false
+    },
     showElectionResults(row) {
       this.selected_row = row;
       this.electionResultsShow = true;
@@ -1461,6 +1522,58 @@ export default {
       this.electionKey1 = null
       this.candidateRows = []
       this.voterRows = []
+    },
+    confirmElectionEdit(id) {
+      const title = this.editElectionTitle
+      const startDate = this.editStartDate
+      const endDate = this.editEndDate
+      const candidates = this.editCandidateRows
+      const voters = this.editVoterRows
+      const managers = this.managerRows
+      if(moment(startDate, 'DD-MM-YYYY HH:mm').isBefore(moment(endDate, 'DD-MM-YYYY HH:mm'))){
+        if(title.length > 0) {
+          if(managers.length > 0) {
+            console.log({id, title, startDate, endDate, candidates, voters, managers})
+            Notify.create({
+              color: 'green-4',
+              textColor: 'white',
+              icon: 'check',
+              message: `Election ${title} edited with success`
+            })
+            this.alert=false;
+          } else {
+            Notify.create({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: 'Cannot create election; Election must have at least 1 manager'
+            })
+          }
+        } else {
+          Notify.create({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'Cannot create election; Please insert an election title'
+          })
+        }
+      } else {
+        Notify.create({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: 'Cannot edit election; Election start date is not before end date'
+        })
+      }
+    },
+    removeElection(id) {
+      console.log(id)
+      this.deleteConfirm=false
+    },
+    renewElectionKey(id) {
+      const key = this.newElectionKey
+      console.log({id, key})
+      this.renewKey = false
     }
   }
 }
