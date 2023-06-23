@@ -75,7 +75,7 @@
                                 Vote
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="results" color="info" :disabled="!props.row.voted" label=''
+                            <q-btn square size="sm" name="results" color="info" :disabled="canSeeResults(props.row)" label=''
                                    icon='summarize' @click="showResults(props.row)">
                               <q-tooltip>
                                 Show election results
@@ -153,22 +153,30 @@
                     <q-dialog v-model="sign">
                       <q-card>
                         <q-card-section>
-                          <div class="text-h6">Please confirm your vote {{ selected.length > 0 ? selected : "Blank" }}</div>
+                          <div class="text-h6">Please confirm your {{ selected.length > 0 ? `vote on candidate ${selected[0].name}` : `blank vote` }}</div>
                         </q-card-section>
 
                         <q-card-section class="q-pt-none">
                           <q-form
                               class="q-gutter-md"
                           >
-                            <q-input v-model="password" type="password" filled hint="Vote key"
-                                     :rules="[ val => val && val.length > 0 || 'Please insert your vote key']">
+                            <q-input v-model="signatureKey" filled hint="Vote key"
+                                     :type="hideSignKey ? 'password' : 'text'"
+                                     :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Vote key must be 16 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Vote key must have upper and lower case characters, special characters and digits']"
+                            ><template v-slot:append>
+                              <q-icon
+                                  :name="hideSignKey ? 'visibility_off' : 'visibility'"
+                                  class="cursor-pointer"
+                                  @click="hideSignKey = !hideSignKey"
+                              /> </template>
                             </q-input>
                           </q-form>
                         </q-card-section>
 
                         <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="sign=false" v-close-popup/>
-                          <q-btn flat label="Cancel" color="negative" @click="sign=false" v-close-popup/>
+                          <q-btn flat label="Confirm" color="primary" @click="submitVote(selected_row.id)" />
+                          <q-btn flat label="Cancel" color="negative" @click="selected=[];signatureKey='';sign=false" />
                         </q-card-actions>
                       </q-card>
                     </q-dialog>
@@ -322,7 +330,7 @@
 import {ref, onMounted} from 'vue'
 import {Chart as ChartJS, ArcElement, Tooltip, Legend} from 'chart.js'
 import {Pie} from 'vue-chartjs'
-import {SessionStorage} from "quasar";
+import {Notify, SessionStorage} from "quasar";
 import moment from 'moment'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
@@ -343,11 +351,12 @@ const columns = [
 ]
 
 const originalRows = [
-  {id: 1, title: 'Election1', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true},
-  {id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true},
-  {id: 3, title: 'Eclair', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false},
-  {id: 4, title: 'Cupcake', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false},
-  {id: 5, title: 'Election2', startDate: '13-06-2023 00:00', endDate: '19-06-2023 00:00', voted: false},
+  {id: 1, title: 'Election1', startDate: '13-02-2023 00:00', endDate: '15-06-2023 00:00', voted: true, results: '{a:1, b:2}'},
+  {id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true, results: '{a:1, b:2}'},
+  {id: 3, title: 'Eclair', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false, results: '{a:1, b:2}'},
+  {id: 4, title: 'Cupcake', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false, results: '{a:1, b:2}'},
+  {id: 5, title: 'Election2', startDate: '13-06-2023 00:00', endDate: '19-06-2023 00:00', voted: false, results: null},
+  {id: 6, title: 'Election3', startDate: '22-06-2023 00:00', endDate: '22-06-2023 23:59', voted: false, results: null}
 ]
 
 const candidateColumns = [
@@ -550,6 +559,8 @@ export default {
       openSettings() {
         settings.value = true
       },
+      hideSignKey: ref(true),
+      signatureKey: ref('')
     }
   },
   methods: {
@@ -558,17 +569,38 @@ export default {
       this.ballot = true;
     },
     canVote(row) {
-      console.log(moment().isAfter(moment(row.startDate).format('yyyy-mm-dd HH:mm')))
       if(row.voted) {
         return true
       }
-      if(moment().isAfter(moment(row.endDate)) || moment().isBefore(row.startDate)) {
+      if(moment().isBefore(moment(row.startDate, 'DD-MM-YYYY HH:mm'))) {
+        return true
+      }
+      if(moment().isAfter(moment(row.endDate, 'DD-MM-YYYY HH:mm'))) {
+        return true
+      }
+    },
+    canSeeResults(row) {
+      if(moment().isAfter(moment(row.endDate, 'DD-MM-YYYY HH:mm'))) {
+        return !row.results;
+      } else {
         return true
       }
     },
     voteConfirm(selected) {
       this.selected = selected;
       this.sign = true;
+    },
+    submitVote(id) {
+      const vote = this.selected.length > 0 ? this.selected[0].id : "blank" // to be encrypted
+      const key = this.signatureKey
+      console.log({id, vote, key})
+      Notify.create({
+        color: 'green-4',
+        textColor: 'white',
+        icon: 'check',
+        message: `Vote submitted with success. Thank you!`
+      })
+      this.sign = false
     },
     showResults(row) {
       this.selected_row = row;

@@ -87,6 +87,11 @@
                                 Regenerate election key
                               </q-tooltip>
                             </q-btn>
+                            <q-btn square size="sm" name="renew" color="positive" :disable="canStatus(props.row.startDate, props.row.endDate)" label='' icon='query_stats' @click="openElectionStatus(props.row)">
+                              <q-tooltip>
+                                Check election status
+                              </q-tooltip>
+                            </q-btn>
                             <q-btn square size="sm" name="results" color="primary" :disable="isAfterEnd(props.row.endDate)" label='' icon='data_thresholding' @click="showResults(props.row)">
                               <q-tooltip>
                                 Check election results
@@ -190,7 +195,7 @@
                                           </div>
                                           <q-input filled v-model="electionKey" label="Election Key" placeholder="Election Key" hint="Election Key" clear-icon="close"
                                                    :type="isPwd ? 'password' : 'text'"
-                                                   :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be at least 16 characters long',
+                                                   :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits',]"
                                           >
                                             <template v-slot:append>
@@ -203,7 +208,7 @@
                                           </q-input>
                                           <q-input filled v-model="electionKey1" label="Confirm Election Key" placeholder="Election Key" hint="Confirm Election Key" clear-icon="close"
                                                    :type="isPwd1 ? 'password' : 'text'"
-                                                   :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be at least 16 characters long',
+                                                   :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits', val => val === electionKey || 'Election key must be the same as above']"
                                           >
                                             <template v-slot:append>
@@ -479,36 +484,134 @@
                           <q-form
                               class="q-gutter-md"
                           >
-                            <q-input v-model="newElectionKey" type="password" filled hint="Election key">
+                            <q-input v-model="newElectionKey" filled hint="New election key"
+                                     :type="hideKey ? 'password' : 'text'"
+                                     :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be 16 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits',]"
+                            >
+                              <template v-slot:append>
+                                <q-icon
+                                    :name="hideKey ? 'visibility_off' : 'visibility'"
+                                    class="cursor-pointer"
+                                    @click="hideKey = !hideKey"
+                                />
+                              </template>
+                            </q-input>
+                            <q-input v-model="newElectionKey1" filled hint="Confirm new election key" :type="hideKey1 ? 'password' : 'text'"
+                                     :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits', val => val === newElectionKey || 'Election key must be the same as above']"
+                            >
+                              <template v-slot:append>
+                                <q-icon
+                                    :name="hideKey1 ? 'visibility_off' : 'visibility'"
+                                    class="cursor-pointer"
+                                    @click="hideKey1 = !hideKey1"
+                                /> </template>
                             </q-input>
                           </q-form>
                         </q-card-section>
 
                         <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="renewElectionKey(selected_row.id)" v-close-popup />
-                          <q-btn flat label="Cancel" color="negative" @click="newElectionKey='';renewKey=false" v-close-popup />
+                          <q-btn flat label="Confirm" color="primary" @click="renewElectionKey(selected_row.id)" />
+                          <q-btn flat label="Cancel" color="negative" @click="newElectionKey='';renewKey=false" />
                         </q-card-actions>
                       </q-card>
                     </q-dialog>
                     <q-dialog v-model="electionResults">
                       <q-card>
                         <q-card-section>
-                          <div class="text-h6">Please insert the election key for election {{selected_row}}</div>
+                          <div class="text-h6">Please insert the election key for election {{selected_row.title}}</div>
                         </q-card-section>
 
                         <q-card-section class="q-pt-none">
                           <q-form
                               class="q-gutter-md"
                           >
-                            <q-input v-model="password" type="password" filled hint="Election key">
+                            <q-input v-model="resultsElectionKey" filled hint="Election key" :type="hideResultsKey ? 'password' : 'text'"
+                                     :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits']"
+                            ><template v-slot:append>
+                              <q-icon
+                                  :name="hideResultsKey ? 'visibility_off' : 'visibility'"
+                                  class="cursor-pointer"
+                                  @click="hideResultsKey = !hideResultsKey"
+                              /> </template>
                             </q-input>
                           </q-form>
                         </q-card-section>
 
                         <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="electionResults=false" v-close-popup />
-                          <q-btn flat label="Cancel" color="negative" @click="electionResults=false" v-close-popup />
+                          <q-btn flat label="Confirm" color="primary" @click="countElectionResults(selected_row.id)" />
+                          <q-btn flat label="Cancel" color="negative" @click="resultsElectionKey='';electionResults=false" />
                         </q-card-actions>
+                      </q-card>
+                    </q-dialog>
+                    <q-dialog
+                        v-model="electionStatus"
+                        persistent
+                        :maximized="maximizedToggle"
+                        transition-show="slide-up"
+                        transition-hide="slide-down"
+                    >
+                      <q-card class="bg-blue-grey-2 text-black">
+                        <q-bar>
+                          <div class="text-h6">{{ selected_row.title }} status</div>
+                          <q-space/>
+                          <q-btn dense flat icon="close" v-close-popup>
+                            <q-tooltip class="bg-white text-primary">Close</q-tooltip>
+                          </q-btn>
+                        </q-bar>
+                        <q-card-section class="q-pt-none">
+                          <div class="flex flex-center column">
+                            <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
+                              <div id="parent" class="fit wrap justify-center items-start content-start"
+                                   style="overflow: hidden;">
+                                <div class=" bg-grey-6" style="overflow: auto;">
+                                  <q-card class="no-border-radius">
+                                    <q-card-section>
+                                      <div class="q-pa-md example-row-equal-width">
+                                        <div class="row">
+                                          <div class="col">
+                                          </div>
+                                          <div class="col">
+                                            <q-card
+                                                class="my-card"
+                                            >
+                                              <q-card-section>
+                                                <div class="text-h6">Submitted Votes</div>
+                                              </q-card-section>
+
+                                              <q-card-section class="q-pt-none">
+                                                <Pie :data="statusData" :options="statusOptions"/>
+                                              </q-card-section>
+                                            </q-card>
+                                          </div>
+                                          <div class="col">
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div class="q-pa-md">
+                                        <q-table
+                                            flat bordered
+                                            title="Voters"
+                                            :rows="statusRows"
+                                            :columns="voterColumns"
+                                            row-key="email"
+                                            :filter="filter"
+                                            :loading="loading"
+                                        >
+                                        </q-table>
+                                      </div>
+                                    </q-card-section>
+                                    <q-card-actions align="center">
+                                      <q-btn label="Close" color="negative" v-close-popup/>
+                                    </q-card-actions>
+                                  </q-card>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </q-card-section>
                       </q-card>
                     </q-dialog>
                     <q-dialog v-model="addCandidate">
@@ -992,6 +1095,31 @@ const abstainOptions = {
   maintainAspectRatio: false
 }
 
+const statusRows = [
+  {displayName: 'A', email: 'a@a.a', voted: true},
+  {displayName: 'B', email: 'b@b.b', voted: true},
+  {displayName: 'C', email: 'c@c.c', voted: false},
+  {displayName: 'D', email: 'd@d.d', voted: false},
+  {displayName: 'E', email: 'e@e.e', voted: false},
+  {displayName: 'F', email: 'f@f.f', voted: false},
+  {displayName: 'G', email: 'g@g.g', voted: false},
+]
+
+const statusData = {
+  labels: ['Voted', 'Yet to vote'],
+  datasets: [
+    {
+      backgroundColor: ['#416db8', '#b64b3c'],
+      data: [2, 5]
+    }
+  ]
+}
+
+const statusOptions = {
+  responsive: true,
+  maintainAspectRatio: false
+}
+
 const chartData = {
   labels: ['candidate1', 'candidate2', 'candidate3'],
   datasets: [
@@ -1069,7 +1197,7 @@ export default {
       sortBy: 'id',
       descending: false,
       page: 1,
-      rowsPerPage: 3,
+      rowsPerPage: 5,
       rowsNumber: 10
     })
 
@@ -1186,6 +1314,10 @@ export default {
         return !results;
     }
 
+    function canStatus(start, end) {
+      return !(moment().isAfter(moment(start, 'DD-MM-YYYY HH:mm')) && moment().isBefore(moment(end, 'DD-MM-YYYY HH:mm')));
+    }
+
     return {
       tableRef,
       filter,
@@ -1198,6 +1330,7 @@ export default {
       selected,
       isAfterStart,
       isAfterEnd,
+      canStatus,
       hasResults,
       getSelectedString () {
         return selected.value.length === 0 ? '' : `${selected.value.length} record${selected.value.length > 1 ? 's' : ''} selected of ${candidateRows.length}`
@@ -1354,7 +1487,16 @@ export default {
           managerLoading.value = false
         }, 500)
       },
-      newElectionKey
+      newElectionKey,
+      newElectionKey1: ref(''),
+      hideKey: ref(true),
+      hideKey1: ref(true),
+      hideResultsKey: ref(true),
+      resultsElectionKey: ref(''),
+      electionStatus: ref(false),
+      statusOptions,
+      statusData,
+      statusRows
     }
   },
   watch: {
@@ -1385,7 +1527,7 @@ export default {
       this.renewKey=true;
     },
     showResults(row) {
-      this.selected_row = row.title;
+      this.selected_row = row;
       this.electionResults=true;
     },
     newCandidate() {
@@ -1572,8 +1714,57 @@ export default {
     },
     renewElectionKey(id) {
       const key = this.newElectionKey
-      console.log({id, key})
-      this.renewKey = false
+      const confirmKey = this.newElectionKey1
+      if(key === confirmKey) {
+        console.log({id, key})
+        Notify.create({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'check',
+          message: `Election key changed with success`
+        })
+        this.renewKey = false
+      } else {
+        Notify.create({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: 'Cannot change election key; Both fields must have the same value'
+        })
+      }
+    },
+    countElectionResults(id) {
+      const key = this.resultsElectionKey
+      if(key.length === 16) {
+        if(key.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$')) {
+          console.log({id, key})
+          Notify.create({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: `Election results counted with success`
+          })
+          this.electionResults = false
+        } else {
+          Notify.create({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'Cannot count election results; Election key must have upper and lower case characters, special characters and digits'
+          })
+        }
+      } else {
+        Notify.create({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: 'Cannot count election results; Election key must be 16 characters long'
+        })
+      }
+    },
+    openElectionStatus(row) {
+      this.selected_row = row
+      this.electionStatus = true
     }
   }
 }
