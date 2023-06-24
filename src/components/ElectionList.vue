@@ -3,13 +3,13 @@
     <q-header elevated class="bg-white text-grey-8" height-hint="64">
       <q-toolbar class="GPL__toolbar" style="height: 64px">
 
-        <q-toolbar-title v-if="$q.screen.gt.sm" shrink  class="row items-center no-wrap">
+        <q-toolbar-title v-if="$q.screen.gt.sm" shrink class="row items-center no-wrap">
           <span class="q-ml-sm">UAlg Secure Vote</span>
         </q-toolbar-title>
 
-        <q-space />
+        <q-space/>
 
-        <q-space />
+        <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round dense flat color="grey-8" icon="notifications">
@@ -75,7 +75,8 @@
                                 Vote
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="results" color="info" :disabled="canSeeResults(props.row)" label=''
+                            <q-btn square size="sm" name="results" color="info" :disabled="canSeeResults(props.row)"
+                                   label=''
                                    icon='summarize' @click="showResults(props.row)">
                               <q-tooltip>
                                 Show election results
@@ -153,7 +154,9 @@
                     <q-dialog v-model="sign">
                       <q-card>
                         <q-card-section>
-                          <div class="text-h6">Please confirm your {{ selected.length > 0 ? `vote on candidate ${selected[0].name}` : `blank vote` }}</div>
+                          <div class="text-h6">Please confirm your
+                            {{ selected.length > 0 ? `vote on candidate ${selected[0].name}` : `blank vote` }}
+                          </div>
                         </q-card-section>
 
                         <q-card-section class="q-pt-none">
@@ -164,19 +167,21 @@
                                      :type="hideSignKey ? 'password' : 'text'"
                                      :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Vote key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Vote key must have upper and lower case characters, special characters and digits']"
-                            ><template v-slot:append>
-                              <q-icon
-                                  :name="hideSignKey ? 'visibility_off' : 'visibility'"
-                                  class="cursor-pointer"
-                                  @click="hideSignKey = !hideSignKey"
-                              /> </template>
+                            >
+                              <template v-slot:append>
+                                <q-icon
+                                    :name="hideSignKey ? 'visibility_off' : 'visibility'"
+                                    class="cursor-pointer"
+                                    @click="hideSignKey = !hideSignKey"
+                                />
+                              </template>
                             </q-input>
                           </q-form>
                         </q-card-section>
 
                         <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="submitVote(selected_row.id)" />
-                          <q-btn flat label="Cancel" color="negative" @click="selected=[];signatureKey='';sign=false" />
+                          <q-btn flat label="Confirm" color="primary" @click="submitVote(selected_row.id)"/>
+                          <q-btn flat label="Cancel" color="negative" @click="selected=[];signatureKey='';sign=false"/>
                         </q-card-actions>
                       </q-card>
                     </q-dialog>
@@ -268,26 +273,30 @@
       </div>
       <q-page-sticky v-if="$q.screen.gt.sm" expand position="left">
         <div class="fit q-pt-xl q-px-sm column">
-          <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('elections')">
-            <q-icon size="22px" name="ballot" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat color="grey-8" stack no-caps size="26px"
+                 class="GPL__side-btn" @click="$router.push('elections')">
+            <q-icon size="22px" name="ballot"/>
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
-            <q-icon size="22px" name="edit_document" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps
+                 size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
+            <q-icon size="22px" name="edit_document"/>
             <div class="GPL__side-btn__label">Election Manager</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
-            <q-icon size="22px" name="fact_check" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'" round flat color="grey-8" stack no-caps
+                 size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
+            <q-icon size="22px" name="fact_check"/>
             <div class="GPL__side-btn__label">Auditing</div>
             <q-badge floating color="red" text-color="white" style="top: 8px; right: 16px">
               1
             </q-badge>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('admin')">
-            <q-icon size="22px" name="admin_panel_settings" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps
+                 size="26px" class="GPL__side-btn" @click="$router.push('admin')">
+            <q-icon size="22px" name="admin_panel_settings"/>
             <div class="GPL__side-btn__label">Admin</div>
           </q-btn>
         </div>
@@ -327,10 +336,10 @@
 </template>
 
 <script>
-import {ref, onMounted} from 'vue'
-import {Chart as ChartJS, ArcElement, Tooltip, Legend} from 'chart.js'
+import {onMounted, ref} from 'vue'
+import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
 import {Pie} from 'vue-chartjs'
-import {Notify, SessionStorage} from "quasar";
+import {Cookies, Notify, SessionStorage} from "quasar";
 import moment from 'moment'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
@@ -351,10 +360,38 @@ const columns = [
 ]
 
 const originalRows = [
-  {id: 1, title: 'Election1', startDate: '13-02-2023 00:00', endDate: '15-06-2023 00:00', voted: true, results: '{a:1, b:2}'},
-  {id: 2, title: 'Ice cream sandwich', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true, results: '{a:1, b:2}'},
-  {id: 3, title: 'Eclair', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false, results: '{a:1, b:2}'},
-  {id: 4, title: 'Cupcake', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: false, results: '{a:1, b:2}'},
+  {
+    id: 1,
+    title: 'Election1',
+    startDate: '13-02-2023 00:00',
+    endDate: '15-06-2023 00:00',
+    voted: true,
+    results: '{a:1, b:2}'
+  },
+  {
+    id: 2,
+    title: 'Ice cream sandwich',
+    startDate: '13-02-2023 00:00',
+    endDate: '15-06-2032 00:00',
+    voted: true,
+    results: '{a:1, b:2}'
+  },
+  {
+    id: 3,
+    title: 'Eclair',
+    startDate: '13-02-2023 00:00',
+    endDate: '15-06-2032 00:00',
+    voted: false,
+    results: '{a:1, b:2}'
+  },
+  {
+    id: 4,
+    title: 'Cupcake',
+    startDate: '13-02-2023 00:00',
+    endDate: '15-06-2032 00:00',
+    voted: false,
+    results: '{a:1, b:2}'
+  },
   {id: 5, title: 'Election2', startDate: '13-06-2023 00:00', endDate: '19-06-2023 00:00', voted: false, results: null},
   {id: 6, title: 'Election3', startDate: '22-06-2023 00:00', endDate: '22-06-2023 23:59', voted: false, results: null}
 ]
@@ -569,18 +606,18 @@ export default {
       this.ballot = true;
     },
     canVote(row) {
-      if(row.voted) {
+      if (row.voted) {
         return true
       }
-      if(moment().isBefore(moment(row.startDate, 'DD-MM-YYYY HH:mm'))) {
+      if (moment().isBefore(moment(row.startDate, 'DD-MM-YYYY HH:mm'))) {
         return true
       }
-      if(moment().isAfter(moment(row.endDate, 'DD-MM-YYYY HH:mm'))) {
+      if (moment().isAfter(moment(row.endDate, 'DD-MM-YYYY HH:mm'))) {
         return true
       }
     },
     canSeeResults(row) {
-      if(moment().isAfter(moment(row.endDate, 'DD-MM-YYYY HH:mm'))) {
+      if (moment().isAfter(moment(row.endDate, 'DD-MM-YYYY HH:mm'))) {
         return !row.results;
       } else {
         return true
@@ -608,6 +645,7 @@ export default {
     },
     logout() {
       SessionStorage.set('permission', '');
+      Cookies.remove('token'); // TODO add cookie options
       this.$router.push('login');
     }
   }
@@ -630,6 +668,7 @@ export default {
 
     .q-item__section--avatar
       padding-left: 12px
+
       .q-icon
         color: #5f6368
 

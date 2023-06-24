@@ -3,13 +3,13 @@
     <q-header elevated class="bg-white text-grey-8" height-hint="64">
       <q-toolbar class="GPL__toolbar" style="height: 64px">
 
-        <q-toolbar-title v-if="$q.screen.gt.sm" shrink  class="row items-center no-wrap">
+        <q-toolbar-title v-if="$q.screen.gt.sm" shrink class="row items-center no-wrap">
           <span class="q-ml-sm">UAlg Secure Vote</span>
         </q-toolbar-title>
 
-        <q-space />
+        <q-space/>
 
-        <q-space />
+        <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round dense flat color="grey-8" icon="notifications">
@@ -80,7 +80,7 @@
 
                       <div>
                         <q-btn label="Submit" type="submit" color="primary"/>
-                        <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
+                        <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
                     <router-link to="register">Don't have an account?</router-link>
@@ -93,26 +93,30 @@
       </div>
       <q-page-sticky v-if="$q.screen.gt.sm" expand position="left">
         <div class="fit q-pt-xl q-px-sm column">
-          <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('elections')">
-            <q-icon size="22px" name="ballot" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat color="grey-8" stack no-caps size="26px"
+                 class="GPL__side-btn" @click="$router.push('elections')">
+            <q-icon size="22px" name="ballot"/>
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
-            <q-icon size="22px" name="edit_document" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps
+                 size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
+            <q-icon size="22px" name="edit_document"/>
             <div class="GPL__side-btn__label">Election Manager</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
-            <q-icon size="22px" name="fact_check" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'" round flat color="grey-8" stack no-caps
+                 size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
+            <q-icon size="22px" name="fact_check"/>
             <div class="GPL__side-btn__label">Auditing</div>
             <q-badge floating color="red" text-color="white" style="top: 8px; right: 16px">
               1
             </q-badge>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('admin')">
-            <q-icon size="22px" name="admin_panel_settings" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps
+                 size="26px" class="GPL__side-btn" @click="$router.push('admin')">
+            <q-icon size="22px" name="admin_panel_settings"/>
             <div class="GPL__side-btn__label">Admin</div>
           </q-btn>
         </div>
@@ -152,17 +156,16 @@
 </template>
 
 <script>
-import { useQuasar, Cookies, SessionStorage } from 'quasar'
-import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import {storeToRefs} from 'pinia'
+import {Cookies, SessionStorage, useQuasar} from 'quasar'
+import {ref} from 'vue'
+import {useRouter} from 'vue-router'
 import {useAuthStore} from '@/stores/auth'
 
 
 export default {
   name: 'Login',
 
-  setup () {
+  setup() {
     const $q = useQuasar()
     const router = useRouter();
     const settings = ref(false)
@@ -178,23 +181,23 @@ export default {
       openSettings() {
         settings.value = true
       },
-      onSubmit () {
+      onSubmit() {
         $q.notify({
           color: 'green-4',
           textColor: 'white',
           icon: 'cloud_done',
-          message: 'Submitted'
+          message: 'Authenticated with success'
         });
         Cookies.set('token', 'aaaa');
         /*Cookies.set('token', 'aaaa', {
           sameSite: 'Lax',
           httpOnly: true,
         });*/
-        SessionStorage.set('permission', 'MANAGER');
+        SessionStorage.set('permission', 'AUDITOR');
         store.logIn();
         router.push({name: 'Elections'});
       },
-      onReset () {
+      onReset() {
         email.value = null
         password.value = null
       }
@@ -204,6 +207,7 @@ export default {
     logout() {
       const store = useAuthStore();
       SessionStorage.set('permission', '');
+      Cookies.remove('token'); // TODO add cookie options
       store.logOut();
       this.$router.push('login');
     }
@@ -227,6 +231,7 @@ export default {
 
     .q-item__section--avatar
       padding-left: 12px
+
       .q-icon
         color: #5f6368
 
