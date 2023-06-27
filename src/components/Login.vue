@@ -193,7 +193,7 @@ export default {
           sameSite: 'Lax',
           httpOnly: true,
         });*/
-        SessionStorage.set('permission', 'AUDITOR');
+        SessionStorage.set('permission', 'ADMIN');
         store.logIn();
         router.push({name: 'Elections'});
       },
