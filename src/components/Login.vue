@@ -185,7 +185,7 @@ export default {
         $q.notify({
           color: 'green-4',
           textColor: 'white',
-          icon: 'cloud_done',
+          icon: 'check',
           message: 'Authenticated with success'
         });
         Cookies.set('token', 'aaaa');
@@ -193,7 +193,7 @@ export default {
           sameSite: 'Lax',
           httpOnly: true,
         });*/
-        SessionStorage.set('permission', 'ADMIN');
+        SessionStorage.set('permission', 'MANAGER');
         store.logIn();
         router.push({name: 'Elections'});
       },

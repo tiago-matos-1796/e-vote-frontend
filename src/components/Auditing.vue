@@ -86,7 +86,7 @@
                             <div class="q-pa-md">
                               <q-table
                                   flat bordered
-                                  title="Logs"
+                                  title=""
                                   :rows="electionRows"
                                   :columns="electionsColumns"
                                   row-key="name"
@@ -94,26 +94,22 @@
                                   :loading="electionLoading"
                                   :pagination="pagination"
                               >
-                                <template v-slot:top>
-                                  <div style="width: 100%" class="row">
-                                    <div class="col-9">
-                                      <q-toggle v-model="toggleNone" @click="customSort" label="Show none"/>
-                                      <q-toggle v-model="toggleLow" @click="customSort" label="Show low"/>
-                                      <q-toggle v-model="toggleMedium" @click="customSort" label="Show medium"/>
-                                      <q-toggle v-model="toggleHigh" @click="customSort" label="Show high"/>
-                                    </div>
-                                    <div class="col-3">
-                                      <q-input dense debounce="400" color="primary" v-model="search"
-                                               placeholder="Search by election" @keyup.enter="customSort">
-                                        <template v-slot:append>
-                                          <q-icon name="search" @click="customSort" style="cursor: pointer"/>
-                                        </template>
-                                      </q-input>
-                                    </div>
+                                <template v-slot:top-right>
+                                  <div class="q-gutter-lg-x-md">
+                                    <q-toggle v-model="toggleNone" @click="customSort" label="Show none"/>
+                                    <q-toggle v-model="toggleLow" @click="customSort" label="Show low"/>
+                                    <q-toggle v-model="toggleMedium" @click="customSort" label="Show medium"/>
+                                    <q-toggle v-model="toggleHigh" @click="customSort" label="Show high"/>
+                                    <q-input dense debounce="400" color="primary" v-model="search"
+                                             placeholder="Search by election" @keyup.enter="customSort">
+                                      <template v-slot:append>
+                                        <q-icon name="close" @click="clearSearch" class="cursor-pointer" />
+                                        <q-icon name="search" @click="customSort" class="cursor-pointer"/>
+                                      </template>
+                                    </q-input>
                                   </div>
                                 </template>
                               </q-table>
-                              {{ filter }}
                             </div>
                           </q-tab-panel>
                         </q-tab-panels>
@@ -351,7 +347,6 @@ export default {
   computed: {},
   methods: {
     customSort (rows, sortBy, descending) {
-      console.log(sortBy)
       this.electionLoading = true
       setTimeout(() => {
         let filteredRows = []
@@ -388,6 +383,10 @@ export default {
         this.electionLoading = false
       }, 500)
 
+    },
+    clearSearch() {
+      this.search = ''
+      this.customSort()
     },
     logout() {
       SessionStorage.set('permission', '');

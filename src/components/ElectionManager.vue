@@ -49,17 +49,21 @@
                         row-key="id"
                         v-model:pagination="pagination"
                         :loading="loading"
-                        :filter="filter"
                         binary-state-sort
-                        @request="onRequest"
                     >
                       <template v-slot:top-right>
-                        <q-space/>
-                        <q-input filled debounce="300" color="primary" v-model="filter">
-                          <template v-slot:append>
-                            <q-icon name="search"/>
-                          </template>
-                        </q-input>
+                        <div class="q-gutter-lg-x-md">
+                          <q-toggle v-model="toggleBefore" @click="customSortMain" :disable="loading" label="Show not started elections"/>
+                          <q-toggle v-model="toggleDuring" @click="customSortMain" :disable="loading" label="Show ongoing elections"/>
+                          <q-toggle v-model="toggleAfter" @click="customSortMain" :disable="loading" label="Show finished elections"/>
+                          <q-input dense debounce="400" color="primary" v-model="searchMain" :disable="loading"
+                                   placeholder="Search by election title" @keyup.enter="customSortMain">
+                            <template v-slot:append>
+                              <q-icon name="close" @click="clearSearchMain" :disable="loading" class="cursor-pointer"/>
+                              <q-icon name="search" @click="customSortMain" :disable="loading" class="cursor-pointer"/>
+                            </template>
+                          </q-input>
+                        </div>
                       </template>
                       <template v-slot:body="props">
                         <q-tr :props="props">
@@ -74,41 +78,41 @@
                           </q-td>
                           <q-td key="actions" :props="props">
                             <q-btn square size="sm" name="edit" color="amber"
-                                   :disable="isAfterStart(props.row.startDate)" label='' icon='edit'
+                                   :disable="isAfterStart(props.row.startDate) || loading" label='' icon='edit'
                                    @click="openmodel(props.row)">
                               <q-tooltip>
                                 Edit election
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="delete" color="negative"
-                                   :disable="isAfterStart(props.row.startDate)" label='' icon='delete'
+                                   :disable="isAfterStart(props.row.startDate) || loading" label='' icon='delete'
                                    @click="deleteElection(props.row)">
                               <q-tooltip>
                                 Delete election
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="renew" color="secondary"
-                                   :disable="isAfterStart(props.row.startDate)" label='' icon='key'
+                                   :disable="isAfterStart(props.row.startDate) || loading" label='' icon='key'
                                    @click="regenerateKey(props.row)">
                               <q-tooltip>
                                 Regenerate election key
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="renew" color="positive"
-                                   :disable="canStatus(props.row.startDate, props.row.endDate)" label=''
+                                   :disable="canStatus(props.row.startDate, props.row.endDate) || loading" label=''
                                    icon='query_stats' @click="openElectionStatus(props.row)">
                               <q-tooltip>
                                 Check election status
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="results" color="primary"
-                                   :disable="isAfterEnd(props.row.endDate)" label='' icon='data_thresholding'
+                                   :disable="isAfterEnd(props.row.endDate) || loading" label='' icon='data_thresholding'
                                    @click="showResults(props.row)">
                               <q-tooltip>
                                 Check election results
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="results" color="info" :disable="hasResults(props.row.results)"
+                            <q-btn square size="sm" name="results" color="info" :disable="hasResults(props.row.results) || loading"
                                    label='' icon='summarize' @click="showElectionResults(props.row)">
                               <q-tooltip>
                                 Show election results
@@ -143,6 +147,7 @@
                                   <q-card class="no-border-radius">
                                     <q-card-section>
                                       <div class="q-pa-md">
+                                        <div class="text-h6">Election Details</div>
                                         <q-form
                                             class="q-gutter-md" style="min-width: 400px; padding: 24px;"
                                         >
@@ -246,64 +251,105 @@
                                             </template>
                                           </q-input>
                                         </q-form>
-                                        <q-table
-                                            flat bordered
-                                            title="Candidates"
-                                            :rows="candidateRows"
-                                            :columns="candidateColumns"
-                                            row-key="id"
-                                            :selected-rows-label="getSelectedString"
-                                            selection="multiple"
-                                            v-model:selected="selectedCandidates"
-                                            :filter="filter"
-                                            :loading="candidateLoading"
-                                        >
-
-                                          <template v-slot:top-right>
-                                            <q-btn color="green" :disable="candidateLoading" label="Add candidate"
-                                                   @click="newCandidate"/>
-                                            <q-btn class="q-ml-sm" color="negative" :disable="candidateLoading"
-                                                   label="Remove candidates" @click="removeCandidate"/>
-                                            <q-space/>
-                                          </template>
-                                          <template v-slot:body="props">
-                                            <q-tr :props="props">
-                                              <q-td>
-                                                <q-checkbox v-model="props.selected"/>
-                                              </q-td>
-                                              <q-td key="name" :props="props">
-                                                {{ props.row.name }}
-                                                <q-popup-edit v-model="props.row.name" v-slot="scope">
-                                                  <q-input v-model="scope.value" dense autofocus counter
-                                                           @keyup.enter="scope.set"></q-input>
-                                                </q-popup-edit>
-                                              </q-td>
-                                            </q-tr>
-                                          </template>
-
-                                        </q-table>
-                                        <q-table
-                                            flat bordered
-                                            title="Voters"
-                                            :rows="voterRows"
-                                            :columns="userColumns"
-                                            row-key="id"
-                                            :selected-rows-label="getSelectedString"
-                                            selection="multiple"
-                                            v-model:selected="selectedVoters"
-                                            :filter="filter"
-                                            :loading="voterLoading"
-                                        >
-
-                                          <template v-slot:top-right>
-                                            <q-btn color="green" :disable="voterLoading" label="Add voter"
-                                                   @click="showVoterAdd"/>
-                                            <q-btn class="q-ml-sm" color="negative" :disable="voterLoading"
-                                                   label="Remove voter" @click="removeVoters"/>
-                                            <q-space/>
-                                          </template>
-                                        </q-table>
                                       </div>
+                                    </q-card-section>
+                                    <q-card-section>
+                                      <q-card class="no-border-radius">
+                                        <q-card-section><div class="text-h6">Candidates</div></q-card-section>
+                                        <q-card-section>
+                                          <div class="q-pa-md">
+
+                                            <q-table
+                                                flat bordered
+                                                title=""
+                                                :rows="candidateRows"
+                                                :columns="candidateColumns"
+                                                row-key="id"
+                                                :selected-rows-label="getSelectedString"
+                                                selection="multiple"
+                                                v-model:selected="selectedCandidates"
+                                                :loading="candidateLoading"
+                                            >
+
+                                              <template v-slot:top-left>
+                                                <q-btn color="green" :disable="candidateLoading" label="Add candidate"
+                                                       @click="newCandidate"/>
+                                                <q-btn class="q-ml-sm" color="negative" :disable="candidateLoading"
+                                                       label="Remove candidates" @click="removeCandidate"/>
+                                                <q-space/>
+                                              </template>
+                                              <template v-slot:top-right>
+                                                <div class="q-gutter-lg-x-md">
+                                                  <q-input dense debounce="400" color="primary" v-model="searchCandidate" :disable="candidateLoading"
+                                                           placeholder="Search by name" @keyup.enter="customSortCandidate">
+                                                    <template v-slot:append>
+                                                      <q-icon name="close" @click="clearSearchCandidate" :disable="candidateLoading" class="cursor-pointer" />
+                                                      <q-icon name="search" @click="customSortCandidate" :disable="candidateLoading" class="cursor-pointer"/>
+                                                    </template>
+                                                  </q-input>
+                                                </div>
+                                              </template>
+                                              <template v-slot:body="props">
+                                                <q-tr :props="props">
+                                                  <q-td>
+                                                    <q-checkbox v-model="props.selected"/>
+                                                  </q-td>
+                                                  <q-td key="name" :props="props">
+                                                    {{ props.row.name }}
+                                                    <q-popup-edit v-model="props.row.name" v-slot="scope">
+                                                      <q-input v-model="scope.value" dense autofocus counter
+                                                               @keyup.enter="scope.set"></q-input>
+                                                    </q-popup-edit>
+                                                  </q-td>
+                                                </q-tr>
+                                              </template>
+
+                                            </q-table>
+                                          </div>
+                                        </q-card-section>
+                                      </q-card>
+                                    </q-card-section>
+                                    <q-card-section>
+                                      <q-card class="no-border-radius">
+                                        <q-card-section><div class="text-h6">Voters</div></q-card-section>
+                                        <q-card-section>
+                                          <div class="q-pa-md">
+                                            <q-table
+                                                flat bordered
+                                                title=""
+                                                :rows="voterRows"
+                                                :columns="userColumns"
+                                                row-key="id"
+                                                :selected-rows-label="getSelectedString"
+                                                selection="multiple"
+                                                v-model:selected="selectedVoters"
+                                                :filter="filter"
+                                                :loading="voterLoading"
+                                            >
+
+                                              <template v-slot:top-left>
+                                                <q-btn color="green" :disable="voterLoading" label="Add voter"
+                                                       @click="showVoterAdd"/>
+                                                <q-btn class="q-ml-sm" color="negative" :disable="voterLoading"
+                                                       label="Remove voter" @click="removeVoters"/>
+                                                <q-space/>
+                                              </template>
+                                              <template v-slot:top-right>
+                                                <div class="q-gutter-lg-x-md">
+                                                  <q-input dense debounce="400" color="primary" v-model="searchVoter" :disable="voterLoading"
+                                                           placeholder="Search by email" @keyup.enter="customSortVoter">
+                                                    <template v-slot:append>
+                                                      <q-icon name="close" @click="clearSearchVoter" :disable="voterLoading" class="cursor-pointer" />
+                                                      <q-icon name="search" @click="customSortVoter" :disable="voterLoading" class="cursor-pointer"/>
+                                                    </template>
+                                                  </q-input>
+                                                </div>
+                                              </template>
+                                            </q-table>
+                                          </div>
+                                        </q-card-section>
+                                      </q-card>
+
                                     </q-card-section>
                                     <q-card-actions align="center">
                                       <q-btn label="Create election" @click="createElection" color="primary"/>
@@ -1024,9 +1070,8 @@
 </template>
 
 <script>
-import {onMounted, ref} from 'vue'
+import {ref} from 'vue'
 import {Cookies, Notify, SessionStorage, useQuasar} from 'quasar'
-import addElection from '@/components/AddElection.vue'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
 import {Pie} from 'vue-chartjs'
 import moment from 'moment'
@@ -1049,7 +1094,7 @@ const columns = [
   {name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: false},
 ]
 
-const originalRows = [
+let rows = [
   {id: 1, title: 'Election1', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true, results: null},
   {
     id: 2,
@@ -1234,10 +1279,10 @@ export default {
   setup() {
     const $q = useQuasar()
     const tableRef = ref()
-    const rows = ref([])
     const candidateRows = ref([])
     const filter = ref('')
     const loading = ref(false)
+    const startRows = rows
     const candidateLoading = ref(false)
     const selected = ref([])
     const selectedCandidates = ref([])
@@ -1285,101 +1330,17 @@ export default {
     const managerLoading = ref(false)
     const selectedManager = ref([])
     const newElectionKey = ref('')
+    const toggleBefore = ref(true)
+    const toggleDuring = ref(true)
+    const toggleAfter = ref(true)
+    const searchMain = ref('')
+    const searchCandidate = ref('')
     const pagination = ref({
-      sortBy: 'id',
+      sortBy: 'title',
       descending: false,
       page: 1,
       rowsPerPage: 5,
-      rowsNumber: 10
     })
-
-    // emulate ajax call
-    // SELECT * FROM ... WHERE...LIMIT...
-    function fetchFromServer(startRow, count, filter, sortBy, descending) {
-      const data = filter
-          ? originalRows.filter(row => row.title.includes(filter))
-          : originalRows.slice()
-
-      // handle sortBy
-      if (sortBy) {
-        const sortFn = sortBy === 'desc'
-            ? (descending
-                    ? (a, b) => (a.title > b.title ? -1 : a.title < b.title ? 1 : 0)
-                    : (a, b) => (a.title > b.title ? 1 : a.title < b.title ? -1 : 0)
-            )
-            : (descending
-                    ? (a, b) => (parseFloat(b[sortBy]) - parseFloat(a[sortBy]))
-                    : (a, b) => (parseFloat(a[sortBy]) - parseFloat(b[sortBy]))
-            )
-        data.sort(sortFn)
-      }
-
-      return data.slice(startRow, startRow + count)
-    }
-
-    // emulate 'SELECT count(*) FROM ...WHERE...'
-    function getRowsNumberCount(filter) {
-      if (!filter) {
-        return originalRows.length
-      }
-      let count = 0
-      originalRows.forEach(treat => {
-        if (treat.title.includes(filter)) {
-          ++count
-        }
-      })
-      return count
-    }
-
-    function onRequest(props) {
-      const {page, rowsPerPage, sortBy, descending} = props.pagination
-      const filter = props.filter
-
-      loading.value = true
-
-      // emulate server
-      setTimeout(() => {
-        // update rowsCount with appropriate value
-        pagination.value.rowsNumber = getRowsNumberCount(filter)
-
-        // get all rows if "All" (0) is selected
-        const fetchCount = rowsPerPage === 0 ? pagination.value.rowsNumber : rowsPerPage
-
-        // calculate starting row of data
-        const startRow = (page - 1) * rowsPerPage
-
-        // fetch data from "server"
-        const returnedData = fetchFromServer(startRow, fetchCount, filter, sortBy, descending)
-
-        // clear out existing data and add new
-        rows.value.splice(0, rows.value.length, ...returnedData)
-
-        // don't forget to update local pagination object
-        pagination.value.page = page
-        pagination.value.rowsPerPage = rowsPerPage
-        pagination.value.sortBy = sortBy
-        pagination.value.descending = descending
-
-        // ...and turn of loading indicator
-        loading.value = false
-      }, 1500)
-    }
-
-    onMounted(() => {
-      // get initial data from server (1st page)
-      tableRef.value.requestServerInteraction()
-    })
-
-    function AddElection() {
-      $q.dialog({
-        component: addElection,
-        componentProps: {},
-        cancel: true,
-        persistent: true
-      }).onOk(data => {
-
-      })
-    }
 
     function confirmDates(date, type) {
       if (date.length === 0) {
@@ -1417,6 +1378,7 @@ export default {
       pagination,
       columns,
       rows,
+      startRows,
       candidateColumns,
       candidateRows,
       selected,
@@ -1430,14 +1392,17 @@ export default {
       userColumns,
       userRows,
       managerRows,
+      toggleBefore,
+      toggleDuring,
+      toggleAfter,
+      searchMain,
+      searchCandidate,
       newVoter: ref(false),
       newManager: ref(false),
       candidateName: ref(null),
       addCandidate: ref(false),
       maximizedToggle: ref(true),
-      AddElection,
       confirmDates,
-      onRequest,
       alert: ref(false),
       newElection: ref(false),
       selected_row: ref({}),
@@ -1857,6 +1822,49 @@ export default {
     openElectionStatus(row) {
       this.selected_row = row
       this.electionStatus = true
+    },
+    customSortMain() {
+      this.loading = true
+      setTimeout(() => {
+        let filteredRows = []
+        const today = moment()
+        const data = this.startRows
+        if (this.toggleBefore) {
+          const filtered = data.filter(obj =>
+              moment(obj.startDate, 'DD-MM-YYYY HH:mm').isAfter(today)
+          )
+          filteredRows.push(...filtered)
+        }
+        if (this.toggleDuring) {
+          const filtered = data.filter(obj =>
+              today.isBetween(moment(obj.startDate, 'DD-MM-YYYY HH:mm'), moment(obj.endDate, 'DD-MM-YYYY HH:mm'))
+          )
+          filteredRows.push(...filtered)
+        }
+        if (this.toggleAfter) {
+          const filtered = data.filter(obj =>
+              moment(obj.endDate, 'DD-MM-YYYY HH:mm').isBefore(today)
+          )
+          filteredRows.push(...filtered)
+        }
+        if (this.searchMain) {
+          filteredRows = filteredRows.filter(obj =>
+              obj.title.toLowerCase().includes(this.searchMain.toLowerCase())
+          )
+        }
+        this.rows = filteredRows
+        this.loading = false
+      }, 500)
+    },
+    clearSearchMain() {
+      this.searchMain = ''
+      this.customSortMain()
+    },
+    customSortCandidate() {
+
+    },
+    clearSearchCandidate() {
+      
     }
   }
 }

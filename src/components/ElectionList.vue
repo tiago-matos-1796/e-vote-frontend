@@ -45,17 +45,24 @@
                         row-key="id"
                         v-model:pagination="pagination"
                         :loading="loading"
-                        :filter="filter"
                         binary-state-sort
-                        @request="onRequest"
                     >
                       <template v-slot:top-right>
-                        <q-space/>
-                        <q-input filled debounce="300" color="primary" v-model="filter">
-                          <template v-slot:append>
-                            <q-icon name="search"/>
-                          </template>
-                        </q-input>
+                        <div class="q-gutter-lg-x-md">
+                          <q-toggle v-model="toggleBefore" @click="customSort" :disable="loading" label="Show not started elections"/>
+                          <q-toggle v-model="toggleDuring" @click="customSort" :disable="loading" label="Show ongoing elections"/>
+                          <q-toggle v-model="toggleAfter" @click="customSort" :disable="loading" label="Show finished elections"/>
+                          <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
+                                   placeholder="Search by election title" @keyup.enter="customSort">
+                            <template v-slot:append>
+                              <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer" />
+                              <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
+                            </template>
+                          </q-input>
+                          <q-checkbox v-model="toVote" @click="customSort" :disable="loading" label="Show only elections yet to vote"/>
+                          <q-checkbox v-model="hasResults" @click="customSort" :disable="loading"
+                                      label="Show only elections with results"/>
+                        </div>
                       </template>
                       <template v-slot:body="props">
                         <q-tr :props="props">
@@ -69,13 +76,13 @@
                             {{ props.row.endDate }}
                           </q-td>
                           <q-td key="actions" :props="props">
-                            <q-btn square size="sm" name="vote" color="primary" :disabled="canVote(props.row)" label=''
+                            <q-btn square size="sm" name="vote" color="primary" :disabled="canVote(props.row)  || loading" label=''
                                    icon='how_to_vote' @click="openBallot(props.row)">
                               <q-tooltip>
                                 Vote
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="results" color="info" :disabled="canSeeResults(props.row)"
+                            <q-btn square size="sm" name="results" color="info" :disabled="canSeeResults(props.row)  || loading"
                                    label=''
                                    icon='summarize' @click="showResults(props.row)">
                               <q-tooltip>
@@ -336,7 +343,7 @@
 </template>
 
 <script>
-import {onMounted, ref} from 'vue'
+import {ref} from 'vue'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
 import {Pie} from 'vue-chartjs'
 import {Cookies, Notify, SessionStorage} from "quasar";
@@ -359,7 +366,7 @@ const columns = [
   {name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: false},
 ]
 
-const originalRows = [
+let rows = [
   {
     id: 1,
     title: 'Election1',
@@ -374,7 +381,7 @@ const originalRows = [
     startDate: '13-02-2023 00:00',
     endDate: '15-06-2032 00:00',
     voted: true,
-    results: '{a:1, b:2}'
+    results: null
   },
   {
     id: 3,
@@ -382,18 +389,19 @@ const originalRows = [
     startDate: '13-02-2023 00:00',
     endDate: '15-06-2032 00:00',
     voted: false,
-    results: '{a:1, b:2}'
+    results: null
   },
   {
     id: 4,
     title: 'Cupcake',
     startDate: '13-02-2023 00:00',
-    endDate: '15-06-2032 00:00',
+    endDate: '15-06-2023 00:00',
     voted: false,
     results: '{a:1, b:2}'
   },
   {id: 5, title: 'Election2', startDate: '13-06-2023 00:00', endDate: '19-06-2023 00:00', voted: false, results: null},
-  {id: 6, title: 'Election3', startDate: '22-06-2023 00:00', endDate: '22-06-2023 23:59', voted: false, results: null}
+  {id: 6, title: 'Election3', startDate: '22-06-2023 00:00', endDate: '22-06-2023 23:59', voted: false, results: null},
+  {id: 7, title: 'Election4', startDate: '22-07-2023 00:00', endDate: '22-08-2023 23:59', voted: false, results: null}
 ]
 
 const candidateColumns = [
@@ -480,93 +488,21 @@ export default {
   },
   setup() {
     const tableRef = ref()
-    const rows = ref([])
     const filter = ref('')
     const loading = ref(false)
     const settings = ref(false)
+    const toggleBefore = ref(true)
+    const toggleDuring = ref(true)
+    const toggleAfter = ref(true)
+    const search = ref('')
+    const toVote = ref(false)
+    const hasResults = ref(false)
+    const startRows = rows
     const pagination = ref({
-      sortBy: 'desc',
+      sortBy: 'title',
       descending: false,
       page: 1,
-      rowsPerPage: 3,
-      rowsNumber: 10
-    })
-
-    // emulate ajax call
-    // SELECT * FROM ... WHERE...LIMIT...
-    function fetchFromServer(startRow, count, filter, sortBy, descending) {
-      const data = filter
-          ? originalRows.filter(row => row.name.includes(filter))
-          : originalRows.slice()
-
-      // handle sortBy
-      if (sortBy) {
-        const sortFn = sortBy === 'desc'
-            ? (descending
-                    ? (a, b) => (a.name > b.name ? -1 : a.name < b.name ? 1 : 0)
-                    : (a, b) => (a.name > b.name ? 1 : a.name < b.name ? -1 : 0)
-            )
-            : (descending
-                    ? (a, b) => (parseFloat(b[sortBy]) - parseFloat(a[sortBy]))
-                    : (a, b) => (parseFloat(a[sortBy]) - parseFloat(b[sortBy]))
-            )
-        data.sort(sortFn)
-      }
-
-      return data.slice(startRow, startRow + count)
-    }
-
-    // emulate 'SELECT count(*) FROM ...WHERE...'
-    function getRowsNumberCount(filter) {
-      if (!filter) {
-        return originalRows.length
-      }
-      let count = 0
-      originalRows.forEach(treat => {
-        if (treat.name.includes(filter)) {
-          ++count
-        }
-      })
-      return count
-    }
-
-    function onRequest(props) {
-      const {page, rowsPerPage, sortBy, descending} = props.pagination
-      const filter = props.filter
-
-      loading.value = true
-
-      // emulate server
-      setTimeout(() => {
-        // update rowsCount with appropriate value
-        pagination.value.rowsNumber = getRowsNumberCount(filter)
-
-        // get all rows if "All" (0) is selected
-        const fetchCount = rowsPerPage === 0 ? pagination.value.rowsNumber : rowsPerPage
-
-        // calculate starting row of data
-        const startRow = (page - 1) * rowsPerPage
-
-        // fetch data from "server"
-        const returnedData = fetchFromServer(startRow, fetchCount, filter, sortBy, descending)
-
-        // clear out existing data and add new
-        rows.value.splice(0, rows.value.length, ...returnedData)
-
-        // don't forget to update local pagination object
-        pagination.value.page = page
-        pagination.value.rowsPerPage = rowsPerPage
-        pagination.value.sortBy = sortBy
-        pagination.value.descending = descending
-
-        // ...and turn of loading indicator
-        loading.value = false
-      }, 1500)
-    }
-
-    onMounted(() => {
-      // get initial data from server (1st page)
-      tableRef.value.requestServerInteraction()
+      rowsPerPage: 5,
     })
 
     return {
@@ -576,6 +512,13 @@ export default {
       pagination,
       columns,
       rows,
+      startRows,
+      toggleBefore,
+      toggleDuring,
+      toggleAfter,
+      search,
+      toVote,
+      hasResults,
       candidateRows,
       candidateColumns,
       resultsRows,
@@ -591,7 +534,6 @@ export default {
       selected_row: ref({}),
       ballot: ref(false),
       vote: ref(false),
-      onRequest,
       settings,
       openSettings() {
         settings.value = true
@@ -628,20 +570,71 @@ export default {
       this.sign = true;
     },
     submitVote(id) {
-      const vote = this.selected.length > 0 ? this.selected[0].id : "blank" // to be encrypted
-      const key = this.signatureKey
-      console.log({id, vote, key})
-      Notify.create({
-        color: 'green-4',
-        textColor: 'white',
-        icon: 'check',
-        message: `Vote submitted with success. Thank you!`
-      })
-      this.sign = false
+      this.loading = true
+      setTimeout(() => {
+        const vote = this.selected.length > 0 ? this.selected[0].id : "blank" // to be encrypted
+        const key = this.signatureKey
+        console.log({id, vote, key})
+        Notify.create({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'check',
+          message: `Vote submitted with success. Thank you!`
+        })
+        this.sign = false
+        this.loading = false
+      }, 500)
     },
     showResults(row) {
       this.selected_row = row;
       this.electionResults = true;
+    },
+    customSort() {
+      this.loading = true
+      setTimeout(() => {
+        let filteredRows = []
+        const today = moment()
+        const data = this.startRows
+        if (this.toggleBefore) {
+          const filtered = data.filter(obj =>
+              moment(obj.startDate, 'DD-MM-YYYY HH:mm').isAfter(today)
+          )
+          filteredRows.push(...filtered)
+        }
+        if (this.toggleDuring) {
+          const filtered = data.filter(obj =>
+              today.isBetween(moment(obj.startDate, 'DD-MM-YYYY HH:mm'), moment(obj.endDate, 'DD-MM-YYYY HH:mm'))
+          )
+          filteredRows.push(...filtered)
+        }
+        if (this.toggleAfter) {
+          const filtered = data.filter(obj =>
+              moment(obj.endDate, 'DD-MM-YYYY HH:mm').isBefore(today)
+          )
+          filteredRows.push(...filtered)
+        }
+        if (this.search) {
+          filteredRows = filteredRows.filter(obj =>
+              obj.title.toLowerCase().includes(this.search.toLowerCase())
+          )
+        }
+        if (this.toVote) {
+          filteredRows = filteredRows.filter(obj =>
+              obj.voted === false
+          )
+        }
+        if (this.hasResults) {
+          filteredRows = filteredRows.filter(obj =>
+              obj.results !== null
+          )
+        }
+        this.rows = filteredRows
+        this.loading = false
+      }, 500)
+    },
+    clearSearch() {
+      this.search = ''
+      this.customSort()
     },
     logout() {
       SessionStorage.set('permission', '');
