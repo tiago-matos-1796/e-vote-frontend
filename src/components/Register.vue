@@ -44,11 +44,10 @@
                     >
                       <q-input
                           filled
-                          clearable
                           clear-icon="close"
                           v-model="displayName"
                           type="text"
-                          label="Display Name *"
+                          label="Display Name"
                           lazy-rules
                           hint="Please insert your display name"
                           :rules="[ val => !!val || 'Please insert your display name']"
@@ -56,11 +55,10 @@
 
                       <q-input
                           filled
-                          clearable
                           clear-icon="close"
                           v-model="email"
                           type="email"
-                          label="Email *"
+                          label="Email"
                           lazy-rules
                           hint="Please insert your email"
                           :rules="[ val => !!val || 'Please insert your email']"
@@ -68,11 +66,10 @@
 
                       <q-input
                           filled
-                          clearable
                           clear-icon="close"
                           :type="isPwd ? 'password' : 'text'"
                           v-model="password"
-                          label="Password *"
+                          label="Password"
                           hint="Please insert your password"
                           lazy-rules
                           :rules="[
@@ -92,35 +89,34 @@
 
                       <q-input
                           filled
-                          clearable
                           clear-icon="close"
-                          :type="isPwd ? 'password' : 'text'"
+                          :type="isPwd1 ? 'password' : 'text'"
                           v-model="passwordConfirm"
-                          label="Password *"
+                          label="Confirm password"
                           hint="Please reinsert your password"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please reinsert your password',
               val => val.length >= 8 || 'Password must be at least 8 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Password must have upper and lower case characters, special characters and digits',
+              val => val === password || 'Both password must be the same'
           ]"
                       >
                         <template v-slot:append>
                           <q-icon
-                              :name="isPwd ? 'visibility_off' : 'visibility'"
+                              :name="isPwd1 ? 'visibility_off' : 'visibility'"
                               class="cursor-pointer"
-                              @click="isPwd = !isPwd"
+                              @click="isPwd1 = !isPwd1"
                           />
                         </template>
                       </q-input>
 
                       <q-input
                           filled
-                          clearable
                           clear-icon="close"
                           :type="isVk ? 'password' : 'text'"
                           v-model="voteKey"
-                          label="Voting Key *"
+                          label="Voting Key"
                           hint="Please insert your voting key"
                           lazy-rules
                           :rules="[
@@ -140,24 +136,24 @@
 
                       <q-input
                           filled
-                          clearable
                           clear-icon="close"
-                          :type="isVk ? 'password' : 'text'"
+                          :type="isVk1 ? 'password' : 'text'"
                           v-model="voteKeyConfirm"
-                          label="Voting Key *"
+                          label="Voting Key"
                           hint="Please reinsert your voting key"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please reinsert your voting key',
               val => val.length === 16 || 'Voting key must be exactly 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
+              val => val === voteKey || 'Both vote keys must be the same'
           ]"
                       >
                         <template v-slot:append>
                           <q-icon
-                              :name="isVk ? 'visibility_off' : 'visibility'"
+                              :name="isVk1 ? 'visibility_off' : 'visibility'"
                               class="cursor-pointer"
-                              @click="isVk = !isVk"
+                              @click="isVk1 = !isVk1"
                           />
                         </template>
                       </q-input>
@@ -177,8 +173,8 @@
 
 
                       <div>
-                        <q-btn label="Submit" type="submit" color="primary"/>
-                        <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
+                        <q-btn label="Register" type="submit" color="primary"/>
+                        <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm" />
                       </div>
                     </q-form>
                     <router-link to="login">Already have an account?</router-link>
@@ -251,24 +247,34 @@
 
 <script>
 import {SessionStorage, useQuasar} from 'quasar'
-import { ref } from 'vue'
+import {ref} from 'vue'
+import {useRouter} from 'vue-router'
 
 export default {
   name: 'Register',
   setup () {
     const $q = useQuasar()
+    const router = useRouter();
     const settings = ref(false)
+    const displayName = ref(null)
     const email = ref(null)
     const password = ref(null)
+    const passwordConfirm = ref(null)
     const voteKey = ref(null)
+    const voteKeyConfirm = ref(null)
     const file = ref(null)
 
     return {
+      displayName,
       email,
       password,
+      passwordConfirm,
       isPwd: ref(true),
+      isPwd1: ref(true),
       voteKey,
+      voteKeyConfirm,
       isVk: ref(true),
+      isVk1: ref(true),
       file,
       filesImages: ref(null),
       filesMaxSize: ref(null),
@@ -279,19 +285,24 @@ export default {
         settings.value = true
       },
       onSubmit () {
+        console.log({displayName, email, password, voteKey, file})
         $q.notify({
           color: 'green-4',
           textColor: 'white',
-          icon: 'cloud_done',
-          message: 'Submitted'
+          icon: 'check',
+          message: 'An email has been sent to you to verify the registration, please check your inbox'
         })
+        router.push('login')
       },
 
       onReset () {
+        displayName.value = null
         email.value = null
         password.value = null
-        file.value = null
+        passwordConfirm.value = null
         voteKey.value = null
+        voteKeyConfirm.value = null
+        file.value = null
       },
       onRejected (rejectedEntries) {
         $q.notify({

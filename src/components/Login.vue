@@ -48,7 +48,7 @@
                           clear-icon="close"
                           v-model="email"
                           type="email"
-                          label="Email *"
+                          label="Email"
                           lazy-rules
                           hint="Please insert your email"
                           :rules="[ val => !!val || 'Please insert your email']"
@@ -60,7 +60,7 @@
                           clear-icon="close"
                           :type="isPwd ? 'password' : 'text'"
                           v-model="password"
-                          label="Password *"
+                          label="Password"
                           hint="Please insert your password"
                           lazy-rules
                           :rules="[
@@ -79,11 +79,12 @@
                       </q-input>
 
                       <div>
-                        <q-btn label="Submit" type="submit" color="primary"/>
-                        <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm"/>
+                        <q-btn label="Login" type="submit" color="primary"/>
+                        <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
-                    <router-link to="register">Don't have an account?</router-link>
+                    <p><router-link to="register">Don't have an account?</router-link></p>
+                    <p><router-link to="forgot-password">Forgot your password?</router-link></p>
                   </div>
                 </q-card-section>
               </q-card>
