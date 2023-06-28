@@ -1,10 +1,131 @@
 <template>
+  <q-layout view="lHh Lpr fff" class="bg-grey-1">
+    <q-header elevated class="bg-white text-grey-8" height-hint="64">
+      <q-toolbar class="GPL__toolbar" style="height: 64px">
 
+        <q-toolbar-title v-if="$q.screen.gt.sm" shrink class="row items-center no-wrap">
+          <span class="q-ml-sm">UAlg Secure Vote</span>
+        </q-toolbar-title>
+
+        <q-space/>
+
+        <q-space/>
+      </q-toolbar>
+    </q-header>
+    <q-page-container class="GPL__page-container">
+      <div class="flex flex-center column">
+        <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
+          <div id="parent" class="fit row wrap justify-center items-start content-start" style="overflow: hidden;">
+            <div class=" bg-grey-6" style="overflow: auto;">
+              <q-card class="no-border-radius">
+                <q-card-section>
+                  <div class="q-pa-md" style="max-width: 400px">
+
+                    <q-form
+                        class="q-gutter-md"
+                        @submit="submit"
+                        @reset="reset"
+                    >
+
+                      <q-input
+                          filled
+                          clearable
+                          clear-icon="close"
+                          :type="isPwd ? 'password' : 'text'"
+                          v-model="password"
+                          label="Password"
+                          hint="Please insert your password"
+                          lazy-rules
+                          :rules="[
+              val => !!val || 'Please insert your password',
+              val => val.length >= 8 || 'Password must be at least 8 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Password must have upper and lower case characters, special characters and digits',
+          ]"
+                      >
+                        <template v-slot:append>
+                          <q-icon
+                              :name="isPwd ? 'visibility_off' : 'visibility'"
+                              class="cursor-pointer"
+                              @click="isPwd = !isPwd"
+                          />
+                        </template>
+                      </q-input>
+                      <q-input
+                          filled
+                          clearable
+                          clear-icon="close"
+                          :type="isPwd1 ? 'password' : 'text'"
+                          v-model="passwordConfirm"
+                          label="Confirm password"
+                          hint="Please insert your password"
+                          lazy-rules
+                          :rules="[
+              val => !!val || 'Please confirm your password',
+              val => val.length >= 8 || 'Password must be at least 8 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Password must have upper and lower case characters, special characters and digits',
+              val => val === password || 'Both passwords must be the same'
+          ]"
+                      >
+                        <template v-slot:append>
+                          <q-icon
+                              :name="isPwd1 ? 'visibility_off' : 'visibility'"
+                              class="cursor-pointer"
+                              @click="isPwd1 = !isPwd1"
+                          />
+                        </template>
+                      </q-input>
+
+                      <div>
+                        <q-btn label="Submit new password" type="submit" color="primary"/>
+                        <q-btn label="Reset" color="negative" type="reset" flat class="q-ml-sm" />
+                      </div>
+                    </q-form>
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+          </div>
+        </div>
+      </div>
+    </q-page-container>
+  </q-layout>
 </template>
 
 <script>
+import {ref} from "vue";
+import {useQuasar} from "quasar";
+import {useRouter} from 'vue-router'
+
 export default {
-  name: "ForgotPassword"
+  name: "ForgotPassword",
+  setup() {
+    const $q = useQuasar()
+    const password = ref(null)
+    const passwordConfirm = ref(null)
+    const router = useRouter()
+
+    return {
+      password,
+      passwordConfirm,
+      isPwd: ref(true),
+      isPwd1: ref(true),
+      submit() {
+        $q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'check',
+          message: 'Password changed with success'
+        });
+        router.push('login')
+      },
+      reset() {
+          password.value = ''
+          passwordConfirm.value = ''
+      }
+    }
+  },
+  methods: {
+  }
 }
 </script>
 

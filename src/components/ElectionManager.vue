@@ -146,119 +146,120 @@
                                 <div class=" bg-grey-6" style="overflow: auto;">
                                   <q-card class="no-border-radius">
                                     <q-card-section>
-                                      <div class="q-pa-md">
-                                        <div class="text-h6">Election Details</div>
-                                        <q-form
-                                            class="q-gutter-md" style="min-width: 400px; padding: 24px;"
-                                        >
-                                          <q-input filled v-model="electionTitle" label="Title"
-                                                   placeholder="Election title" hint="Election title"
-                                                   :rules="[ val => !!val || 'Election title must not be empty']"
-                                          ></q-input>
+                                      <q-card class="no-border-radius">
+                                        <q-card-section><div class="text-h6">Election Details</div></q-card-section>
+                                        <q-card-section>
+                                          <div class="q-pa-md">
+                                            <q-form
+                                                class="q-gutter-md" style="min-width: 400px; padding: 24px;"
+                                            >
+                                              <q-input filled v-model="electionTitle" label="Title"
+                                                       placeholder="Election title" hint="Election title"
+                                                       :rules="[ val => !!val || 'Election title must not be empty']"
+                                              ></q-input>
 
-                                          <div class="row">
-                                            <div class="col">
-                                              <q-input filled v-model="startDate" label="Start date and time"
-                                                       hint="Start date and time">
-                                                <template v-slot:prepend>
-                                                  <q-icon name="event" class="cursor-pointer">
-                                                    <q-popup-proxy cover transition-show="scale"
-                                                                   transition-hide="scale">
-                                                      <q-date v-model="startDate" mask="YYYY-MM-DD HH:mm"
-                                                              :options="startDateOptions">
-                                                        <div class="row items-center justify-end">
-                                                          <q-btn v-close-popup label="Close" color="primary" flat/>
-                                                        </div>
-                                                      </q-date>
-                                                    </q-popup-proxy>
-                                                  </q-icon>
-                                                </template>
+                                              <div class="row">
+                                                <div class="col">
+                                                  <q-input filled v-model="startDate" label="Start date and time"
+                                                           hint="Start date and time">
+                                                    <template v-slot:prepend>
+                                                      <q-icon name="event" class="cursor-pointer">
+                                                        <q-popup-proxy cover transition-show="scale"
+                                                                       transition-hide="scale">
+                                                          <q-date v-model="startDate" mask="YYYY-MM-DD HH:mm"
+                                                                  :options="startDateOptions">
+                                                            <div class="row items-center justify-end">
+                                                              <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                            </div>
+                                                          </q-date>
+                                                        </q-popup-proxy>
+                                                      </q-icon>
+                                                    </template>
 
-                                                <template v-slot:append>
-                                                  <q-icon name="access_time" class="cursor-pointer">
-                                                    <q-popup-proxy cover transition-show="scale"
-                                                                   transition-hide="scale">
-                                                      <q-time v-model="startDate" mask="YYYY-MM-DD HH:mm" format24h>
-                                                        <div class="row items-center justify-end">
-                                                          <q-btn v-close-popup label="Close" color="primary" flat/>
-                                                        </div>
-                                                      </q-time>
-                                                    </q-popup-proxy>
-                                                  </q-icon>
-                                                </template>
-                                              </q-input>
-                                            </div>
-                                            <div class="col">
-                                              <q-input filled v-model="endDate" label="End date and time"
-                                                       hint="End date and time" :disable="allowEndDate"
-                                                       :rules="[ val => confirmDates(val, 'INSERT') || 'End date must be after start date']">
-                                                <template v-slot:prepend>
-                                                  <q-icon name="event" class="cursor-pointer">
-                                                    <q-popup-proxy cover transition-show="scale"
-                                                                   transition-hide="scale">
-                                                      <q-date v-model="endDate" mask="YYYY-MM-DD HH:mm"
-                                                              :options="endDateOptions">
-                                                        <div class="row items-center justify-end">
-                                                          <q-btn v-close-popup label="Close" color="primary" flat/>
-                                                        </div>
-                                                      </q-date>
-                                                    </q-popup-proxy>
-                                                  </q-icon>
-                                                </template>
+                                                    <template v-slot:append>
+                                                      <q-icon name="access_time" class="cursor-pointer">
+                                                        <q-popup-proxy cover transition-show="scale"
+                                                                       transition-hide="scale">
+                                                          <q-time v-model="startDate" mask="YYYY-MM-DD HH:mm" format24h>
+                                                            <div class="row items-center justify-end">
+                                                              <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                            </div>
+                                                          </q-time>
+                                                        </q-popup-proxy>
+                                                      </q-icon>
+                                                    </template>
+                                                  </q-input>
+                                                </div>
+                                                <div class="col">
+                                                  <q-input filled v-model="endDate" label="End date and time"
+                                                           hint="End date and time" :disable="allowEndDate"
+                                                           :rules="[ val => confirmDates(val, 'INSERT') || 'End date must be after start date']">
+                                                    <template v-slot:prepend>
+                                                      <q-icon name="event" class="cursor-pointer">
+                                                        <q-popup-proxy cover transition-show="scale"
+                                                                       transition-hide="scale">
+                                                          <q-date v-model="endDate" mask="YYYY-MM-DD HH:mm"
+                                                                  :options="endDateOptions">
+                                                            <div class="row items-center justify-end">
+                                                              <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                            </div>
+                                                          </q-date>
+                                                        </q-popup-proxy>
+                                                      </q-icon>
+                                                    </template>
 
-                                                <template v-slot:append>
-                                                  <q-icon name="access_time" class="cursor-pointer">
-                                                    <q-popup-proxy cover transition-show="scale"
-                                                                   transition-hide="scale">
-                                                      <q-time v-model="endDate" mask="YYYY-MM-DD HH:mm" format24h>
-                                                        <div class="row items-center justify-end">
-                                                          <q-btn v-close-popup label="Close" color="primary" flat/>
-                                                        </div>
-                                                      </q-time>
-                                                    </q-popup-proxy>
-                                                  </q-icon>
-                                                </template>
-                                              </q-input>
-                                            </div>
-                                          </div>
-                                          <q-input filled v-model="electionKey" label="Election Key"
-                                                   placeholder="Election Key" hint="Election Key" clear-icon="close"
-                                                   :type="isPwd ? 'password' : 'text'"
-                                                   :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be 16 characters long',
+                                                    <template v-slot:append>
+                                                      <q-icon name="access_time" class="cursor-pointer">
+                                                        <q-popup-proxy cover transition-show="scale"
+                                                                       transition-hide="scale">
+                                                          <q-time v-model="endDate" mask="YYYY-MM-DD HH:mm" format24h>
+                                                            <div class="row items-center justify-end">
+                                                              <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                            </div>
+                                                          </q-time>
+                                                        </q-popup-proxy>
+                                                      </q-icon>
+                                                    </template>
+                                                  </q-input>
+                                                </div>
+                                              </div>
+                                              <q-input filled v-model="electionKey" label="Election Key"
+                                                       placeholder="Election Key" hint="Election Key" clear-icon="close"
+                                                       :type="isPwd ? 'password' : 'text'"
+                                                       :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits',]"
-                                          >
-                                            <template v-slot:append>
-                                              <q-icon
-                                                  :name="isPwd ? 'visibility_off' : 'visibility'"
-                                                  class="cursor-pointer"
-                                                  @click="isPwd = !isPwd"
-                                              />
-                                            </template>
-                                          </q-input>
-                                          <q-input filled v-model="electionKey1" label="Confirm Election Key"
-                                                   placeholder="Election Key" hint="Confirm Election Key"
-                                                   clear-icon="close"
-                                                   :type="isPwd1 ? 'password' : 'text'"
-                                                   :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
+                                              >
+                                                <template v-slot:append>
+                                                  <q-icon
+                                                      :name="isPwd ? 'visibility_off' : 'visibility'"
+                                                      class="cursor-pointer"
+                                                      @click="isPwd = !isPwd"
+                                                  />
+                                                </template>
+                                              </q-input>
+                                              <q-input filled v-model="electionKey1" label="Confirm Election Key"
+                                                       placeholder="Election Key" hint="Confirm Election Key"
+                                                       clear-icon="close"
+                                                       :type="isPwd1 ? 'password' : 'text'"
+                                                       :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits', val => val === electionKey || 'Election key must be the same as above']"
-                                          >
-                                            <template v-slot:append>
-                                              <q-icon
-                                                  :name="isPwd1 ? 'visibility_off' : 'visibility'"
-                                                  class="cursor-pointer"
-                                                  @click="isPwd1 = !isPwd1"
-                                              />
-                                            </template>
-                                          </q-input>
-                                        </q-form>
-                                      </div>
-                                    </q-card-section>
-                                    <q-card-section>
+                                              >
+                                                <template v-slot:append>
+                                                  <q-icon
+                                                      :name="isPwd1 ? 'visibility_off' : 'visibility'"
+                                                      class="cursor-pointer"
+                                                      @click="isPwd1 = !isPwd1"
+                                                  />
+                                                </template>
+                                              </q-input>
+                                            </q-form>
+                                          </div>
+                                        </q-card-section>
+                                      </q-card>
                                       <q-card class="no-border-radius">
                                         <q-card-section><div class="text-h6">Candidates</div></q-card-section>
                                         <q-card-section>
                                           <div class="q-pa-md">
-
                                             <q-table
                                                 flat bordered
                                                 title=""
@@ -269,25 +270,14 @@
                                                 selection="multiple"
                                                 v-model:selected="selectedCandidates"
                                                 :loading="candidateLoading"
+                                                binary-state-sort
                                             >
-
-                                              <template v-slot:top-left>
+                                              <template v-slot:top-right>
                                                 <q-btn color="green" :disable="candidateLoading" label="Add candidate"
                                                        @click="newCandidate"/>
                                                 <q-btn class="q-ml-sm" color="negative" :disable="candidateLoading"
                                                        label="Remove candidates" @click="removeCandidate"/>
                                                 <q-space/>
-                                              </template>
-                                              <template v-slot:top-right>
-                                                <div class="q-gutter-lg-x-md">
-                                                  <q-input dense debounce="400" color="primary" v-model="searchCandidate" :disable="candidateLoading"
-                                                           placeholder="Search by name" @keyup.enter="customSortCandidate">
-                                                    <template v-slot:append>
-                                                      <q-icon name="close" @click="clearSearchCandidate" :disable="candidateLoading" class="cursor-pointer" />
-                                                      <q-icon name="search" @click="customSortCandidate" :disable="candidateLoading" class="cursor-pointer"/>
-                                                    </template>
-                                                  </q-input>
-                                                </div>
                                               </template>
                                               <template v-slot:body="props">
                                                 <q-tr :props="props">
@@ -303,13 +293,10 @@
                                                   </q-td>
                                                 </q-tr>
                                               </template>
-
                                             </q-table>
                                           </div>
                                         </q-card-section>
                                       </q-card>
-                                    </q-card-section>
-                                    <q-card-section>
                                       <q-card class="no-border-radius">
                                         <q-card-section><div class="text-h6">Voters</div></q-card-section>
                                         <q-card-section>
@@ -325,31 +312,20 @@
                                                 v-model:selected="selectedVoters"
                                                 :filter="filter"
                                                 :loading="voterLoading"
+                                                binary-state-sort
                                             >
 
-                                              <template v-slot:top-left>
+                                              <template v-slot:top-right>
                                                 <q-btn color="green" :disable="voterLoading" label="Add voter"
                                                        @click="showVoterAdd"/>
                                                 <q-btn class="q-ml-sm" color="negative" :disable="voterLoading"
                                                        label="Remove voter" @click="removeVoters"/>
                                                 <q-space/>
                                               </template>
-                                              <template v-slot:top-right>
-                                                <div class="q-gutter-lg-x-md">
-                                                  <q-input dense debounce="400" color="primary" v-model="searchVoter" :disable="voterLoading"
-                                                           placeholder="Search by email" @keyup.enter="customSortVoter">
-                                                    <template v-slot:append>
-                                                      <q-icon name="close" @click="clearSearchVoter" :disable="voterLoading" class="cursor-pointer" />
-                                                      <q-icon name="search" @click="customSortVoter" :disable="voterLoading" class="cursor-pointer"/>
-                                                    </template>
-                                                  </q-input>
-                                                </div>
-                                              </template>
                                             </q-table>
                                           </div>
                                         </q-card-section>
                                       </q-card>
-
                                     </q-card-section>
                                     <q-card-actions align="center">
                                       <q-btn label="Create election" @click="createElection" color="primary"/>
@@ -365,7 +341,7 @@
                       </q-card>
                     </q-dialog>
                     <q-dialog
-                        v-model="alert"
+                        v-model="editElection"
                         persistent
                         :maximized="maximizedToggle"
                         transition-show="slide-up"
@@ -388,158 +364,189 @@
                                   <q-card class="no-border-radius">
                                     <q-card-section>
                                       <div class="q-pa-md">
-                                        <q-form
-                                            class="q-gutter-md" style="min-width: 400px; padding: 24px;"
-                                        >
-                                          <q-input filled v-model="editElectionTitle" label="Title"
-                                                   placeholder="Election title" hint="Election title"
-                                                   :rules="[ val => !!val || 'Election title must not be empty']"
-                                          ></q-input>
+                                        <q-card class="no-border-radius">
+                                          <q-card-section><div class="text-h6">Election Details</div></q-card-section>
+                                          <q-card-section>
+                                            <div class="q-pa-md">
+                                              <q-form
+                                                  class="q-gutter-md" style="min-width: 400px; padding: 24px;"
+                                              >
+                                                <q-input filled v-model="editElectionTitle" label="Title"
+                                                         placeholder="Election title" hint="Election title"
+                                                         :rules="[ val => !!val || 'Election title must not be empty']"
+                                                ></q-input>
 
-                                          <div class="row">
-                                            <div class="col">
-                                              <q-input filled v-model="editStartDate" label="Start date and time"
-                                                       hint="Start date and time">
-                                                <template v-slot:prepend>
-                                                  <q-icon name="event" class="cursor-pointer">
-                                                    <q-popup-proxy cover transition-show="scale"
-                                                                   transition-hide="scale">
-                                                      <q-date v-model="editStartDate" mask="YYYY-MM-DD HH:mm"
-                                                              :options="startDateOptions">
-                                                        <div class="row items-center justify-end">
-                                                          <q-btn v-close-popup label="Close" color="primary" flat/>
-                                                        </div>
-                                                      </q-date>
-                                                    </q-popup-proxy>
-                                                  </q-icon>
-                                                </template>
+                                                <div class="row">
+                                                  <div class="col">
+                                                    <q-input filled v-model="editStartDate" label="Start date and time"
+                                                             hint="Start date and time">
+                                                      <template v-slot:prepend>
+                                                        <q-icon name="event" class="cursor-pointer">
+                                                          <q-popup-proxy cover transition-show="scale"
+                                                                         transition-hide="scale">
+                                                            <q-date v-model="editStartDate" mask="YYYY-MM-DD HH:mm"
+                                                                    :options="startDateOptions">
+                                                              <div class="row items-center justify-end">
+                                                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                              </div>
+                                                            </q-date>
+                                                          </q-popup-proxy>
+                                                        </q-icon>
+                                                      </template>
 
-                                                <template v-slot:append>
-                                                  <q-icon name="access_time" class="cursor-pointer">
-                                                    <q-popup-proxy cover transition-show="scale"
-                                                                   transition-hide="scale">
-                                                      <q-time v-model="editStartDate" mask="YYYY-MM-DD HH:mm" format24h>
-                                                        <div class="row items-center justify-end">
-                                                          <q-btn v-close-popup label="Close" color="primary" flat/>
-                                                        </div>
-                                                      </q-time>
-                                                    </q-popup-proxy>
-                                                  </q-icon>
-                                                </template>
-                                              </q-input>
+                                                      <template v-slot:append>
+                                                        <q-icon name="access_time" class="cursor-pointer">
+                                                          <q-popup-proxy cover transition-show="scale"
+                                                                         transition-hide="scale">
+                                                            <q-time v-model="editStartDate" mask="YYYY-MM-DD HH:mm" format24h>
+                                                              <div class="row items-center justify-end">
+                                                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                              </div>
+                                                            </q-time>
+                                                          </q-popup-proxy>
+                                                        </q-icon>
+                                                      </template>
+                                                    </q-input>
+                                                  </div>
+                                                  <div class="col">
+                                                    <q-input filled v-model="editEndDate" label="End date and time"
+                                                             hint="End date and time" :disable="allowEditEndDate"
+                                                             :rules="[ val => confirmDates(val, 'EDIT') || 'End date must be after start date']">
+                                                      <template v-slot:prepend>
+                                                        <q-icon name="event" class="cursor-pointer">
+                                                          <q-popup-proxy cover transition-show="scale"
+                                                                         transition-hide="scale">
+                                                            <q-date v-model="editEndDate" mask="YYYY-MM-DD HH:mm"
+                                                                    :options="endDateOptions">
+                                                              <div class="row items-center justify-end">
+                                                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                              </div>
+                                                            </q-date>
+                                                          </q-popup-proxy>
+                                                        </q-icon>
+                                                      </template>
+
+                                                      <template v-slot:append>
+                                                        <q-icon name="access_time" class="cursor-pointer">
+                                                          <q-popup-proxy cover transition-show="scale"
+                                                                         transition-hide="scale">
+                                                            <q-time v-model="editEndDate" mask="YYYY-MM-DD HH:mm" format24h>
+                                                              <div class="row items-center justify-end">
+                                                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                              </div>
+                                                            </q-time>
+                                                          </q-popup-proxy>
+                                                        </q-icon>
+                                                      </template>
+                                                    </q-input>
+                                                  </div>
+                                                </div>
+                                              </q-form>
                                             </div>
-                                            <div class="col">
-                                              <q-input filled v-model="editEndDate" label="End date and time"
-                                                       hint="End date and time" :disable="allowEditEndDate"
-                                                       :rules="[ val => confirmDates(val, 'EDIT') || 'End date must be after start date']">
-                                                <template v-slot:prepend>
-                                                  <q-icon name="event" class="cursor-pointer">
-                                                    <q-popup-proxy cover transition-show="scale"
-                                                                   transition-hide="scale">
-                                                      <q-date v-model="editEndDate" mask="YYYY-MM-DD HH:mm"
-                                                              :options="endDateOptions">
-                                                        <div class="row items-center justify-end">
-                                                          <q-btn v-close-popup label="Close" color="primary" flat/>
-                                                        </div>
-                                                      </q-date>
-                                                    </q-popup-proxy>
-                                                  </q-icon>
+                                          </q-card-section>
+                                        </q-card>
+                                        <q-card class="no-border-radius">
+                                          <q-card-section><div class="text-h6">Candidates</div></q-card-section>
+                                          <q-card-section>
+                                            <div class="q-pa-md">
+                                              <q-table
+                                                  flat bordered
+                                                  title=""
+                                                  :rows="editCandidateRows"
+                                                  :columns="candidateColumns"
+                                                  row-key="id"
+                                                  :selected-rows-label="getSelectedString"
+                                                  selection="multiple"
+                                                  v-model:selected="editSelectedCandidates"
+                                                  :filter="filter"
+                                                  :loading="editCandidateLoading"
+                                                  binary-state-sort
+                                              >
+
+                                                <template v-slot:top-right>
+                                                  <q-btn color="green" :disable="editCandidateLoading" label="Add candidate"
+                                                         @click="showEditNewCandidate"/>
+                                                  <q-btn class="q-ml-sm" color="negative" :disable="editCandidateLoading"
+                                                         label="Remove candidates" @click="editRemoveCandidate"/>
+                                                  <q-space/>
+                                                </template>
+                                                <template v-slot:body="props">
+                                                  <q-tr :props="props">
+                                                    <q-td>
+                                                      <q-checkbox v-model="props.selected"/>
+                                                    </q-td>
+                                                    <q-td key="name" :props="props">
+                                                      {{ props.row.name }}
+                                                      <q-popup-edit v-model="props.row.name" v-slot="scope">
+                                                        <q-input v-model="scope.value" dense autofocus counter
+                                                                 @keyup.enter="scope.set"></q-input>
+                                                      </q-popup-edit>
+                                                    </q-td>
+                                                  </q-tr>
                                                 </template>
 
-                                                <template v-slot:append>
-                                                  <q-icon name="access_time" class="cursor-pointer">
-                                                    <q-popup-proxy cover transition-show="scale"
-                                                                   transition-hide="scale">
-                                                      <q-time v-model="editEndDate" mask="YYYY-MM-DD HH:mm" format24h>
-                                                        <div class="row items-center justify-end">
-                                                          <q-btn v-close-popup label="Close" color="primary" flat/>
-                                                        </div>
-                                                      </q-time>
-                                                    </q-popup-proxy>
-                                                  </q-icon>
-                                                </template>
-                                              </q-input>
+                                              </q-table>
                                             </div>
-                                          </div>
-                                        </q-form>
-                                        <q-table
-                                            flat bordered
-                                            title="Candidates"
-                                            :rows="editCandidateRows"
-                                            :columns="candidateColumns"
-                                            row-key="id"
-                                            :selected-rows-label="getSelectedString"
-                                            selection="multiple"
-                                            v-model:selected="editSelectedCandidates"
-                                            :filter="filter"
-                                            :loading="editCandidateLoading"
-                                        >
+                                          </q-card-section>
+                                        </q-card>
+                                        <q-card class="no-border-radius">
+                                          <q-card-section><div class="text-h6">Voters</div></q-card-section>
+                                          <q-card-section>
+                                            <div class="q-pa-md">
+                                              <q-table
+                                                  flat bordered
+                                                  title=""
+                                                  :rows="editVoterRows"
+                                                  :columns="userColumns"
+                                                  row-key="id"
+                                                  :selected-rows-label="getSelectedString"
+                                                  selection="multiple"
+                                                  v-model:selected="editSelectedVoters"
+                                                  :filter="filter"
+                                                  :loading="editVoterLoading"
+                                                  binary-state-sort
+                                              >
 
-                                          <template v-slot:top-right>
-                                            <q-btn color="green" :disable="editCandidateLoading" label="Add candidate"
-                                                   @click="showEditNewCandidate"/>
-                                            <q-btn class="q-ml-sm" color="negative" :disable="editCandidateLoading"
-                                                   label="Remove candidates" @click="editRemoveCandidate"/>
-                                            <q-space/>
-                                          </template>
-                                          <template v-slot:body="props">
-                                            <q-tr :props="props">
-                                              <q-td>
-                                                <q-checkbox v-model="props.selected"/>
-                                              </q-td>
-                                              <q-td key="name" :props="props">
-                                                {{ props.row.name }}
-                                                <q-popup-edit v-model="props.row.name" v-slot="scope">
-                                                  <q-input v-model="scope.value" dense autofocus counter
-                                                           @keyup.enter="scope.set"></q-input>
-                                                </q-popup-edit>
-                                              </q-td>
-                                            </q-tr>
-                                          </template>
+                                                <template v-slot:top-right>
+                                                  <q-btn color="green" :disable="editVoterLoading" label="Add voter"
+                                                         @click="editShowVoterAdd"/>
+                                                  <q-btn class="q-ml-sm" color="negative" :disable="editVoterLoading"
+                                                         label="Remove voter" @click="editRemoveVoters"/>
+                                                  <q-space/>
+                                                </template>
+                                              </q-table>
+                                            </div>
+                                          </q-card-section>
+                                        </q-card>
+                                        <q-card class="no-border-radius">
+                                          <q-card-section><div class="text-h6">Managers</div></q-card-section>
+                                          <q-card-section>
+                                            <div class="q-pa-md">
+                                              <q-table
+                                                  flat bordered
+                                                  title=""
+                                                  :rows="managerRows"
+                                                  :columns="userColumns"
+                                                  row-key="id"
+                                                  :selected-rows-label="getSelectedString"
+                                                  selection="multiple"
+                                                  v-model:selected="selectedManager"
+                                                  :filter="filter"
+                                                  :loading="managerLoading"
+                                                  binary-state-sort
+                                              >
 
-                                        </q-table>
-                                        <q-table
-                                            flat bordered
-                                            title="Voters"
-                                            :rows="editVoterRows"
-                                            :columns="userColumns"
-                                            row-key="id"
-                                            :selected-rows-label="getSelectedString"
-                                            selection="multiple"
-                                            v-model:selected="editSelectedVoters"
-                                            :filter="filter"
-                                            :loading="editVoterLoading"
-                                        >
-
-                                          <template v-slot:top-right>
-                                            <q-btn color="green" :disable="editVoterLoading" label="Add voter"
-                                                   @click="editShowVoterAdd"/>
-                                            <q-btn class="q-ml-sm" color="negative" :disable="editVoterLoading"
-                                                   label="Remove voter" @click="editRemoveVoters"/>
-                                            <q-space/>
-                                          </template>
-                                        </q-table>
-                                        <q-table
-                                            flat bordered
-                                            title="Managers"
-                                            :rows="managerRows"
-                                            :columns="userColumns"
-                                            row-key="id"
-                                            :selected-rows-label="getSelectedString"
-                                            selection="multiple"
-                                            v-model:selected="selectedManager"
-                                            :filter="filter"
-                                            :loading="managerLoading"
-                                        >
-
-                                          <template v-slot:top-right>
-                                            <q-btn color="green" :disable="managerLoading" label="Add manager"
-                                                   @click="showManagerAdd"/>
-                                            <q-btn class="q-ml-sm" color="negative" :disable="managerLoading"
-                                                   label="Remove manager" @click="editRemoveManagers"/>
-                                            <q-space/>
-                                          </template>
-                                        </q-table>
+                                                <template v-slot:top-right>
+                                                  <q-btn color="green" :disable="managerLoading" label="Add manager"
+                                                         @click="showManagerAdd"/>
+                                                  <q-btn class="q-ml-sm" color="negative" :disable="managerLoading"
+                                                         label="Remove manager" @click="editRemoveManagers"/>
+                                                  <q-space/>
+                                                </template>
+                                              </q-table>
+                                            </div>
+                                          </q-card-section>
+                                        </q-card>
                                       </div>
                                     </q-card-section>
                                     <q-card-actions align="center">
@@ -810,6 +817,7 @@
                                     v-model:selected="newVoterSelected"
                                     :filter="filter"
                                     :loading="newVoterLoading"
+                                    binary-state-sort
                                 >
                                 </q-table>
                               </div>
@@ -850,6 +858,7 @@
                                     v-model:selected="newManagerSelected"
                                     :filter="filter"
                                     :loading="newManagerLoading"
+                                    binary-state-sort
                                 >
                                 </q-table>
                               </div>
@@ -984,6 +993,7 @@
                                     v-model:selected="editNewVoterSelected"
                                     :filter="filter"
                                     :loading="editNewVoterLoading"
+                                    binary-state-sort
                                 >
                                 </q-table>
                               </div>
@@ -1403,7 +1413,7 @@ export default {
       addCandidate: ref(false),
       maximizedToggle: ref(true),
       confirmDates,
-      alert: ref(false),
+      editElection: ref(false),
       newElection: ref(false),
       selected_row: ref({}),
       deleteConfirm: ref(false),
@@ -1572,7 +1582,7 @@ export default {
       this.editElectionTitle = row.title;
       this.editStartDate = row.startDate;
       this.editEndDate = row.endDate;
-      this.alert = true;
+      this.editElection = true;
     },
     deleteElection(row) {
       this.selected_row = row;
@@ -1739,7 +1749,7 @@ export default {
               icon: 'check',
               message: `Election ${title} edited with success`
             })
-            this.alert = false;
+            this.editElection = false;
           } else {
             Notify.create({
               color: 'red-10',
@@ -1859,12 +1869,6 @@ export default {
     clearSearchMain() {
       this.searchMain = ''
       this.customSortMain()
-    },
-    customSortCandidate() {
-
-    },
-    clearSearchCandidate() {
-      
     }
   }
 }
