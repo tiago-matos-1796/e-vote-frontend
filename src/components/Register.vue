@@ -3,13 +3,13 @@
     <q-header elevated class="bg-white text-grey-8" height-hint="64">
       <q-toolbar class="GPL__toolbar" style="height: 64px">
 
-        <q-toolbar-title v-if="$q.screen.gt.sm" shrink  class="row items-center no-wrap">
+        <q-toolbar-title v-if="$q.screen.gt.sm" shrink class="row items-center no-wrap">
           <span class="q-ml-sm">UAlg Secure Vote</span>
         </q-toolbar-title>
 
-        <q-space />
+        <q-space/>
 
-        <q-space />
+        <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round dense flat color="grey-8" icon="notifications">
@@ -41,6 +41,7 @@
                         @submit="onSubmit"
                         @reset="onReset"
                         class="q-gutter-md"
+                        enctype="multipart/form-data"
                     >
                       <q-input
                           filled
@@ -165,7 +166,7 @@
                           clearable
                           clear-icon="close"
                           label="Select image"
-                          accept=".jpg, .png"
+                          accept=".jpg, .png, .svg"
                           max-files="1"
                           hint="*Optional"
                           @rejected="onRejected"
@@ -174,7 +175,7 @@
 
                       <div>
                         <q-btn label="Register" type="submit" color="primary"/>
-                        <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm" />
+                        <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
                     <router-link to="login">Already have an account?</router-link>
@@ -187,26 +188,30 @@
       </div>
       <q-page-sticky v-if="$q.screen.gt.sm" expand position="left">
         <div class="fit q-pt-xl q-px-sm column">
-          <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('elections')">
-            <q-icon size="22px" name="ballot" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat color="grey-8" stack no-caps size="26px"
+                 class="GPL__side-btn" @click="$router.push('elections')">
+            <q-icon size="22px" name="ballot"/>
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
-            <q-icon size="22px" name="edit_document" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps
+                 size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
+            <q-icon size="22px" name="edit_document"/>
             <div class="GPL__side-btn__label">Election Manager</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
-            <q-icon size="22px" name="fact_check" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'" round flat color="grey-8" stack no-caps
+                 size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
+            <q-icon size="22px" name="fact_check"/>
             <div class="GPL__side-btn__label">Auditing</div>
             <q-badge floating color="red" text-color="white" style="top: 8px; right: 16px">
               1
             </q-badge>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps size="26px" class="GPL__side-btn" @click="$router.push('admin')">
-            <q-icon size="22px" name="admin_panel_settings" />
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps
+                 size="26px" class="GPL__side-btn" @click="$router.push('admin')">
+            <q-icon size="22px" name="admin_panel_settings"/>
             <div class="GPL__side-btn__label">Admin</div>
           </q-btn>
         </div>
@@ -249,10 +254,11 @@
 import {SessionStorage, useQuasar} from 'quasar'
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
+import axios from "axios";
 
 export default {
   name: 'Register',
-  setup () {
+  setup() {
     const $q = useQuasar()
     const router = useRouter();
     const settings = ref(false)
@@ -263,6 +269,41 @@ export default {
     const voteKey = ref(null)
     const voteKeyConfirm = ref(null)
     const file = ref(null)
+
+    async function register() {
+      const uri = 'http://localhost:8080/users/'
+      const data = {
+        email: email.value,
+        display_name: displayName.value,
+        password: password.value,
+        sign_key: voteKey.value,
+        image: file.value
+      }
+      try {
+        return await axios.post(uri, data, {
+          headers: {
+            "Content-type": "multipart/form-data"
+          }
+        }).then(function (response) {
+          $q.notify({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: 'An email has been sent to you to verify the registration, please check your inbox'
+          })
+          router.push('login')
+        }).catch(function (error) { // 400 is caught here
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: `An error has occurred while registering, please try again later`
+          })
+        })
+      } catch (err) {
+        console.log(err)
+      }
+    }
 
     return {
       displayName,
@@ -284,18 +325,12 @@ export default {
       openSettings() {
         settings.value = true
       },
-      onSubmit () {
-        console.log({displayName, email, password, voteKey, file})
-        $q.notify({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'check',
-          message: 'An email has been sent to you to verify the registration, please check your inbox'
-        })
-        router.push('login')
+      onSubmit() {
+        //console.log({displayName, email, password, voteKey, image: file})
+        register()
       },
 
-      onReset () {
+      onReset() {
         displayName.value = null
         email.value = null
         password.value = null
@@ -304,9 +339,11 @@ export default {
         voteKeyConfirm.value = null
         file.value = null
       },
-      onRejected (rejectedEntries) {
+      onRejected(rejectedEntries) {
         $q.notify({
-          type: 'negative',
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
           message: `${rejectedEntries.length} file(s) did not pass validation constraints`
         })
       }
@@ -337,6 +374,7 @@ export default {
 
     .q-item__section--avatar
       padding-left: 12px
+
       .q-icon
         color: #5f6368
 
