@@ -1683,7 +1683,7 @@ export default {
     },
     logout() {
       SessionStorage.set('permission', '');
-      Cookies.remove('token'); // TODO add cookie options
+      Cookies.remove('token');
       this.$router.push('login');
     },
     createElection() {

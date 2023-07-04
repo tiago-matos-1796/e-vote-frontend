@@ -363,7 +363,7 @@ export default {
     logout() {
       const store = useAuthStore();
       SessionStorage.set('permission', '');
-      Cookies.remove('token'); // TODO add cookie options
+      Cookies.remove('token');
       store.logOut();
       this.$router.push('login');
     }

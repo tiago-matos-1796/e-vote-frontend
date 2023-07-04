@@ -437,7 +437,7 @@ export default {
   methods: {
     logout() {
       SessionStorage.set('permission', '');
-      Cookies.remove('token'); // TODO add cookie options
+      Cookies.remove('token');
       this.$router.push('login');
     },
     onSubmitDelete() {
@@ -448,8 +448,8 @@ export default {
         icon: 'check',
         message: `Account deleted with success`
       })
-      Cookies.remove('token'); // TODO add cookie options
       SessionStorage.set('permission', '');
+      Cookies.remove('token');
       this.$router.push('login');
     },
   }

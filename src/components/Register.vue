@@ -140,7 +140,7 @@
                           clear-icon="close"
                           :type="isVk1 ? 'password' : 'text'"
                           v-model="voteKeyConfirm"
-                          label="Voting Key"
+                          label="Confirm Voting Key"
                           hint="Please reinsert your voting key"
                           lazy-rules
                           :rules="[
@@ -165,8 +165,10 @@
                           filled
                           clearable
                           clear-icon="close"
-                          label="Select image"
+                          label="Select image (max: 1MB)"
                           accept=".jpg, .png, .svg"
+                          max-file-size="1048576"
+                          counter
                           max-files="1"
                           hint="*Optional"
                           @rejected="onRejected"
@@ -251,7 +253,7 @@
 </template>
 
 <script>
-import {SessionStorage, useQuasar} from 'quasar'
+import {Cookies, QSpinnerGears, SessionStorage, useQuasar} from 'quasar'
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
 import axios from "axios";
@@ -292,16 +294,39 @@ export default {
             message: 'An email has been sent to you to verify the registration, please check your inbox'
           })
           router.push('login')
-        }).catch(function (error) { // 400 is caught here
-          $q.notify({
-            color: 'red-10',
-            textColor: 'white',
-            icon: 'cancel',
-            message: `An error has occurred while registering, please try again later`
-          })
+        }).catch(function (error) {
+          if(!error.response) {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: `An error has occurred while registering, please try again later`
+            })
+          } else {
+            if(error.toJSON().status === 409) {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: `Error: Email is already registered`
+              })
+            } else {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: `An error has occurred while registering, please try again later`
+              })
+            }
+          }
         })
       } catch (err) {
-        console.log(err)
+        $q.notify({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: `An error has occurred while registering, please try again later`
+        })
       }
     }
 
@@ -326,8 +351,14 @@ export default {
         settings.value = true
       },
       onSubmit() {
-        //console.log({displayName, email, password, voteKey, image: file})
-        register()
+        $q.loading.show({
+          message: 'Authentication in progress, please wait...',
+          spinner: QSpinnerGears,
+        })
+        setTimeout(() => {
+          register()
+          $q.loading.hide()
+        }, 3000)
       },
 
       onReset() {
@@ -352,6 +383,7 @@ export default {
   methods: {
     logout() {
       SessionStorage.set('permission', '');
+      Cookies.remove('token');
       this.$router.push('login');
     }
   }

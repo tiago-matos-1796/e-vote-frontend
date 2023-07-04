@@ -44,7 +44,6 @@
                     >
                       <q-input
                           filled
-                          clearable
                           clear-icon="close"
                           v-model="email"
                           type="email"
@@ -56,7 +55,6 @@
 
                       <q-input
                           filled
-                          clearable
                           clear-icon="close"
                           :type="isPwd ? 'password' : 'text'"
                           v-model="password"
@@ -157,10 +155,11 @@
 </template>
 
 <script>
-import {Cookies, SessionStorage, useQuasar} from 'quasar'
+import {Cookies, QSpinnerGears, SessionStorage, useQuasar} from 'quasar'
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useAuthStore} from '@/stores/auth'
+import axios from "axios";
 
 
 export default {
@@ -174,6 +173,58 @@ export default {
     const password = ref(null)
     const store = useAuthStore();
 
+    async function login() {
+      const uri = 'http://localhost:8080/users/login'
+      const data = {
+        email: email.value,
+        password: password.value
+      }
+      try {
+        return await axios.post(uri, data, {
+          headers: {
+            "Content-type": "application/json"
+          }
+        }).then(function (response) {
+          SessionStorage.set('permission', response.data.permissions);
+          Cookies.set('token', response.data.token, {
+            sameSite: 'Lax',
+            httpOnly: true,
+            secure: true
+          });
+          $q.notify({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: 'Authenticated with success'
+          });
+          router.push({name: 'Elections'});
+        }).catch(function (error) {
+          if(!error.response) {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: `An error has occurred while logging in, please try again later`
+            })
+          } else {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: `Email and/or password is wrong`
+            })
+          }
+        })
+      } catch (err) {
+        $q.notify({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: `An error has occurred while logging in, please try again later`
+        })
+      }
+    }
+
     return {
       email,
       password,
@@ -183,20 +234,14 @@ export default {
         settings.value = true
       },
       onSubmit() {
-        $q.notify({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'check',
-          message: 'Authenticated with success'
-        });
-        Cookies.set('token', 'aaaa');
-        /*Cookies.set('token', 'aaaa', {
-          sameSite: 'Lax',
-          httpOnly: true,
-        });*/
-        SessionStorage.set('permission', 'MANAGER');
-        store.logIn();
-        router.push({name: 'Elections'});
+        $q.loading.show({
+          message: 'Authentication in progress, please wait...',
+          spinner: QSpinnerGears,
+        })
+        setTimeout(() => {
+          login()
+          $q.loading.hide()
+        }, 500)
       },
       onReset() {
         email.value = null
@@ -208,7 +253,7 @@ export default {
     logout() {
       const store = useAuthStore();
       SessionStorage.set('permission', '');
-      Cookies.remove('token'); // TODO add cookie options
+      Cookies.remove('token');
       store.logOut();
       this.$router.push('login');
     }
