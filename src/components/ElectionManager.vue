@@ -20,7 +20,7 @@
           </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+              <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
             </q-avatar>
             <q-tooltip>Account</q-tooltip>
           </q-btn>
@@ -50,12 +50,17 @@
                         v-model:pagination="pagination"
                         :loading="loading"
                         binary-state-sort
+                        :filter="filter"
+                        @request="onRequest"
                     >
                       <template v-slot:top-right>
                         <div class="q-gutter-lg-x-md">
-                          <q-toggle v-model="toggleBefore" @click="customSortMain" :disable="loading" label="Show not started elections"/>
-                          <q-toggle v-model="toggleDuring" @click="customSortMain" :disable="loading" label="Show ongoing elections"/>
-                          <q-toggle v-model="toggleAfter" @click="customSortMain" :disable="loading" label="Show finished elections"/>
+                          <q-toggle v-model="toggleBefore" @click="customSortMain" :disable="loading"
+                                    label="Show not started elections"/>
+                          <q-toggle v-model="toggleDuring" @click="customSortMain" :disable="loading"
+                                    label="Show ongoing elections"/>
+                          <q-toggle v-model="toggleAfter" @click="customSortMain" :disable="loading"
+                                    label="Show finished elections"/>
                           <q-input dense debounce="400" color="primary" v-model="searchMain" :disable="loading"
                                    placeholder="Search by election title" @keyup.enter="customSortMain">
                             <template v-slot:append>
@@ -112,7 +117,8 @@
                                 Check election results
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="results" color="info" :disable="hasResults(props.row.results) || loading"
+                            <q-btn square size="sm" name="results" color="info"
+                                   :disable="hasResults(props.row.results) || loading"
                                    label='' icon='summarize' @click="showElectionResults(props.row)">
                               <q-tooltip>
                                 Show election results
@@ -147,7 +153,9 @@
                                   <q-card class="no-border-radius">
                                     <q-card-section>
                                       <q-card class="no-border-radius">
-                                        <q-card-section><div class="text-h6">Election Details</div></q-card-section>
+                                        <q-card-section>
+                                          <div class="text-h6">Election Details</div>
+                                        </q-card-section>
                                         <q-card-section>
                                           <div class="q-pa-md">
                                             <q-form
@@ -257,7 +265,9 @@
                                         </q-card-section>
                                       </q-card>
                                       <q-card class="no-border-radius">
-                                        <q-card-section><div class="text-h6">Candidates</div></q-card-section>
+                                        <q-card-section>
+                                          <div class="text-h6">Candidates</div>
+                                        </q-card-section>
                                         <q-card-section>
                                           <div class="q-pa-md">
                                             <q-table
@@ -298,7 +308,9 @@
                                         </q-card-section>
                                       </q-card>
                                       <q-card class="no-border-radius">
-                                        <q-card-section><div class="text-h6">Voters</div></q-card-section>
+                                        <q-card-section>
+                                          <div class="text-h6">Voters</div>
+                                        </q-card-section>
                                         <q-card-section>
                                           <div class="q-pa-md">
                                             <q-table
@@ -365,7 +377,9 @@
                                     <q-card-section>
                                       <div class="q-pa-md">
                                         <q-card class="no-border-radius">
-                                          <q-card-section><div class="text-h6">Election Details</div></q-card-section>
+                                          <q-card-section>
+                                            <div class="text-h6">Election Details</div>
+                                          </q-card-section>
                                           <q-card-section>
                                             <div class="q-pa-md">
                                               <q-form
@@ -387,7 +401,8 @@
                                                             <q-date v-model="editStartDate" mask="YYYY-MM-DD HH:mm"
                                                                     :options="startDateOptions">
                                                               <div class="row items-center justify-end">
-                                                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                                <q-btn v-close-popup label="Close" color="primary"
+                                                                       flat/>
                                                               </div>
                                                             </q-date>
                                                           </q-popup-proxy>
@@ -398,9 +413,11 @@
                                                         <q-icon name="access_time" class="cursor-pointer">
                                                           <q-popup-proxy cover transition-show="scale"
                                                                          transition-hide="scale">
-                                                            <q-time v-model="editStartDate" mask="YYYY-MM-DD HH:mm" format24h>
+                                                            <q-time v-model="editStartDate" mask="YYYY-MM-DD HH:mm"
+                                                                    format24h>
                                                               <div class="row items-center justify-end">
-                                                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                                <q-btn v-close-popup label="Close" color="primary"
+                                                                       flat/>
                                                               </div>
                                                             </q-time>
                                                           </q-popup-proxy>
@@ -419,7 +436,8 @@
                                                             <q-date v-model="editEndDate" mask="YYYY-MM-DD HH:mm"
                                                                     :options="endDateOptions">
                                                               <div class="row items-center justify-end">
-                                                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                                <q-btn v-close-popup label="Close" color="primary"
+                                                                       flat/>
                                                               </div>
                                                             </q-date>
                                                           </q-popup-proxy>
@@ -430,9 +448,11 @@
                                                         <q-icon name="access_time" class="cursor-pointer">
                                                           <q-popup-proxy cover transition-show="scale"
                                                                          transition-hide="scale">
-                                                            <q-time v-model="editEndDate" mask="YYYY-MM-DD HH:mm" format24h>
+                                                            <q-time v-model="editEndDate" mask="YYYY-MM-DD HH:mm"
+                                                                    format24h>
                                                               <div class="row items-center justify-end">
-                                                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                                                                <q-btn v-close-popup label="Close" color="primary"
+                                                                       flat/>
                                                               </div>
                                                             </q-time>
                                                           </q-popup-proxy>
@@ -446,7 +466,9 @@
                                           </q-card-section>
                                         </q-card>
                                         <q-card class="no-border-radius">
-                                          <q-card-section><div class="text-h6">Candidates</div></q-card-section>
+                                          <q-card-section>
+                                            <div class="text-h6">Candidates</div>
+                                          </q-card-section>
                                           <q-card-section>
                                             <div class="q-pa-md">
                                               <q-table
@@ -464,9 +486,11 @@
                                               >
 
                                                 <template v-slot:top-right>
-                                                  <q-btn color="green" :disable="editCandidateLoading" label="Add candidate"
+                                                  <q-btn color="green" :disable="editCandidateLoading"
+                                                         label="Add candidate"
                                                          @click="showEditNewCandidate"/>
-                                                  <q-btn class="q-ml-sm" color="negative" :disable="editCandidateLoading"
+                                                  <q-btn class="q-ml-sm" color="negative"
+                                                         :disable="editCandidateLoading"
                                                          label="Remove candidates" @click="editRemoveCandidate"/>
                                                   <q-space/>
                                                 </template>
@@ -490,7 +514,9 @@
                                           </q-card-section>
                                         </q-card>
                                         <q-card class="no-border-radius">
-                                          <q-card-section><div class="text-h6">Voters</div></q-card-section>
+                                          <q-card-section>
+                                            <div class="text-h6">Voters</div>
+                                          </q-card-section>
                                           <q-card-section>
                                             <div class="q-pa-md">
                                               <q-table
@@ -519,7 +545,9 @@
                                           </q-card-section>
                                         </q-card>
                                         <q-card class="no-border-radius">
-                                          <q-card-section><div class="text-h6">Managers</div></q-card-section>
+                                          <q-card-section>
+                                            <div class="text-h6">Managers</div>
+                                          </q-card-section>
                                           <q-card-section>
                                             <div class="q-pa-md">
                                               <q-table
@@ -1053,10 +1081,10 @@
       <q-card-section class="row items-center no-wrap">
         <div class="column items-center">
           <q-avatar size="72px">
-            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+            <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
           </q-avatar>
 
-          <div class="text-subtitle1 q-mt-md q-mb-xs">John Doe</div>
+          <div class="text-subtitle1 q-mt-md q-mb-xs">{{$q.sessionStorage.getItem('username')}}</div>
           <q-btn
               color="primary"
               label="Profile"
@@ -1080,12 +1108,13 @@
 </template>
 
 <script>
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {Cookies, Notify, SessionStorage, useQuasar} from 'quasar'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
 import {Pie} from 'vue-chartjs'
 import moment from 'moment'
 import {v1} from 'uuid'
+import axios from "axios";
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -1104,7 +1133,7 @@ const columns = [
   {name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: false},
 ]
 
-let rows = [
+/*let rows = [
   {id: 1, title: 'Election1', startDate: '13-02-2023 00:00', endDate: '15-06-2032 00:00', voted: true, results: null},
   {
     id: 2,
@@ -1125,7 +1154,7 @@ let rows = [
     voted: true,
     results: '{a:1,b:2}'
   }
-]
+]*/
 
 const candidateColumns = [
   {
@@ -1281,6 +1310,9 @@ const chartOptions = {
   maintainAspectRatio: false,
 }
 
+const originalRows = []
+
+
 export default {
   name: 'ElectionManager',
   components: {
@@ -1292,7 +1324,8 @@ export default {
     const candidateRows = ref([])
     const filter = ref('')
     const loading = ref(false)
-    const startRows = rows
+    const rows = ref([])
+    const startRows = ref([])
     const candidateLoading = ref(false)
     const selected = ref([])
     const selectedCandidates = ref([])
@@ -1306,6 +1339,7 @@ export default {
     const allowEndDate = ref(true)
     const minEndDate = ref('')
     const allowEditEndDate = ref(true)
+    const avatar = ref(null)
     const editCandidateRows = ref([
       {id: 1, name: 'candidate1'},
       {id: 2, name: 'candidate2'},
@@ -1350,6 +1384,7 @@ export default {
       descending: false,
       page: 1,
       rowsPerPage: 5,
+      rowsNumber:10
     })
 
     function confirmDates(date, type) {
@@ -1380,6 +1415,111 @@ export default {
     function canStatus(start, end) {
       return !(moment().isAfter(moment(start, 'DD-MM-YYYY HH:mm')) && moment().isBefore(moment(end, 'DD-MM-YYYY HH:mm')));
     }
+    async function getElections() {
+      const uri = 'http://localhost:8080/elections/manager'
+      try {
+        return await axios.get(uri, {
+          headers: {
+            "Content-type": "application/json"
+          },
+          withCredentials: true
+        }).then(function (response) {
+          for(const election of response.data){
+            originalRows.push(election)
+          }
+        }).catch(function (error) {
+          console.log(error)
+        })
+      } catch (err) {
+        console.log(err)
+      }
+    }
+
+    function fetchFromServer (startRow, count, filter, sortBy, descending) {
+      console.log(sortBy)
+      const data = filter
+          ? originalRows.filter(row => row.title.includes(filter))
+          : originalRows.slice()
+
+      // handle sortBy
+      if (sortBy) {
+        const sortFn = (descending
+                ? (a, b) => (a[sortBy] > b[sortBy] ? -1 : a[sortBy] < b[sortBy] ? 1 : 0)
+                : (a, b) => (a[sortBy] > b[sortBy] ? 1 : a[sortBy] < b[sortBy] ? -1 : 0)
+        )
+        data.sort(sortFn)
+      }
+
+      return data.slice(startRow, startRow + count)
+    }
+
+    // emulate 'SELECT count(*) FROM ...WHERE...'
+    function getRowsNumberCount (filter) {
+      if (!filter) {
+        return originalRows.length
+      }
+      let count = 0
+      originalRows.forEach(treat => {
+        if (treat.name.includes(filter)) {
+          ++count
+        }
+      })
+      return count
+    }
+
+    function onRequest (props) {
+      const { page, rowsPerPage, sortBy, descending } = props.pagination
+      const filter = props.filter
+
+      loading.value = true
+
+      // emulate server
+      setTimeout(() => {
+        // update rowsCount with appropriate value
+        pagination.value.rowsNumber = getRowsNumberCount(filter)
+
+        // get all rows if "All" (0) is selected
+        const fetchCount = rowsPerPage === 0 ? pagination.value.rowsNumber : rowsPerPage
+
+        // calculate starting row of data
+        const startRow = (page - 1) * rowsPerPage
+
+        // fetch data from "server"
+        const returnedData = fetchFromServer(startRow, fetchCount, filter, sortBy, descending)
+
+        // clear out existing data and add new
+        rows.value.splice(0, rows.value.length, ...returnedData)
+        startRows.value.splice(0, rows.value.length, ...returnedData)
+
+        // don't forget to update local pagination object
+        pagination.value.page = page
+        pagination.value.rowsPerPage = rowsPerPage
+        pagination.value.sortBy = sortBy
+        pagination.value.descending = descending
+
+        // ...and turn of loading indicator
+        loading.value = false
+      }, 500)
+    }
+
+    onMounted(() => {
+      // get initial data from server (1st page)
+      getElections()
+      tableRef.value.requestServerInteraction()
+    })
+
+    /*onMounted(() => {
+      const {page, rowsPerPage, sortBy, descending} = pagination
+      loading.value = true
+      setTimeout(() => {
+        getElections()
+        pagination.value.page = page
+        pagination.value.rowsPerPage = rowsPerPage
+        pagination.value.sortBy = sortBy
+        pagination.value.descending = descending
+        loading.value = false
+      }, 500)
+    })*/
 
     return {
       tableRef,
@@ -1392,10 +1532,12 @@ export default {
       candidateColumns,
       candidateRows,
       selected,
+      avatar,
       isAfterStart,
       isAfterEnd,
       canStatus,
       hasResults,
+      onRequest,
       getSelectedString() {
         return selected.value.length === 0 ? '' : `${selected.value.length} record${selected.value.length > 1 ? 's' : ''} selected of ${candidateRows.length}`
       },
@@ -1566,6 +1708,25 @@ export default {
       statusRows
     }
   },
+  created() {
+      /*const uri = 'http://localhost:8080/elections/manager'
+      try {
+        return axios.get(uri, {
+          headers: {
+            "Content-type": "application/json"
+          },
+          withCredentials: true
+        }).then(function (response) {
+          for(const election of response.data) {
+            rows.push(election)
+          }
+        }).catch(function (error) {
+          console.log(error)
+        })
+      } catch (err) {
+        console.log(err)
+      }*/
+  },
   watch: {
     startDate: function (value) {
       this.allowEndDate = value
@@ -1683,6 +1844,9 @@ export default {
     },
     logout() {
       SessionStorage.set('permission', '');
+      SessionStorage.set('id', '');
+      SessionStorage.set('avatar', '');
+      SessionStorage.set('username', '');
       Cookies.remove('token');
       this.$router.push('login');
     },

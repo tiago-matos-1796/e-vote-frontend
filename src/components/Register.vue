@@ -383,6 +383,9 @@ export default {
   methods: {
     logout() {
       SessionStorage.set('permission', '');
+      SessionStorage.set('id', '');
+      SessionStorage.set('avatar', '');
+      SessionStorage.set('username', '');
       Cookies.remove('token');
       this.$router.push('login');
     }

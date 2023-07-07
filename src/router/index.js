@@ -10,6 +10,7 @@ import ResetPassword from "@/components/ResetPassword.vue";
 import ForgotPassword from "@/components/ForgotPassword.vue";
 import AccountVerification from "@/components/AccountVerification.vue";
 import Error from "@/components/Error.vue";
+import AccessDenied from "@/components/AccessDenied.vue";
 import { SessionStorage } from "quasar";
 
 const router = createRouter({
@@ -86,6 +87,11 @@ const router = createRouter({
       path: "/verification",
       name: "Verification",
       component: AccountVerification,
+    },
+    {
+      path: "/access-denied",
+      name: "AccessDenied",
+      component: AccessDenied,
     },
     {
       path: "/error",

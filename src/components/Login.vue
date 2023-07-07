@@ -185,12 +185,16 @@ export default {
             "Content-type": "application/json"
           }
         }).then(function (response) {
-          SessionStorage.set('permission', response.data.permissions);
-          Cookies.set('token', response.data.token, {
-            sameSite: 'Lax',
+          console.log(response.data)
+          $q.sessionStorage.set('permission', response.data.permissions);
+          $q.sessionStorage.set('id', response.data.id);
+          $q.sessionStorage.set('avatar', response.data.image);
+          $q.sessionStorage.set('username', response.data.username);
+          /*$q.cookies.set('token', response.data.token, { // production
             httpOnly: true,
             secure: true
-          });
+          });*/
+          $q.cookies.set('token', response.data.token);
           $q.notify({
             color: 'green-4',
             textColor: 'white',
@@ -253,6 +257,9 @@ export default {
     logout() {
       const store = useAuthStore();
       SessionStorage.set('permission', '');
+      SessionStorage.set('id', '');
+      SessionStorage.set('avatar', '');
+      SessionStorage.set('username', '');
       Cookies.remove('token');
       store.logOut();
       this.$router.push('login');
