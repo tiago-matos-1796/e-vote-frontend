@@ -9,8 +9,9 @@ import Profile from "@/components/Profile.vue";
 import ResetPassword from "@/components/ResetPassword.vue";
 import ForgotPassword from "@/components/ForgotPassword.vue";
 import AccountVerification from "@/components/AccountVerification.vue";
-import Error from "@/components/Error.vue";
+import NotFound from "@/components/NotFound.vue";
 import AccessDenied from "@/components/AccessDenied.vue";
+import Error from "@/components/Error.vue";
 import { SessionStorage } from "quasar";
 
 const router = createRouter({
@@ -99,8 +100,13 @@ const router = createRouter({
       component: Error,
     },
     {
+      path: "/not-found",
+      name: "NotFound",
+      component: NotFound,
+    },
+    {
       path: "/:catchAll(.*)",
-      redirect: "error",
+      redirect: "not-found",
     },
     /* {
               path: '/about',

@@ -27,6 +27,7 @@
                   <div class="q-ma-xl" style="max-width: 500px">
                     <div class="text-h4">You do not have permission to access this page</div>
                   </div>
+                  <router-link to="/">Go back</router-link>
                 </q-card-section>
               </q-card>
             </div>

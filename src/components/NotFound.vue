@@ -20,13 +20,14 @@
               <q-card class="no-border-radius" style="min-height: 400px">
                 <q-card-section vertical align="center">
                   <div class="q-ma-xl" style="max-width: 500px">
-                    <div class="text-h2" style="color: darkred">Error</div>
+                    <div class="text-h2" style="color: darkred">404 error</div>
                   </div>
                 </q-card-section>
                 <q-card-section vertical align="center">
                   <div class="q-ma-xl" style="max-width: 500px">
-                    <div class="text-h4">An error has occurred, please try again later</div>
+                    <div class="text-h4">This page does not exist</div>
                   </div>
+                  <router-link to="/">Go back</router-link>
                 </q-card-section>
               </q-card>
             </div>
@@ -39,7 +40,7 @@
 
 <script>
 export default {
-  name: "Error"
+  name: "Not Found"
 }
 </script>
 
