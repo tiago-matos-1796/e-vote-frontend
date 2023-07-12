@@ -145,236 +145,7 @@
                         transition-show="slide-up"
                         transition-hide="slide-down"
                     >
-                      <q-card class="bg-blue-grey-2 text-black">
-                        <q-bar>
-                          <div class="text-h6">Edit election {{ selected_row.title }}</div>
-                          <q-space/>
-                          <q-btn dense flat icon="close" v-close-popup>
-                            <q-tooltip class="bg-white text-primary">Close</q-tooltip>
-                          </q-btn>
-                        </q-bar>
-                        <q-card-section class="q-pt-none">
-                          <div class="flex flex-center column">
-                            <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
-                              <div id="parent" class="fit wrap justify-center items-start content-start"
-                                   style="overflow: hidden;">
-                                <div class=" bg-grey-6" style="overflow: auto;">
-                                  <q-card class="no-border-radius">
-                                    <q-card-section>
-                                      <div class="q-pa-md">
-                                        <q-card class="no-border-radius">
-                                          <q-card-section>
-                                            <div class="text-h6">Election Details</div>
-                                          </q-card-section>
-                                          <q-card-section>
-                                            <div class="q-pa-md">
-                                              <q-form
-                                                  class="q-gutter-md" style="min-width: 400px; padding: 24px;"
-                                              >
-                                                <q-input filled v-model="editElectionTitle" label="Title"
-                                                         placeholder="Election title" hint="Election title"
-                                                         :rules="[ val => !!val || 'Election title must not be empty']"
-                                                ></q-input>
-
-                                                <div class="row">
-                                                  <div class="col">
-                                                    <q-input filled v-model="editStartDate" label="Start date and time"
-                                                             hint="Start date and time">
-                                                      <template v-slot:prepend>
-                                                        <q-icon name="event" class="cursor-pointer">
-                                                          <q-popup-proxy cover transition-show="scale"
-                                                                         transition-hide="scale">
-                                                            <q-date v-model="editStartDate" mask="YYYY-MM-DD HH:mm"
-                                                                    :options="startDateOptions">
-                                                              <div class="row items-center justify-end">
-                                                                <q-btn v-close-popup label="Close" color="primary"
-                                                                       flat/>
-                                                              </div>
-                                                            </q-date>
-                                                          </q-popup-proxy>
-                                                        </q-icon>
-                                                      </template>
-
-                                                      <template v-slot:append>
-                                                        <q-icon name="access_time" class="cursor-pointer">
-                                                          <q-popup-proxy cover transition-show="scale"
-                                                                         transition-hide="scale">
-                                                            <q-time v-model="editStartDate" mask="YYYY-MM-DD HH:mm"
-                                                                    format24h>
-                                                              <div class="row items-center justify-end">
-                                                                <q-btn v-close-popup label="Close" color="primary"
-                                                                       flat/>
-                                                              </div>
-                                                            </q-time>
-                                                          </q-popup-proxy>
-                                                        </q-icon>
-                                                      </template>
-                                                    </q-input>
-                                                  </div>
-                                                  <div class="col">
-                                                    <q-input filled v-model="editEndDate" label="End date and time"
-                                                             hint="End date and time" :disable="allowEditEndDate"
-                                                             :rules="[ val => confirmDates(val, 'EDIT') || 'End date must be after start date']">
-                                                      <template v-slot:prepend>
-                                                        <q-icon name="event" class="cursor-pointer">
-                                                          <q-popup-proxy cover transition-show="scale"
-                                                                         transition-hide="scale">
-                                                            <q-date v-model="editEndDate" mask="YYYY-MM-DD HH:mm"
-                                                                    :options="endDateOptions">
-                                                              <div class="row items-center justify-end">
-                                                                <q-btn v-close-popup label="Close" color="primary"
-                                                                       flat/>
-                                                              </div>
-                                                            </q-date>
-                                                          </q-popup-proxy>
-                                                        </q-icon>
-                                                      </template>
-
-                                                      <template v-slot:append>
-                                                        <q-icon name="access_time" class="cursor-pointer">
-                                                          <q-popup-proxy cover transition-show="scale"
-                                                                         transition-hide="scale">
-                                                            <q-time v-model="editEndDate" mask="YYYY-MM-DD HH:mm"
-                                                                    format24h>
-                                                              <div class="row items-center justify-end">
-                                                                <q-btn v-close-popup label="Close" color="primary"
-                                                                       flat/>
-                                                              </div>
-                                                            </q-time>
-                                                          </q-popup-proxy>
-                                                        </q-icon>
-                                                      </template>
-                                                    </q-input>
-                                                  </div>
-                                                </div>
-                                              </q-form>
-                                            </div>
-                                          </q-card-section>
-                                        </q-card>
-                                        <q-card class="no-border-radius">
-                                          <q-card-section>
-                                            <div class="text-h6">Candidates</div>
-                                          </q-card-section>
-                                          <q-card-section>
-                                            <div class="q-pa-md">
-                                              <q-table
-                                                  flat bordered
-                                                  title=""
-                                                  :rows="editCandidateRows"
-                                                  :columns="candidateColumns"
-                                                  row-key="id"
-                                                  :selected-rows-label="getSelectedString"
-                                                  selection="multiple"
-                                                  v-model:selected="editSelectedCandidates"
-                                                  :filter="filter"
-                                                  :loading="editCandidateLoading"
-                                                  binary-state-sort
-                                              >
-
-                                                <template v-slot:top-right>
-                                                  <q-btn color="green" :disable="editCandidateLoading"
-                                                         label="Add candidate"
-                                                         @click="showEditNewCandidate"/>
-                                                  <q-btn class="q-ml-sm" color="negative"
-                                                         :disable="editCandidateLoading"
-                                                         label="Remove candidates" @click="editRemoveCandidate"/>
-                                                  <q-space/>
-                                                </template>
-                                                <template v-slot:body="props">
-                                                  <q-tr :props="props">
-                                                    <q-td>
-                                                      <q-checkbox v-model="props.selected"/>
-                                                    </q-td>
-                                                    <q-td key="name" :props="props">
-                                                      {{ props.row.name }}
-                                                      <q-popup-edit v-model="props.row.name" v-slot="scope">
-                                                        <q-input v-model="scope.value" dense autofocus counter
-                                                                 @keyup.enter="scope.set"></q-input>
-                                                      </q-popup-edit>
-                                                    </q-td>
-                                                  </q-tr>
-                                                </template>
-
-                                              </q-table>
-                                            </div>
-                                          </q-card-section>
-                                        </q-card>
-                                        <q-card class="no-border-radius">
-                                          <q-card-section>
-                                            <div class="text-h6">Voters</div>
-                                          </q-card-section>
-                                          <q-card-section>
-                                            <div class="q-pa-md">
-                                              <q-table
-                                                  flat bordered
-                                                  title=""
-                                                  :rows="editVoterRows"
-                                                  :columns="userColumns"
-                                                  row-key="id"
-                                                  :selected-rows-label="getSelectedString"
-                                                  selection="multiple"
-                                                  v-model:selected="editSelectedVoters"
-                                                  :filter="filter"
-                                                  :loading="editVoterLoading"
-                                                  binary-state-sort
-                                              >
-
-                                                <template v-slot:top-right>
-                                                  <q-btn color="green" :disable="editVoterLoading" label="Add voter"
-                                                         @click="editShowVoterAdd"/>
-                                                  <q-btn class="q-ml-sm" color="negative" :disable="editVoterLoading"
-                                                         label="Remove voter" @click="editRemoveVoters"/>
-                                                  <q-space/>
-                                                </template>
-                                              </q-table>
-                                            </div>
-                                          </q-card-section>
-                                        </q-card>
-                                        <q-card class="no-border-radius">
-                                          <q-card-section>
-                                            <div class="text-h6">Managers</div>
-                                          </q-card-section>
-                                          <q-card-section>
-                                            <div class="q-pa-md">
-                                              <q-table
-                                                  flat bordered
-                                                  title=""
-                                                  :rows="managerRows"
-                                                  :columns="userColumns"
-                                                  row-key="id"
-                                                  :selected-rows-label="getSelectedString"
-                                                  selection="multiple"
-                                                  v-model:selected="selectedManager"
-                                                  :filter="filter"
-                                                  :loading="managerLoading"
-                                                  binary-state-sort
-                                              >
-
-                                                <template v-slot:top-right>
-                                                  <q-btn color="green" :disable="managerLoading" label="Add manager"
-                                                         @click="showManagerAdd"/>
-                                                  <q-btn class="q-ml-sm" color="negative" :disable="managerLoading"
-                                                         label="Remove manager" @click="editRemoveManagers"/>
-                                                  <q-space/>
-                                                </template>
-                                              </q-table>
-                                            </div>
-                                          </q-card-section>
-                                        </q-card>
-                                      </div>
-                                    </q-card-section>
-                                    <q-card-actions align="center">
-                                      <q-btn label="Confirm changes" type="submit" color="primary"
-                                             @click="confirmElectionEdit(selected_row.id)"/>
-                                      <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
-                                    </q-card-actions>
-                                  </q-card>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </q-card-section>
-                      </q-card>
+                      <EditElection :id="electionId"></EditElection>
                     </q-dialog>
                     <q-dialog v-model="deleteConfirm">
                       <q-card>
@@ -542,79 +313,6 @@
                         </q-card-section>
                       </q-card>
                     </q-dialog>
-                    <q-dialog v-model="editAddCandidate">
-                      <q-card>
-                        <q-card-section>
-                          <div class="text-h6">Please insert the name of the new candidate</div>
-                        </q-card-section>
-
-                        <q-card-section class="q-pt-none">
-                          <q-form
-                              class="q-gutter-md"
-                          >
-                            <q-input v-model="editCandidateName" type="text" filled hint="Candidate name"
-                                     :rules="[ val => !!val || 'Candidate name must not be empty']">
-                            </q-input>
-                            <q-file
-                                v-model="editCandidateImage"
-                                label="Choose image (max 2MB)"
-                                filled
-                                counter
-                                accept=".jpg, .png, .svg, image/*"
-                                max-file-size="2097152"
-                                @rejected="rejectCandidateImage"
-                            />
-                          </q-form>
-                        </q-card-section>
-
-                        <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="editInsertNewCandidate" v-close-popup/>
-                          <q-btn flat label="Cancel" color="negative" @click="editAddCandidate=false" v-close-popup/>
-                        </q-card-actions>
-                      </q-card>
-                    </q-dialog>
-                    <q-dialog
-                        v-model="newManager"
-                        persistent
-                        full-width
-                    >
-                      <div class="flex flex-center column">
-                        <div id="parent" class="fit wrap justify-center items-start content-start"
-                             style="overflow: hidden;">
-                          <q-card class="no-border-radius">
-                            <q-toolbar>
-                              <q-toolbar-title><span class="text-weight-bold">{{ selected_row.title }}</span>
-                              </q-toolbar-title>
-                              <q-btn flat round dense icon="close" v-close-popup/>
-                            </q-toolbar>
-                            <q-card-section>
-                              <div class="q-pa-md">
-                                <q-table
-                                    flat bordered
-                                    title="Users"
-                                    :rows="userManagerRows"
-                                    :columns="userColumns"
-                                    row-key="id"
-                                    :selected-rows-label="getSelectedString"
-                                    selection="multiple"
-                                    v-model:selected="newManagerSelected"
-                                    :filter="filter"
-                                    :loading="newManagerLoading"
-                                    binary-state-sort
-                                >
-                                </q-table>
-                              </div>
-                            </q-card-section>
-                            <q-card-actions align="center">
-                              <q-btn label="Add selected voters" type="submit" color="primary"
-                                     @click="editInsertNewManager"/>
-                              <q-btn label="Cancel" type="reset" color="negative" @click="this.newManagerSelected = []"
-                                     v-close-popup/>
-                            </q-card-actions>
-                          </q-card>
-                        </div>
-                      </div>
-                    </q-dialog>
                     <q-dialog
                         v-model="electionResultsShow"
                         persistent
@@ -708,48 +406,6 @@
                         </q-card-section>
                       </q-card>
                     </q-dialog>
-                    <q-dialog
-                        v-model="editNewVoter"
-                        persistent
-                        full-width
-                    >
-                      <div class="flex flex-center column">
-                        <div id="parent" class="fit wrap justify-center items-start content-start"
-                             style="overflow: hidden;">
-                          <q-card class="no-border-radius">
-                            <q-toolbar>
-                              <q-toolbar-title><span class="text-weight-bold">{{ selected_row.title }}</span>
-                              </q-toolbar-title>
-                              <q-btn flat round dense icon="close" v-close-popup/>
-                            </q-toolbar>
-                            <q-card-section>
-                              <div class="q-pa-md">
-                                <q-table
-                                    flat bordered
-                                    title="Users"
-                                    :rows="editUserRows"
-                                    :columns="userColumns"
-                                    row-key="id"
-                                    :selected-rows-label="getSelectedString"
-                                    selection="multiple"
-                                    v-model:selected="editNewVoterSelected"
-                                    :filter="filter"
-                                    :loading="editNewVoterLoading"
-                                    binary-state-sort
-                                >
-                                </q-table>
-                              </div>
-                            </q-card-section>
-                            <q-card-actions align="center">
-                              <q-btn label="Add selected voters" type="submit" color="primary"
-                                     @click="editInsertNewVoter"/>
-                              <q-btn label="Cancel" type="reset" color="negative" @click="this.newVoterSelected = []"
-                                     v-close-popup/>
-                            </q-card-actions>
-                          </q-card>
-                        </div>
-                      </div>
-                    </q-dialog>
                   </div>
                 </q-card-section>
               </q-card>
@@ -827,9 +483,9 @@ import {Cookies, Notify, SessionStorage, useQuasar} from 'quasar'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
 import {Pie} from 'vue-chartjs'
 import moment from 'moment'
-import {v1} from 'uuid'
 import axios from "axios";
 import AddElection from "@/components/AddElection.vue";
+import EditElection from "@/components/EditElection.vue";
 import {useRouter} from "vue-router";
 
 const router = useRouter();
@@ -1011,6 +667,7 @@ const originalRows = []
 export default {
   name: 'ElectionManager',
   components: {
+    EditElection,
     AddElection,
     Pie
   },
@@ -1024,41 +681,8 @@ export default {
     const startRows = ref([])
     const selected = ref([])
     const settings = ref(false)
-    const allowEditEndDate = ref(true)
     const avatar = ref(null)
-    const editCandidateRows = ref([
-      {id: 1, name: 'candidate1'},
-      {id: 2, name: 'candidate2'},
-      {id: 3, name: 'candidate3'},
-      {id: 4, name: 'candidate4'}
-    ])
-    const editVoterRows = ref([
-      {id: 1, displayName: 'A', email: 'a@a.a'},
-      {id: 2, displayName: 'B', email: 'b@b.b'},
-      {id: 3, displayName: 'C', email: 'c@c.c'},
-    ])
-    const editUserRows = ref([
-      {id: 4, displayName: 'D', email: 'd@d.d'},
-      {id: 5, displayName: 'E', email: 'e@e.e'}
-    ])
-    const editSelectedCandidates = ref([])
-    const editCandidateLoading = ref(false)
-    const editNewVoterSelected = ref([])
-    const editNewVoterLoading = ref(false)
-    const editSelectedVoters = ref([])
-    const editVoterLoading = ref(false)
-    const managerRows = ref([
-      {id: 1, displayName: 'Manager1', email: 'manager1@man.man'},
-      {id: 2, displayName: 'Manager2', email: 'manager2@man.man'}
-    ])
-    const userManagerRows = ref([
-      {id: 3, displayName: 'Manager3', email: 'manager3@man.man'},
-      {id: 4, displayName: 'Manager4', email: 'manager4@man.man'}
-    ])
-    const newManagerSelected = ref([])
-    const newManagerLoading = ref(false)
-    const managerLoading = ref(false)
-    const selectedManager = ref([])
+    const electionId = ref('')
     const newElectionKey = ref('')
     const toggleBefore = ref(true)
     const toggleDuring = ref(true)
@@ -1215,13 +839,11 @@ export default {
       onRequest,
       userColumns,
       userRows,
-      managerRows,
       toggleBefore,
       toggleDuring,
       toggleAfter,
       searchMain,
       searchCandidate,
-      newManager: ref(false),
       maximizedToggle: ref(true),
       confirmDates,
       editElection: ref(false),
@@ -1244,69 +866,6 @@ export default {
       openSettings() {
         settings.value = true
       },
-      editElectionTitle: ref(''),
-      editStartDate: ref(''),
-      editEndDate: ref(''),
-      allowEditEndDate,
-      editCandidateRows,
-      editSelectedCandidates,
-      editCandidateLoading,
-      editAddCandidate: ref(false),
-      editCandidateName: ref(null),
-      editCandidateImage: ref(null),
-      editRemoveCandidate() {
-        editCandidateLoading.value = true
-        setTimeout(() => {
-          for (const sc of editSelectedCandidates.value) {
-            const index = editCandidateRows.value.findIndex(object => {
-              return object.id === sc.id;
-            });
-            editCandidateRows.value.splice(index, 1)
-          }
-          editSelectedCandidates.value = []
-          editCandidateLoading.value = false
-        }, 500)
-      },
-      editVoterRows,
-      editNewVoter: ref(false),
-      editUserRows,
-      editNewVoterSelected,
-      editNewVoterLoading,
-      editSelectedVoters,
-      editVoterLoading,
-      editRemoveVoters() {
-        editVoterLoading.value = true
-        setTimeout(() => {
-          for (const esv of editSelectedVoters.value) {
-            const index = editVoterRows.value.findIndex(object => {
-              return object.id === esv.id;
-            });
-            editVoterRows.value.splice(index, 1);
-            editUserRows.value.push(esv)
-          }
-          editSelectedVoters.value = []
-          editVoterLoading.value = false
-        }, 500)
-      },
-      userManagerRows,
-      newManagerSelected,
-      newManagerLoading,
-      managerLoading,
-      selectedManager,
-      editRemoveManagers() {
-        managerLoading.value = true
-        setTimeout(() => {
-          for (const sm of selectedManager.value) {
-            const index = managerRows.value.findIndex(object => {
-              return object.id === sm.id;
-            });
-            managerRows.value.splice(index, 1)
-            userManagerRows.value.push(sm)
-          }
-          selectedManager.value = []
-          managerLoading.value = false
-        }, 500)
-      },
       newElectionKey,
       newElectionKey1: ref(''),
       hideKey: ref(true),
@@ -1316,20 +875,16 @@ export default {
       electionStatus: ref(false),
       statusOptions,
       statusData,
-      statusRows
+      statusRows,
+      electionId
     }
   },
   watch: {
-    editStartDate: function (value) {
-      this.allowEditEndDate = value
-    }
   },
   methods: {
     openmodel(row) {
       this.selected_row = row;
-      this.editElectionTitle = row.title;
-      this.editStartDate = row.startDate;
-      this.editEndDate = row.endDate;
+      this.electionId = row.id;
       this.editElection = true;
     },
     deleteElection(row) {
@@ -1344,57 +899,8 @@ export default {
       this.selected_row = row;
       this.electionResults = true;
     },
-    showManagerAdd() {
-      this.newManager = true;
-    },
     showElectionWindow() {
       this.newElection = true;
-    },
-    showEditNewCandidate() {
-      this.editAddCandidate = true
-    },
-    editShowVoterAdd() {
-      this.editNewVoter = true
-    },
-    editInsertNewCandidate() {
-      this.editCandidateLoading = true
-      setTimeout(() => {
-        const name = this.editCandidateName
-        this.editCandidateRows.push({id: v1(), name: name})
-        this.editCandidateName = ''
-        this.editAddCandidate = false
-        this.editCandidateLoading = false
-      }, 500)
-    },
-    editInsertNewVoter() {
-      this.editNewVoterLoading = true
-      setTimeout(() => {
-        for (const env of this.editNewVoterSelected) {
-          const index = this.editVoterRows.findIndex(object => {
-            return object.id === env.id;
-          });
-          this.editUserRows.splice(index, 1)
-          this.editVoterRows.push(env)
-        }
-        this.editNewVoterSelected = []
-        this.editNewVoterLoading = false
-      }, 500)
-      this.editNewVoter = false
-    },
-    editInsertNewManager() {
-      this.managerLoading = true
-      setTimeout(() => {
-        for (const ms of this.newManagerSelected) {
-          const index = this.userManagerRows.findIndex(object => {
-            return object.id === ms.id;
-          });
-          this.userManagerRows.splice(index, 1)
-          this.managerRows.push(ms)
-        }
-        this.newManagerSelected = []
-        this.managerLoading = false
-      }, 500)
-      this.newManager = false
     },
     showElectionResults(row) {
       this.selected_row = row;
@@ -1407,49 +913,6 @@ export default {
       SessionStorage.set('username', '');
       Cookies.remove('token');
       this.$router.push('login');
-    },
-    confirmElectionEdit(id) {
-      const title = this.editElectionTitle
-      const startDate = this.editStartDate
-      const endDate = this.editEndDate
-      const candidates = this.editCandidateRows
-      const voters = this.editVoterRows
-      const managers = this.managerRows
-      if (moment(startDate, 'DD-MM-YYYY HH:mm').isBefore(moment(endDate, 'DD-MM-YYYY HH:mm'))) {
-        if (title.length > 0) {
-          if (managers.length > 0) {
-            console.log({id, title, startDate, endDate, candidates, voters, managers})
-            Notify.create({
-              color: 'green-4',
-              textColor: 'white',
-              icon: 'check',
-              message: `Election ${title} edited with success`
-            })
-            this.editElection = false;
-          } else {
-            Notify.create({
-              color: 'red-10',
-              textColor: 'white',
-              icon: 'cancel',
-              message: 'Cannot create election; Election must have at least 1 manager'
-            })
-          }
-        } else {
-          Notify.create({
-            color: 'red-10',
-            textColor: 'white',
-            icon: 'cancel',
-            message: 'Cannot create election; Please insert an election title'
-          })
-        }
-      } else {
-        Notify.create({
-          color: 'red-10',
-          textColor: 'white',
-          icon: 'cancel',
-          message: 'Cannot edit election; Election start date is not before end date'
-        })
-      }
     },
     removeElection(id) {
       console.log(id)
