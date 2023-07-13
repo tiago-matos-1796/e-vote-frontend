@@ -689,6 +689,7 @@ export default {
     const toggleAfter = ref(true)
     const searchMain = ref('')
     const searchCandidate = ref('')
+    const deleteConfirm = ref(false)
     const pagination = ref({
       sortBy: 'title',
       descending: false,
@@ -747,6 +748,31 @@ export default {
       } catch (err) {
         console.log(err)
       }
+    }
+
+    async function electionDelete(id) {
+      const uri = `http://localhost:8080/elections/${id}`
+      return await axios.delete(uri, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        deleteConfirm.value = false
+        $q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'check',
+          message: `Election deleted with success`
+        })
+        router.go(0)
+      }).catch(function (error) {
+        if(error.response.status === 403 || error.response.status === 401) {
+          router.push({name: 'AccessDenied'})
+        } else {
+          router.push({name: 'Error'})
+        }
+      })
     }
 
     function fetchFromServer (startRow, count, filter, sortBy, descending) {
@@ -849,7 +875,7 @@ export default {
       editElection: ref(false),
       newElection: ref(false),
       selected_row: ref({}),
-      deleteConfirm: ref(false),
+      deleteConfirm,
       ph: ref(''),
       renewKey: ref(false),
       electionResults: ref(false),
@@ -876,7 +902,10 @@ export default {
       statusOptions,
       statusData,
       statusRows,
-      electionId
+      electionId,
+      removeElection(id) {
+        electionDelete(id)
+      },
     }
   },
   watch: {
@@ -913,10 +942,6 @@ export default {
       SessionStorage.set('username', '');
       Cookies.remove('token');
       this.$router.push('login');
-    },
-    removeElection(id) {
-      console.log(id)
-      this.deleteConfirm = false
     },
     renewElectionKey(id) {
       const key = this.newElectionKey

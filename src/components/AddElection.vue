@@ -332,7 +332,7 @@
 </template>
 
 <script>
-import {onMounted, ref} from "vue";
+import {defineEmits, onMounted, ref} from "vue";
 import moment from "moment";
 import {Notify, useQuasar} from "quasar";
 import {v1} from "uuid";
@@ -628,10 +628,10 @@ export default {
                 icon: 'check',
                 message: 'Election created with success'
               })
-              this.undoElection()
-              this.loading = false
-              this.$emit('close-add-election')
+              const emit = defineEmits(['close-add-election'])
+              emit('close-add-election')
             }).catch(function (error) {
+              console.log(error)
               if(error.response.status === 406) {
                 Notify.create({
                   color: 'red-10',

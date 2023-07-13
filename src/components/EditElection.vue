@@ -360,12 +360,18 @@
           <q-input v-model="candidateName" type="text" filled hint="Candidate name"
                    :rules="[ val => !!val || 'Candidate name must not be empty']">
           </q-input>
+          <q-toggle v-model="editImage" label="Change image?"><q-tooltip>
+            Toggle to change or remove current image
+          </q-tooltip></q-toggle>
           <q-file
               v-model="candidateImage"
               label="Choose image (max 2MB)"
               filled
               counter
               clearable
+              :disable="!editImage"
+              :hide-hint="!editImage"
+              hint="Leave empty to remove image"
               accept=".jpg, .png, .svg, image/*"
               max-file-size="2097152"
               @rejected="rejectCandidateImage"
@@ -375,7 +381,7 @@
 
       <q-card-actions align="right">
         <q-btn flat label="Confirm" color="primary" @click="editCandidate"/>
-        <q-btn flat label="Cancel" color="negative" @click="editCandidateDialog=false" v-close-popup/>
+        <q-btn flat label="Cancel" color="negative" @click="editCandidateDialog=false; editImage=false" v-close-popup/>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -468,6 +474,7 @@ export default {
     const editAddCandidate = ref(false)
     const editCandidateName = ref(null)
     const editCandidateImage = ref(null)
+    const editImage = ref(false)
 
     function confirmDates(date) {
       if (date.length === 0) {
@@ -524,6 +531,7 @@ export default {
       editSelectedCandidates,
       editCandidateLoading,
       editAddCandidate,
+      editImage,
       editRemoveCandidate() {
         editCandidateLoading.value = true
         setTimeout(() => {
@@ -588,9 +596,9 @@ export default {
         setTimeout(() => {
           const name = editCandidateName.value
           const image = editCandidateImage.value
-          editCandidateRows.value.push({id: v1(), name: name, image: image})
-          candidateName.value = ''
-          candidateImage.value = null
+          editCandidateRows.value.push({id: v1(), name: name, image: image, new: true})
+          editCandidateName.value = ''
+          editCandidateImage.value = null
           editAddCandidate.value = false
           editCandidateLoading.value = false
         }, 500)
@@ -655,12 +663,43 @@ export default {
       this.newManager = true;
     },
     confirmElectionEdit(id) {
+      let data = new FormData()
+      data.append('title', this.editElectionTitle)
+      data.append('startDate', this.editStartDate)
+      data.append('endDate', this.editEndDate)
       const title = this.editElectionTitle
       const startDate = this.editStartDate
       const endDate = this.editEndDate
       const candidates = this.editCandidateRows
+      for(const candidate of this.editCandidateRows) {
+          if(candidate.image) {
+            if(typeof candidate.image === 'string') {
+              data.append('candidates[]', JSON.stringify({id: candidate.id, name: candidate.name, image: candidate.image}))
+            } else {
+              if(candidate.hasOwnProperty('new')) {
+                data.append('candidates[]', JSON.stringify({name: candidate.name, image: candidate.image.name}))
+                data.append('images', candidate.image)
+              } else {
+                data.append('candidates[]', JSON.stringify({id: candidate.id, name: candidate.name, image: candidate.image}))
+                data.append('images', candidate.image)
+              }
+            }
+          } else {
+            if(candidate.hasOwnProperty('new')) {
+              data.append('candidates[]', JSON.stringify({name: candidate.name, image: null}))
+            } else {
+              data.append('candidates[]', JSON.stringify({id: candidate.id, name: candidate.name, image: null}))
+            }
+          }
+      }
       const voters = this.editVoterRows
+      for (const voter of this.editVoterRows) {
+        data.append('voters[]', voter.id)
+      }
       const managers = this.managerRows
+      for (const manager of this.managerRows) {
+        data.append('managers[]', managers.id)
+      }
       if (moment(startDate, 'DD-MM-YYYY HH:mm').isBefore(moment(endDate, 'DD-MM-YYYY HH:mm'))) {
         if (title.length > 0) {
           if (managers.length > 0) {
@@ -700,17 +739,20 @@ export default {
     openCandidateEdit(row) {
       this.editCandidateDialog = true
       this.candidateName = row.name
-      this.candidateImage = row.image
+      this.candidateImage = null
       this.editCandidateId = row.id
     },
     editCandidate() {
       if (this.candidateName.length > 0) {
         this.candidateLoading = true
         setTimeout(() => {
-          const index = this.candidateRows.findIndex((obj => obj.id === this.editCandidateId));
-          this.candidateRows[index].name = this.candidateName;
-          this.candidateRows[index].image = this.candidateImage ? this.candidateImage : null;
+          const index = this.editCandidateRows.findIndex((obj => obj.id === this.editCandidateId));
+          this.editCandidateRows[index].name = this.candidateName;
+          if(this.editImage) {
+            this.editCandidateRows[index].image = this.candidateImage ? this.candidateImage : null;
+          }
           this.editCandidateDialog = false
+          this.editImage = false
           this.candidateLoading = false
         })
       }
