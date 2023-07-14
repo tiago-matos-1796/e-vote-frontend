@@ -614,7 +614,7 @@ export default {
           this.newElection = false
           this.loading = true
           setTimeout(() => {
-            //console.log({title, start, end, key, candidates, voters})
+            console.log(data)
             const uri = 'http://localhost:8080/elections/'
             axios.post(uri, data, {
               headers: {

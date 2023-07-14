@@ -224,7 +224,7 @@
                 </q-card-section>
                 <q-card-actions align="center">
                   <q-btn label="Confirm changes" type="submit" color="primary"
-                         @click="confirmElectionEdit(selected_row.id)"/>
+                         @click="confirmElectionEdit(id)"/>
                   <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
                 </q-card-actions>
               </q-card>
@@ -663,14 +663,13 @@ export default {
       this.newManager = true;
     },
     confirmElectionEdit(id) {
-      let data = new FormData()
+      let data = new FormData();
       data.append('title', this.editElectionTitle)
       data.append('startDate', this.editStartDate)
       data.append('endDate', this.editEndDate)
       const title = this.editElectionTitle
       const startDate = this.editStartDate
       const endDate = this.editEndDate
-      const candidates = this.editCandidateRows
       for(const candidate of this.editCandidateRows) {
           if(candidate.image) {
             if(typeof candidate.image === 'string') {
@@ -680,7 +679,7 @@ export default {
                 data.append('candidates[]', JSON.stringify({name: candidate.name, image: candidate.image.name}))
                 data.append('images', candidate.image)
               } else {
-                data.append('candidates[]', JSON.stringify({id: candidate.id, name: candidate.name, image: candidate.image}))
+                data.append('candidates[]', JSON.stringify({id: candidate.id, name: candidate.name, image: candidate.image.name}))
                 data.append('images', candidate.image)
               }
             }
@@ -692,25 +691,33 @@ export default {
             }
           }
       }
-      const voters = this.editVoterRows
       for (const voter of this.editVoterRows) {
         data.append('voters[]', voter.id)
       }
       const managers = this.managerRows
       for (const manager of this.managerRows) {
-        data.append('managers[]', managers.id)
+        data.append('managers[]', manager.id)
       }
       if (moment(startDate, 'DD-MM-YYYY HH:mm').isBefore(moment(endDate, 'DD-MM-YYYY HH:mm'))) {
         if (title.length > 0) {
           if (managers.length > 0) {
-            console.log({id, title, startDate, endDate, candidates, voters, managers})
-            Notify.create({
-              color: 'green-4',
-              textColor: 'white',
-              icon: 'check',
-              message: `Election ${title} edited with success`
+            const uri = `http://localhost:8080/elections/${id}`
+            return axios.put(uri, data, {
+              headers: {
+                "Content-type": "multipart/form-data"
+              },
+              withCredentials: true
+            }).then(function (response) {
+              Notify.create({
+                color: 'green-4',
+                textColor: 'white',
+                icon: 'check',
+                message: `Election ${title} edited with success`
+              })
+              this.editElection = false;
+            }).catch(function (error) {
+              console.log(error)
             })
-            this.editElection = false;
           } else {
             Notify.create({
               color: 'red-10',
