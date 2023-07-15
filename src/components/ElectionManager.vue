@@ -479,7 +479,7 @@
 
 <script>
 import {onMounted, ref} from 'vue'
-import {Cookies, Notify, SessionStorage, useQuasar} from 'quasar'
+import {Cookies, Notify, QSpinnerGears, SessionStorage, useQuasar} from 'quasar'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
 import {Pie} from 'vue-chartjs'
 import moment from 'moment'
@@ -661,7 +661,7 @@ const chartOptions = {
   maintainAspectRatio: false,
 }
 
-const originalRows = []
+let originalRows = []
 
 
 export default {
@@ -683,7 +683,9 @@ export default {
     const settings = ref(false)
     const avatar = ref(null)
     const electionId = ref('')
+    const renewKey = ref(false)
     const newElectionKey = ref('')
+    const newElectionKey1 = ref('')
     const toggleBefore = ref(true)
     const toggleDuring = ref(true)
     const toggleAfter = ref(true)
@@ -735,9 +737,7 @@ export default {
           },
           withCredentials: true
         }).then(function (response) {
-          for(const election of response.data){
-            originalRows.push(election)
-          }
+          originalRows = response.data
         }).catch(function (error) {
           if(error.response.status === 403 || error.response.status === 401) {
            router.push({name: 'AccessDenied'})
@@ -772,6 +772,21 @@ export default {
         } else {
           router.push({name: 'Error'})
         }
+      })
+    }
+
+    async function regenerateKey(id, key) {
+      const uri = `http://localhost:8080/elections/${id}`;
+      const data = {key: key};
+      return await axios.patch(uri, data, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
       })
     }
 
@@ -877,7 +892,7 @@ export default {
       selected_row: ref({}),
       deleteConfirm,
       ph: ref(''),
-      renewKey: ref(false),
+      renewKey,
       electionResults: ref(false),
       electionResultsShow: ref(false),
       resultsRows,
@@ -893,7 +908,7 @@ export default {
         settings.value = true
       },
       newElectionKey,
-      newElectionKey1: ref(''),
+      newElectionKey1,
       hideKey: ref(true),
       hideKey1: ref(true),
       hideResultsKey: ref(true),
@@ -905,6 +920,36 @@ export default {
       electionId,
       removeElection(id) {
         electionDelete(id)
+      },
+      renewElectionKey(id) {
+        const key = newElectionKey.value
+        const confirmKey = newElectionKey1.value
+        if (key === confirmKey) {
+          $q.loading.show({
+            message: 'Key regeneration in progress, please wait...',
+            spinner: QSpinnerGears,
+          })
+          setTimeout(() => {
+            regenerateKey(id, key)
+            newElectionKey.value = null
+            newElectionKey1.value = null
+            $q.loading.hide()
+            $q.notify({
+              color: 'green-4',
+              textColor: 'white',
+              icon: 'check',
+              message: `Election key changed with success`
+            })
+            renewKey.value = false
+          }, 3000)
+        } else {
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'Cannot change election key; Both fields must have the same value'
+          })
+        }
       },
     }
   },
@@ -942,27 +987,6 @@ export default {
       SessionStorage.set('username', '');
       Cookies.remove('token');
       this.$router.push('login');
-    },
-    renewElectionKey(id) {
-      const key = this.newElectionKey
-      const confirmKey = this.newElectionKey1
-      if (key === confirmKey) {
-        console.log({id, key})
-        Notify.create({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'check',
-          message: `Election key changed with success`
-        })
-        this.renewKey = false
-      } else {
-        Notify.create({
-          color: 'red-10',
-          textColor: 'white',
-          icon: 'cancel',
-          message: 'Cannot change election key; Both fields must have the same value'
-        })
-      }
     },
     countElectionResults(id) {
       const key = this.resultsElectionKey

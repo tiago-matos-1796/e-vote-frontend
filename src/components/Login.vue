@@ -185,7 +185,6 @@ export default {
             "Content-type": "application/json"
           }
         }).then(function (response) {
-          console.log(response.data)
           $q.sessionStorage.set('permission', response.data.permissions);
           $q.sessionStorage.set('id', response.data.id);
           $q.sessionStorage.set('avatar', response.data.image);

@@ -20,7 +20,7 @@
           </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+              <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
             </q-avatar>
             <q-tooltip>Account</q-tooltip>
           </q-btn>
@@ -46,6 +46,7 @@
                         v-model:pagination="pagination"
                         :loading="loading"
                         binary-state-sort
+                        @request="onRequest"
                     >
                       <template v-slot:top-right>
                         <div class="q-gutter-lg-x-md">
@@ -98,99 +99,7 @@
                         persistent
                         full-width
                     >
-                      <div class="flex flex-center column">
-                        <div id="parent" class="fit wrap justify-center items-start content-start"
-                             style="overflow: hidden;">
-                          <q-card class="no-border-radius">
-                            <q-toolbar>
-                              <q-toolbar-title><span class="text-weight-bold">{{ selected_row.title }}</span>
-                              </q-toolbar-title>
-                              <q-btn flat round dense icon="close" v-close-popup/>
-                            </q-toolbar>
-                            <q-card-section>
-                              <div class="q-pa-md">
-                                <q-table
-                                    :rows="candidateRows"
-                                    :columns="candidateColumns"
-                                    row-key="id"
-                                    selection="single"
-                                    v-model:selected="selected"
-                                    :filter="filter"
-                                    rows-per-page-options="0"
-                                    grid
-                                    hide-header
-                                >
-                                  <template v-slot:item="props">
-                                    <div
-                                        class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3 grid-style-transition"
-                                        :style="props.selected ? 'transform: scale(0.95);' : ''"
-                                    >
-                                      <q-card bordered flat
-                                              :class="props.selected ? ($q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2') : ''">
-                                        <q-card-section>
-                                          <q-checkbox dense v-model="props.selected" :label="props.row.name"/>
-                                        </q-card-section>
-                                        <q-separator/>
-                                        <q-list dense>
-                                          <q-item v-for="col in props.cols.filter(col => col.name !== 'title')"
-                                                  :key="col.name">
-                                            <q-item-section>
-                                              <q-item-label>{{ col.label }}</q-item-label>
-                                            </q-item-section>
-                                            <q-item-section side>
-                                              <q-item-label caption>{{ col.value }}</q-item-label>
-                                            </q-item-section>
-                                          </q-item>
-                                        </q-list>
-                                      </q-card>
-                                    </div>
-                                  </template>
-
-                                </q-table>
-                              </div>
-                            </q-card-section>
-                            <q-card-actions align="center">
-                              <q-btn label="Vote" type="submit" color="primary" @click="voteConfirm(selected)"
-                                     v-close-popup/>
-                              <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
-                            </q-card-actions>
-                          </q-card>
-                        </div>
-                      </div>
-                    </q-dialog>
-                    <q-dialog v-model="sign">
-                      <q-card>
-                        <q-card-section>
-                          <div class="text-h6">Please confirm your
-                            {{ selected.length > 0 ? `vote on candidate ${selected[0].name}` : `blank vote` }}
-                          </div>
-                        </q-card-section>
-
-                        <q-card-section class="q-pt-none">
-                          <q-form
-                              class="q-gutter-md"
-                          >
-                            <q-input v-model="signatureKey" filled hint="Vote key"
-                                     :type="hideSignKey ? 'password' : 'text'"
-                                     :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Vote key must be 16 characters long',
-              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Vote key must have upper and lower case characters, special characters and digits']"
-                            >
-                              <template v-slot:append>
-                                <q-icon
-                                    :name="hideSignKey ? 'visibility_off' : 'visibility'"
-                                    class="cursor-pointer"
-                                    @click="hideSignKey = !hideSignKey"
-                                />
-                              </template>
-                            </q-input>
-                          </q-form>
-                        </q-card-section>
-
-                        <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="submitVote(selected_row.id)"/>
-                          <q-btn flat label="Cancel" color="negative" @click="selected=[];signatureKey='';sign=false"/>
-                        </q-card-actions>
-                      </q-card>
+                      <ElectionBallot :id="electionId"></ElectionBallot>
                     </q-dialog>
                     <q-dialog
                         v-model="electionResults"
@@ -316,10 +225,10 @@
       <q-card-section class="row items-center no-wrap">
         <div class="column items-center">
           <q-avatar size="72px">
-            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+            <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
           </q-avatar>
 
-          <div class="text-subtitle1 q-mt-md q-mb-xs">John Doe</div>
+          <div class="text-subtitle1 q-mt-md q-mb-xs">{{$q.sessionStorage.getItem('username')}}</div>
           <q-btn
               color="primary"
               label="Profile"
@@ -343,11 +252,16 @@
 </template>
 
 <script>
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
 import {Pie} from 'vue-chartjs'
-import {Cookies, Notify, SessionStorage} from "quasar";
+import {Cookies, SessionStorage} from "quasar";
 import moment from 'moment'
+import axios from "axios";
+import {useRouter} from "vue-router";
+import ElectionBallot from "@/components/ElectionBallot.vue";
+
+const router = useRouter();
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -366,44 +280,6 @@ const columns = [
   {name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: false},
 ]
 
-let rows = [
-  {
-    id: 1,
-    title: 'Election1',
-    startDate: '13-02-2023 00:00',
-    endDate: '15-06-2023 00:00',
-    voted: true,
-    results: '{a:1, b:2}'
-  },
-  {
-    id: 2,
-    title: 'Ice cream sandwich',
-    startDate: '13-02-2023 00:00',
-    endDate: '15-06-2032 00:00',
-    voted: true,
-    results: null
-  },
-  {
-    id: 3,
-    title: 'Eclair',
-    startDate: '13-02-2023 00:00',
-    endDate: '15-06-2032 00:00',
-    voted: false,
-    results: null
-  },
-  {
-    id: 4,
-    title: 'Cupcake',
-    startDate: '13-02-2023 00:00',
-    endDate: '15-06-2023 00:00',
-    voted: false,
-    results: '{a:1, b:2}'
-  },
-  {id: 5, title: 'Election2', startDate: '13-06-2023 00:00', endDate: '19-06-2023 00:00', voted: false, results: null},
-  {id: 6, title: 'Election3', startDate: '22-06-2023 00:00', endDate: '22-06-2023 23:59', voted: false, results: null},
-  {id: 7, title: 'Election4', startDate: '22-07-2023 00:00', endDate: '22-08-2023 23:59', voted: false, results: null}
-]
-
 const candidateColumns = [
   {
     name: 'name',
@@ -418,12 +294,6 @@ const candidateColumns = [
     name: 'image',
     label: 'Image',
   }
-]
-
-const candidateRows = [
-  {id: 1, name: 'candidate1', image: ''},
-  {id: 2, name: 'candidate2', image: ''},
-  {id: 3, name: 'candidate3', image: ''}
 ]
 
 const resultsColumns = [
@@ -481,9 +351,12 @@ const chartOptions = {
   maintainAspectRatio: false,
 }
 
+let originalRows = []
+
 export default {
   name: 'ElectionList',
   components: {
+    ElectionBallot,
     Pie
   },
   setup() {
@@ -497,12 +370,109 @@ export default {
     const search = ref('')
     const toVote = ref(false)
     const hasResults = ref(false)
-    const startRows = rows
+    const rows = ref([])
+    const startRows = ref([])
+    const electionId = ref('')
     const pagination = ref({
       sortBy: 'title',
       descending: false,
       page: 1,
       rowsPerPage: 5,
+      rowsNumber:10
+    })
+
+    async function getElections() {
+      const uri = 'http://localhost:8080/elections/voter'
+      try {
+        return await axios.get(uri, {
+          headers: {
+            "Content-type": "application/json"
+          },
+          withCredentials: true
+        }).then(function (response) {
+          originalRows = response.data
+        }).catch(function (error) {
+          if(error.response.status === 403 || error.response.status === 401) {
+            router.push({name: 'AccessDenied'})
+          } else {
+            router.push({name: 'Error'})
+          }
+        })
+      } catch (err) {
+        console.log(err)
+      }
+    }
+
+    function fetchFromServer (startRow, count, filter, sortBy, descending) {
+      const data = filter
+          ? originalRows.filter(row => row.title.includes(filter))
+          : originalRows.slice()
+
+      // handle sortBy
+      if (sortBy) {
+        const sortFn = (descending
+                ? (a, b) => (a[sortBy] > b[sortBy] ? -1 : a[sortBy] < b[sortBy] ? 1 : 0)
+                : (a, b) => (a[sortBy] > b[sortBy] ? 1 : a[sortBy] < b[sortBy] ? -1 : 0)
+        )
+        data.sort(sortFn)
+      }
+
+      return data.slice(startRow, startRow + count)
+    }
+
+    // emulate 'SELECT count(*) FROM ...WHERE...'
+    function getRowsNumberCount (filter) {
+      if (!filter) {
+        return originalRows.length
+      }
+      let count = 0
+      originalRows.forEach(treat => {
+        if (treat.name.includes(filter)) {
+          ++count
+        }
+      })
+      return count
+    }
+
+    function onRequest (props) {
+      const { page, rowsPerPage, sortBy, descending } = props.pagination
+      const filter = props.filter
+
+      loading.value = true
+
+      // emulate server
+      setTimeout(() => {
+        // update rowsCount with appropriate value
+        pagination.value.rowsNumber = getRowsNumberCount(filter)
+
+        // get all rows if "All" (0) is selected
+        const fetchCount = rowsPerPage === 0 ? pagination.value.rowsNumber : rowsPerPage
+
+        // calculate starting row of data
+        const startRow = (page - 1) * rowsPerPage
+
+        // fetch data from "server"
+        const returnedData = fetchFromServer(startRow, fetchCount, filter, sortBy, descending)
+
+        // clear out existing data and add new
+        rows.value.splice(0, rows.value.length, ...returnedData)
+        startRows.value.splice(0, rows.value.length, ...returnedData)
+
+        // don't forget to update local pagination object
+        pagination.value.page = page
+        pagination.value.rowsPerPage = rowsPerPage
+        pagination.value.sortBy = sortBy
+        pagination.value.descending = descending
+
+        // ...and turn of loading indicator
+        loading.value = false
+      }, 500)
+    }
+
+    onMounted(() => {
+      // get initial data from server (1st page)
+      getElections()
+      tableRef.value.requestServerInteraction()
     })
 
     return {
@@ -519,7 +489,6 @@ export default {
       search,
       toVote,
       hasResults,
-      candidateRows,
       candidateColumns,
       resultsRows,
       resultsColumns,
@@ -527,9 +496,10 @@ export default {
       chartOptions,
       abstainData,
       abstainOptions,
+      electionId,
+      onRequest,
       electionResults: ref(false),
       maximizedToggle: ref(true),
-      sign: ref(false),
       selected: ref([]),
       selected_row: ref({}),
       ballot: ref(false),
@@ -537,14 +507,13 @@ export default {
       settings,
       openSettings() {
         settings.value = true
-      },
-      hideSignKey: ref(true),
-      signatureKey: ref('')
+      }
     }
   },
   methods: {
     openBallot(row) {
       this.selected_row = row;
+      this.electionId = row.id;
       this.ballot = true;
     },
     canVote(row) {
@@ -564,26 +533,6 @@ export default {
       } else {
         return true
       }
-    },
-    voteConfirm(selected) {
-      this.selected = selected;
-      this.sign = true;
-    },
-    submitVote(id) {
-      this.loading = true
-      setTimeout(() => {
-        const vote = this.selected.length > 0 ? this.selected[0].id : "blank" // to be encrypted
-        const key = this.signatureKey
-        console.log({id, vote, key})
-        Notify.create({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'check',
-          message: `Vote submitted with success. Thank you!`
-        })
-        this.sign = false
-        this.loading = false
-      }, 500)
     },
     showResults(row) {
       this.selected_row = row;
@@ -620,7 +569,7 @@ export default {
         }
         if (this.toVote) {
           filteredRows = filteredRows.filter(obj =>
-              obj.voted === false
+              obj.voted === null
           )
         }
         if (this.hasResults) {
