@@ -95,9 +95,9 @@
 import axios from "axios";
 import {useRouter} from "vue-router";
 import {onMounted, ref} from "vue";
-import {Notify} from "quasar";
-import crypto from "crypto";
-import {Buffer} from "buffer";
+import {Notify, useQuasar} from "quasar";
+import crypto from 'crypto-browserify'
+import {Buffer} from 'buffer/' // <-- no typo here ("/")
 
 globalThis.Buffer = Buffer
 
@@ -109,9 +109,10 @@ export default {
     id: String
   },
   setup(props) {
+    const $q = useQuasar()
     const electionKey = ref('')
-    const signKey = ref('')
-    const signIv = ref('')
+    const hashMethod = ref('')
+    const signature = ref('')
     const sign = ref(false)
     const selected = ref([])
     const electionTitle = ref('')
@@ -140,12 +141,10 @@ export default {
           },
           withCredentials: true
         }).then(function (response) {
-          console.log(response.data)
           candidateRows.value = response.data.candidates
           electionTitle.value = response.data.title
           electionKey.value = response.data.election_key
-          signKey.value = response.data.signature_key
-          signIv.value = response.data.signature_iv
+          hashMethod.value = response.data.hash_method
         }).catch(function (error) {
           if(error.response.status === 403 || error.response.status === 401) {
             router.push({name: 'AccessDenied'})
@@ -155,9 +154,46 @@ export default {
         })
     }
 
+    async function getSignature(data) {
+      const uri = `http://localhost:8080/elections/signature`
+      return await axios.post(uri, data, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response.data.data
+      }).catch(function (error) {
+        $q.notify({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: 'An error has occurred while submitting your vote, please try again later'
+        })
+      });
+    }
+
+    async function submitVote(id, data) {
+      const uri = `http://localhost:8080/vote/${id}`
+      return await axios.post(uri, data, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        $q.notify({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: 'An error has occurred while submitting your vote, please try again later'
+        })
+      })
+    }
+
     function encrypt(data, publicKey) {
-      return crypto
-          .publicEncrypt(
+      return crypto.publicEncrypt(
               Buffer.from(publicKey, "base64").toString("utf8"),
               Buffer.from(data)
           )
@@ -174,6 +210,7 @@ export default {
       selected,
       sign,
       signatureKey,
+      signature,
       hideSignKey: ref(true),
       electionTitle,
       selected_row: ref({}),
@@ -182,12 +219,33 @@ export default {
           const vote = selected.value.length > 0 ? selected.value[0].id : "blank" // to be encrypted
           const key = signatureKey.value
           const encryptedVote = encrypt(vote, electionKey.value)
-          console.log({id, encryptedVote, key})
-          Notify.create({
-            color: 'green-4',
-            textColor: 'white',
-            icon: 'check',
-            message: `Vote submitted with success. Thank you!`
+          const data = {data: encryptedVote, key: key}
+          const hash = crypto.Hash(hashMethod.value)
+          hash.update(encryptedVote)
+          getSignature(data).then(function (response) {
+            //console.log({id: props.id, vote: encryptedVote, signature: response, hash: hash.digest('base64')})
+            submitVote(props.id, {vote: encryptedVote, signature: response, hash: hash.digest('base64')}).then(function (response) {
+              Notify.create({
+                color: 'green-4',
+                textColor: 'white',
+                icon: 'check',
+                message: `Vote submitted with success. Thank you!`
+              })
+            }).catch(function (error) {
+              Notify.create({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: 'Cannot submit vote, cannot create signature'
+              })
+            })
+          }).catch(function () {
+            Notify.create({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: 'Cannot submit vote, cannot create signature'
+            })
           })
           sign.value = false
         }, 500)
