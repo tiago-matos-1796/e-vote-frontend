@@ -252,66 +252,7 @@
                         transition-show="slide-up"
                         transition-hide="slide-down"
                     >
-                      <q-card class="bg-blue-grey-2 text-black">
-                        <q-bar>
-                          <div class="text-h6">{{ selected_row.title }} status</div>
-                          <q-space/>
-                          <q-btn dense flat icon="close" v-close-popup>
-                            <q-tooltip class="bg-white text-primary">Close</q-tooltip>
-                          </q-btn>
-                        </q-bar>
-                        <q-card-section class="q-pt-none">
-                          <div class="flex flex-center column">
-                            <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
-                              <div id="parent" class="fit wrap justify-center items-start content-start"
-                                   style="overflow: hidden;">
-                                <div class=" bg-grey-6" style="overflow: auto;">
-                                  <q-card class="no-border-radius">
-                                    <q-card-section>
-                                      <div class="q-pa-md example-row-equal-width">
-                                        <div class="row">
-                                          <div class="col">
-                                          </div>
-                                          <div class="col">
-                                            <q-card
-                                                class="my-card"
-                                            >
-                                              <q-card-section>
-                                                <div class="text-h6">Submitted Votes</div>
-                                              </q-card-section>
-
-                                              <q-card-section class="q-pt-none">
-                                                <Pie :data="statusData" :options="statusOptions"/>
-                                              </q-card-section>
-                                            </q-card>
-                                          </div>
-                                          <div class="col">
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div class="q-pa-md">
-                                        <q-table
-                                            flat bordered
-                                            title="Voters"
-                                            :rows="statusRows"
-                                            :columns="voterColumns"
-                                            row-key="email"
-                                            :filter="filter"
-                                            :loading="loading"
-                                        >
-                                        </q-table>
-                                      </div>
-                                    </q-card-section>
-                                    <q-card-actions align="center">
-                                      <q-btn label="Close" color="negative" v-close-popup/>
-                                    </q-card-actions>
-                                  </q-card>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </q-card-section>
-                      </q-card>
+                      <ElectionStatus :id="electionId" :title="electionTitle"></ElectionStatus>
                     </q-dialog>
                     <q-dialog
                         v-model="electionResultsShow"
@@ -347,7 +288,7 @@
                                               </q-card-section>
 
                                               <q-card-section class="q-pt-none">
-                                                <Pie :data="chartData" :options="chartOptions"/>
+                                                <DoughnutChart :data="chartData" :options="chartOptions"/>
                                               </q-card-section>
                                             </q-card>
 
@@ -481,12 +422,13 @@
 import {onMounted, ref} from 'vue'
 import {Cookies, Notify, QSpinnerGears, SessionStorage, useQuasar} from 'quasar'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
-import {Pie} from 'vue-chartjs'
+import {DoughnutChart} from 'vue-chart-3'
 import moment from 'moment'
 import axios from "axios";
 import AddElection from "@/components/AddElection.vue";
 import EditElection from "@/components/EditElection.vue";
 import {useRouter} from "vue-router";
+import ElectionStatus from "./ElectionStatus.vue";
 
 const router = useRouter();
 
@@ -622,31 +564,6 @@ const abstainOptions = {
   maintainAspectRatio: false
 }
 
-const statusRows = [
-  {displayName: 'A', email: 'a@a.a', voted: true},
-  {displayName: 'B', email: 'b@b.b', voted: true},
-  {displayName: 'C', email: 'c@c.c', voted: false},
-  {displayName: 'D', email: 'd@d.d', voted: false},
-  {displayName: 'E', email: 'e@e.e', voted: false},
-  {displayName: 'F', email: 'f@f.f', voted: false},
-  {displayName: 'G', email: 'g@g.g', voted: false},
-]
-
-const statusData = {
-  labels: ['Voted', 'Yet to vote'],
-  datasets: [
-    {
-      backgroundColor: ['#416db8', '#b64b3c'],
-      data: [2, 5]
-    }
-  ]
-}
-
-const statusOptions = {
-  responsive: true,
-  maintainAspectRatio: false
-}
-
 const chartData = {
   labels: ['candidate1', 'candidate2', 'candidate3'],
   datasets: [
@@ -667,9 +584,10 @@ let originalRows = []
 export default {
   name: 'ElectionManager',
   components: {
+    ElectionStatus,
     EditElection,
     AddElection,
-    Pie
+    DoughnutChart
   },
   setup() {
     const $q = useQuasar()
@@ -683,6 +601,7 @@ export default {
     const settings = ref(false)
     const avatar = ref(null)
     const electionId = ref('')
+    const electionTitle = ref('')
     const renewKey = ref(false)
     const newElectionKey = ref('')
     const newElectionKey1 = ref('')
@@ -914,10 +833,8 @@ export default {
       hideResultsKey: ref(true),
       resultsElectionKey: ref(''),
       electionStatus: ref(false),
-      statusOptions,
-      statusData,
-      statusRows,
       electionId,
+      electionTitle,
       removeElection(id) {
         electionDelete(id)
       },
@@ -971,6 +888,7 @@ export default {
     },
     showResults(row) {
       this.selected_row = row;
+      this.electionId = row.id;
       this.electionResults = true;
     },
     showElectionWindow() {
@@ -1019,6 +937,8 @@ export default {
     },
     openElectionStatus(row) {
       this.selected_row = row
+      this.electionId = row.id;
+      this.electionTitle = row.title
       this.electionStatus = true
     },
     customSortMain() {

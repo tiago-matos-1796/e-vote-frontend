@@ -149,7 +149,7 @@
                                               </q-card-section>
 
                                               <q-card-section class="q-pt-none">
-                                                <Pie :data="abstainData" :options="abstainOptions"/>
+                                                <DoughnutChart :data="abstainData" :options="abstainOptions"/>
                                               </q-card-section>
                                             </q-card>
 
@@ -254,7 +254,7 @@
 <script>
 import {onMounted, ref} from 'vue'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
-import {Pie} from 'vue-chartjs'
+import {DoughnutChart} from 'vue-chart-3'
 import {Cookies, SessionStorage} from "quasar";
 import moment from 'moment'
 import axios from "axios";
@@ -357,7 +357,7 @@ export default {
   name: 'ElectionList',
   components: {
     ElectionBallot,
-    Pie
+    DoughnutChart
   },
   setup() {
     const tableRef = ref()
