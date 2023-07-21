@@ -107,14 +107,14 @@
                                    :disable="canStatus(props.row.startDate, props.row.endDate) || loading" label=''
                                    icon='query_stats' @click="openElectionStatus(props.row)">
                               <q-tooltip>
-                                Check election status
+                                Show election status
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="results" color="primary"
                                    :disable="isAfterEnd(props.row.endDate) || loading" label='' icon='data_thresholding'
                                    @click="showResults(props.row)">
                               <q-tooltip>
-                                Check election results
+                                {{hasResults(props.row.results) ? 'Count election votes' : 'Recount election votes'}}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="results" color="info"
@@ -261,91 +261,7 @@
                         transition-show="slide-up"
                         transition-hide="slide-down"
                     >
-                      <q-card class="bg-blue-grey-2 text-black">
-                        <q-bar>
-                          <div class="text-h6">Results for election {{ selected_row.title }}</div>
-                          <q-space/>
-                          <q-btn dense flat icon="close" v-close-popup>
-                            <q-tooltip class="bg-white text-primary">Close</q-tooltip>
-                          </q-btn>
-                        </q-bar>
-                        <q-card-section class="q-pt-none">
-                          <div class="flex flex-center column">
-                            <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
-                              <div id="parent" class="fit wrap justify-center items-start content-start"
-                                   style="overflow: hidden;">
-                                <div class=" bg-grey-6" style="overflow: auto;">
-                                  <q-card class="no-border-radius">
-                                    <q-card-section>
-                                      <div class="q-pa-md example-row-equal-width">
-                                        <div class="row">
-                                          <div class="col">
-                                            <q-card
-                                                class="my-card"
-                                            >
-                                              <q-card-section>
-                                                <div class="text-h6">Votes</div>
-                                              </q-card-section>
-
-                                              <q-card-section class="q-pt-none">
-                                                <DoughnutChart :data="chartData" :options="chartOptions"/>
-                                              </q-card-section>
-                                            </q-card>
-
-                                          </div>
-                                          <div class="col">
-                                            <q-card
-                                                class="my-card"
-                                            >
-                                              <q-card-section>
-                                                <div class="text-h6">Abstention</div>
-                                              </q-card-section>
-
-                                              <q-card-section class="q-pt-none">
-                                                <Pie :data="abstainData" :options="abstainOptions"/>
-                                              </q-card-section>
-                                            </q-card>
-
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div class="q-pa-md">
-                                        <q-table
-                                            flat bordered
-                                            title="Results"
-                                            :rows="resultsRows"
-                                            :columns="resultsColumns"
-                                            row-key="candidate"
-                                            :filter="filter"
-                                            :loading="loading"
-                                        >
-                                        </q-table>
-                                      </div>
-                                      <div class="q-pa-md">
-                                        <q-table
-                                            flat bordered
-                                            title="Voters"
-                                            :rows="voterResultsRows"
-                                            :columns="voterColumns"
-                                            row-key="email"
-                                            :filter="filter"
-                                            :loading="loading"
-                                        >
-                                        </q-table>
-                                      </div>
-                                    </q-card-section>
-                                    <q-card-actions align="center">
-                                      <q-btn label="Download XLS" color="secondary"/>
-                                      <q-btn label="Download PDF" color="primary"/>
-                                      <q-btn label="Close" color="negative" v-close-popup/>
-                                    </q-card-actions>
-                                  </q-card>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </q-card-section>
-                      </q-card>
+                      <ElectionResults :id="electionId" :title="electionTitle"></ElectionResults>
                     </q-dialog>
                   </div>
                 </q-card-section>
@@ -422,13 +338,13 @@
 import {onMounted, ref} from 'vue'
 import {Cookies, Notify, QSpinnerGears, SessionStorage, useQuasar} from 'quasar'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
-import {DoughnutChart} from 'vue-chart-3'
 import moment from 'moment'
 import axios from "axios";
 import AddElection from "@/components/AddElection.vue";
 import EditElection from "@/components/EditElection.vue";
-import {useRouter} from "vue-router";
 import ElectionStatus from "./ElectionStatus.vue";
+import ElectionResults from "./ElectionResults.vue";
+import {useRouter} from "vue-router";
 
 const router = useRouter();
 
@@ -488,68 +404,6 @@ const userRows = [
   {id: 3, displayName: 'C', email: 'c@c.c'},
 ]
 
-const voterColumns = [
-  {
-    name: 'displayName',
-    required: true,
-    label: 'Display Name',
-    align: 'center',
-    field: row => row.displayName,
-    format: val => `${val}`,
-    sortable: true
-  },
-  {
-    name: 'email',
-    required: true,
-    label: 'Email',
-    align: 'center',
-    field: row => row.email,
-    format: val => `${val}`,
-    sortable: true
-  },
-  {
-    name: 'voted',
-    required: true,
-    label: 'Voted',
-    align: 'center',
-    field: row => row.voted,
-    format: val => `${val ? 'yes' : 'no'}`,
-    sortable: true
-  }
-]
-
-const voterResultsRows = [
-  {displayName: 'A', email: 'a@a.a', voted: true},
-  {displayName: 'B', email: 'b@b.b', voted: true},
-  {displayName: 'C', email: 'c@c.c', voted: false},
-]
-
-const resultsColumns = [
-  {
-    name: 'candidate',
-    required: true,
-    label: 'Candidate',
-    align: 'left',
-    field: row => row.candidate,
-    format: val => `${val}`,
-    sortable: true
-  },
-  {
-    name: 'votes',
-    required: true,
-    label: 'Votes',
-    align: 'right',
-    field: row => row.votes,
-    sortable: true,
-  }
-]
-
-const resultsRows = [
-  {candidate: 'candidate1', votes: 13},
-  {candidate: 'candidate2', votes: 17},
-  {candidate: 'candidate3', votes: 10},
-]
-
 const abstainData = {
   labels: ['Votes', 'Abstention'],
   datasets: [
@@ -584,10 +438,10 @@ let originalRows = []
 export default {
   name: 'ElectionManager',
   components: {
+    ElectionResults,
     ElectionStatus,
     EditElection,
     AddElection,
-    DoughnutChart
   },
   setup() {
     const $q = useQuasar()
@@ -611,6 +465,8 @@ export default {
     const searchMain = ref('')
     const searchCandidate = ref('')
     const deleteConfirm = ref(false)
+    const resultsElectionKey = ref('')
+    const electionResults = ref(false)
     const pagination = ref({
       sortBy: 'title',
       descending: false,
@@ -656,6 +512,7 @@ export default {
           },
           withCredentials: true
         }).then(function (response) {
+          console.log(response.data)
           originalRows = response.data
         }).catch(function (error) {
           if(error.response.status === 403 || error.response.status === 401) {
@@ -698,6 +555,20 @@ export default {
       const uri = `http://localhost:8080/elections/${id}`;
       const data = {key: key};
       return await axios.patch(uri, data, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
+
+    async function countVotes(id, data) {
+      const uri = `http://localhost:8080/vote/count/${id}`
+      return await axios.post(uri, data, {
         headers: {
           "Content-type": "application/json"
         },
@@ -812,16 +683,12 @@ export default {
       deleteConfirm,
       ph: ref(''),
       renewKey,
-      electionResults: ref(false),
+      electionResults,
       electionResultsShow: ref(false),
-      resultsRows,
-      resultsColumns,
       chartData,
       chartOptions,
       abstainData,
       abstainOptions,
-      voterColumns,
-      voterResultsRows,
       settings,
       openSettings() {
         settings.value = true
@@ -831,7 +698,7 @@ export default {
       hideKey: ref(true),
       hideKey1: ref(true),
       hideResultsKey: ref(true),
-      resultsElectionKey: ref(''),
+      resultsElectionKey,
       electionStatus: ref(false),
       electionId,
       electionTitle,
@@ -868,6 +735,48 @@ export default {
           })
         }
       },
+      countElectionResults(id) {
+        const key = resultsElectionKey.value
+        if (key.length === 16) {
+          if (key.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$')) {
+            const data = {key: key}
+            countVotes(id, data).then(function (response) {
+              if(response.code) {
+                Notify.create({
+                  color: 'red-10',
+                  textColor: 'white',
+                  icon: 'cancel',
+                  message: 'Cannot count election results; Election key is not correct'
+                })
+              } else {
+                console.log(response)
+                Notify.create({
+                  color: 'green-4',
+                  textColor: 'white',
+                  icon: 'check',
+                  message: `Election results counted with success`
+                })
+                electionResults.value = false
+              }
+            }).catch(function (error) {
+            })
+          } else {
+            Notify.create({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: 'Cannot count election results; Election key must have upper and lower case characters, special characters and digits'
+            })
+          }
+        } else {
+          Notify.create({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'Cannot count election results; Election key must be 16 characters long'
+          })
+        }
+      },
     }
   },
   watch: {
@@ -896,6 +805,8 @@ export default {
     },
     showElectionResults(row) {
       this.selected_row = row;
+      this.electionId = row.id;
+      this.electionTitle = row.title
       this.electionResultsShow = true;
     },
     logout() {
@@ -905,35 +816,6 @@ export default {
       SessionStorage.set('username', '');
       Cookies.remove('token');
       this.$router.push('login');
-    },
-    countElectionResults(id) {
-      const key = this.resultsElectionKey
-      if (key.length === 16) {
-        if (key.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$')) {
-          console.log({id, key})
-          Notify.create({
-            color: 'green-4',
-            textColor: 'white',
-            icon: 'check',
-            message: `Election results counted with success`
-          })
-          this.electionResults = false
-        } else {
-          Notify.create({
-            color: 'red-10',
-            textColor: 'white',
-            icon: 'cancel',
-            message: 'Cannot count election results; Election key must have upper and lower case characters, special characters and digits'
-          })
-        }
-      } else {
-        Notify.create({
-          color: 'red-10',
-          textColor: 'white',
-          icon: 'cancel',
-          message: 'Cannot count election results; Election key must be 16 characters long'
-        })
-      }
     },
     openElectionStatus(row) {
       this.selected_row = row

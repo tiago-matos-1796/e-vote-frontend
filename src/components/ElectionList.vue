@@ -108,77 +108,7 @@
                         transition-show="slide-up"
                         transition-hide="slide-down"
                     >
-                      <q-card class="bg-blue-grey-2 text-black">
-                        <q-bar>
-                          <div class="text-h6">Results for election {{ selected_row.title }}</div>
-                          <q-space/>
-                          <q-btn dense flat icon="close" v-close-popup>
-                            <q-tooltip class="bg-white text-primary">Close</q-tooltip>
-                          </q-btn>
-                        </q-bar>
-                        <q-card-section class="q-pt-none">
-                          <div class="flex flex-center column">
-                            <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
-                              <div id="parent" class="fit wrap justify-center items-start content-start"
-                                   style="overflow: hidden;">
-                                <div class=" bg-grey-6" style="overflow: auto;">
-                                  <q-card class="no-border-radius">
-                                    <q-card-section>
-                                      <div class="q-pa-md example-row-equal-width">
-                                        <div class="row">
-                                          <div class="col">
-                                            <q-card
-                                                class="my-card"
-                                            >
-                                              <q-card-section>
-                                                <div class="text-h6">Votes</div>
-                                              </q-card-section>
-
-                                              <q-card-section class="q-pt-none">
-                                                <Pie :data="chartData" :options="chartOptions"/>
-                                              </q-card-section>
-                                            </q-card>
-
-                                          </div>
-                                          <div class="col">
-                                            <q-card
-                                                class="my-card"
-                                            >
-                                              <q-card-section>
-                                                <div class="text-h6">Abstention</div>
-                                              </q-card-section>
-
-                                              <q-card-section class="q-pt-none">
-                                                <DoughnutChart :data="abstainData" :options="abstainOptions"/>
-                                              </q-card-section>
-                                            </q-card>
-
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div class="q-pa-md">
-                                        <q-table
-                                            flat bordered
-                                            title="Results"
-                                            :rows="resultsRows"
-                                            :columns="resultsColumns"
-                                            row-key="candidate"
-                                            :filter="filter"
-                                            :loading="loading"
-                                        >
-                                        </q-table>
-                                      </div>
-                                    </q-card-section>
-                                    <q-card-actions align="center">
-                                      <q-btn label="Close" color="negative" v-close-popup/>
-                                    </q-card-actions>
-                                  </q-card>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </q-card-section>
-                      </q-card>
+                      <ElectionResultsUser :id="electionId" :title="electionTitle"></ElectionResultsUser>
                     </q-dialog>
                   </div>
                 </q-card-section>
@@ -254,12 +184,12 @@
 <script>
 import {onMounted, ref} from 'vue'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
-import {DoughnutChart} from 'vue-chart-3'
 import {Cookies, SessionStorage} from "quasar";
 import moment from 'moment'
 import axios from "axios";
 import {useRouter} from "vue-router";
 import ElectionBallot from "@/components/ElectionBallot.vue";
+import ElectionResultsUser from "./ElectionResultsUser.vue";
 
 const router = useRouter();
 
@@ -356,8 +286,8 @@ let originalRows = []
 export default {
   name: 'ElectionList',
   components: {
+    ElectionResultsUser,
     ElectionBallot,
-    DoughnutChart
   },
   setup() {
     const tableRef = ref()
@@ -373,6 +303,7 @@ export default {
     const rows = ref([])
     const startRows = ref([])
     const electionId = ref('')
+    const electionTitle = ref('')
     const pagination = ref({
       sortBy: 'title',
       descending: false,
@@ -497,6 +428,7 @@ export default {
       abstainData,
       abstainOptions,
       electionId,
+      electionTitle,
       onRequest,
       electionResults: ref(false),
       maximizedToggle: ref(true),
@@ -536,6 +468,8 @@ export default {
     },
     showResults(row) {
       this.selected_row = row;
+      this.electionId = row.id;
+      this.electionTitle = row.title
       this.electionResults = true;
     },
     customSort() {

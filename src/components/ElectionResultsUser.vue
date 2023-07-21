@@ -59,22 +59,8 @@
                     >
                     </q-table>
                   </div>
-                  <div class="q-pa-md">
-                    <q-table
-                        flat bordered
-                        title="Voters"
-                        :rows="voterResultsRows"
-                        :columns="voterColumns"
-                        row-key="email"
-                        :filter="filter"
-                        :loading="loading"
-                    >
-                    </q-table>
-                  </div>
                 </q-card-section>
                 <q-card-actions align="center">
-                  <q-btn label="Download XLS" color="secondary"/>
-                  <q-btn label="Download PDF" color="primary"/>
                   <q-btn label="Close" color="negative" v-close-popup/>
                 </q-card-actions>
               </q-card>
@@ -91,14 +77,13 @@ import {onMounted, ref} from "vue";
 import axios from "axios";
 
 export default {
-  name: "ElectionResults",
+  name: "ElectionResultsUser",
   props: {
     id: String,
     title: String
   },
   setup(props) {
     const loading = ref(false)
-    const voterResultsRows = ref([])
     const resultsRows = ref([])
     const abstentionData = ref(null)
     const voteData = ref(null)
@@ -160,14 +145,13 @@ export default {
     })
 
     async function getResults() {
-      const uri = `http://localhost:8080/vote/results/${props.id}`
+      const uri = `http://localhost:8080/vote/results/user/${props.id}`
       return await axios.get(uri, {
         headers: {
           "Content-type": "application/json"
         },
         withCredentials: true
       }).then(function (response) {
-        voterResultsRows.value = response.data.voters
         resultsRows.value = response.data.candidates
         abstentionData.value = response.data.abstention
         voteData.value = response.data.voteData
@@ -181,7 +165,6 @@ export default {
     })
 
     return {
-      voterResultsRows,
       resultsRows,
       resultsColumns,
       voterColumns,
