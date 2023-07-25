@@ -20,7 +20,7 @@
           </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+              <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
             </q-avatar>
             <q-tooltip>Account</q-tooltip>
           </q-btn>
@@ -38,6 +38,7 @@
                   <div class="q-pa-md">
                     <q-table
                         flat bordered
+                        ref="tableRef"
                         title="Users"
                         :rows="rows"
                         :columns="columns"
@@ -45,6 +46,7 @@
                         v-model:pagination="pagination"
                         :loading="loading"
                         binary-state-sort
+                        @request="onRequest"
                     >
                       <template v-slot:top-right>
                         <div class="q-gutter-lg-x-md">
@@ -66,8 +68,8 @@
                           <q-td key="email" :props="props">
                             {{ props.row.email }}
                           </q-td>
-                          <q-td key="displayName" :props="props">
-                            {{ props.row.displayName }}
+                          <q-td key="display_name" :props="props">
+                            {{ props.row.display_name }}
                           </q-td>
                           <q-td key="username" :props="props">
                             {{ props.row.username }}
@@ -180,10 +182,10 @@
       <q-card-section class="row items-center no-wrap">
         <div class="column items-center">
           <q-avatar size="72px">
-            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+            <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
           </q-avatar>
 
-          <div class="text-subtitle1 q-mt-md q-mb-xs">John Doe</div>
+          <div class="text-subtitle1 q-mt-md q-mb-xs">{{$q.sessionStorage.getItem('username')}}</div>
           <q-btn
               color="primary"
               label="Profile"
@@ -207,9 +209,10 @@
 </template>
 
 <script>
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {Cookies, Notify, SessionStorage, useQuasar} from 'quasar'
 import {useAuthStore} from "@/stores/auth";
+import axios from "axios";
 
 const columns = [
   {
@@ -221,19 +224,13 @@ const columns = [
     format: val => `${val}`,
     sortable: true
   },
-  {name: 'displayName', align: 'center', label: 'Display Name', field: 'displayName', sortable: true},
+  {name: 'display_name', align: 'center', label: 'Display Name', field: 'display_name', sortable: true},
   {name: 'username', align: 'center', label: 'Username', field: 'username', sortable: true},
   {name: 'permission', align: 'center', label: 'Permission', field: 'permission', sortable: true},
   {name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: false},
 ]
 
-let rows = [
-  {id: 1, email: 'a@a.a', displayName: 'A', username: 'a', permission: 'REGULAR'},
-  {id: 2, email: 'b@b.b', displayName: 'B', username: 'b', permission: 'REGULAR'},
-  {id: 3, email: 'c@c.c', displayName: 'C', username: 'c', permission: 'AUDITOR'},
-  {id: 4, email: 'd@d.d', displayName: 'D', username: 'd', permission: 'MANAGER'},
-  {id: 5, email: 'e@e.e', displayName: 'E', username: 'e', permission: 'ADMIN'}
-]
+let originalRows = []
 
 export default {
   name: 'Admin',
@@ -243,6 +240,10 @@ export default {
     const filter = ref('')
     const loading = ref(false)
     const settings = ref(false)
+    const rows = ref([])
+    const startRows = ref([])
+    const permissions = ref(null)
+    const permission = ref(false)
     const toggleRegular = ref(true)
     const toggleManager = ref(true)
     const toggleAuditor = ref(true)
@@ -253,6 +254,92 @@ export default {
       descending: false,
       page: 1,
       rowsPerPage: 5,
+      rowsNumber:10
+    })
+
+    async function getUsers() {
+      const uri = `http://localhost:8080/users/user-list`
+      return await axios.get(uri, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        originalRows = response.data
+      }).catch(function (error) {
+
+      })
+    }
+
+    function fetchFromServer (startRow, count, filter, sortBy, descending) {
+      const data = filter
+          ? originalRows.filter(row => row.title.includes(filter))
+          : originalRows.slice()
+
+      // handle sortBy
+      if (sortBy) {
+        const sortFn = (descending
+                ? (a, b) => (a[sortBy] > b[sortBy] ? -1 : a[sortBy] < b[sortBy] ? 1 : 0)
+                : (a, b) => (a[sortBy] > b[sortBy] ? 1 : a[sortBy] < b[sortBy] ? -1 : 0)
+        )
+        data.sort(sortFn)
+      }
+
+      return data.slice(startRow, startRow + count)
+    }
+
+    // emulate 'SELECT count(*) FROM ...WHERE...'
+    function getRowsNumberCount (filter) {
+      if (!filter) {
+        return originalRows.length
+      }
+      let count = 0
+      originalRows.forEach(treat => {
+        if (treat.name.includes(filter)) {
+          ++count
+        }
+      })
+      return count
+    }
+
+    function onRequest (props) {
+      const { page, rowsPerPage, sortBy, descending } = props.pagination
+      const filter = props.filter
+
+      loading.value = true
+
+      // emulate server
+      setTimeout(() => {
+        // update rowsCount with appropriate value
+        pagination.value.rowsNumber = getRowsNumberCount(filter)
+
+        // get all rows if "All" (0) is selected
+        const fetchCount = rowsPerPage === 0 ? pagination.value.rowsNumber : rowsPerPage
+
+        // calculate starting row of data
+        const startRow = (page - 1) * rowsPerPage
+
+        // fetch data from "server"
+        const returnedData = fetchFromServer(startRow, fetchCount, filter, sortBy, descending)
+
+        // clear out existing data and add new
+        rows.value.splice(0, rows.value.length, ...returnedData)
+        startRows.value.splice(0, rows.value.length, ...returnedData)
+
+        // don't forget to update local pagination object
+        pagination.value.page = page
+        pagination.value.rowsPerPage = rowsPerPage
+        pagination.value.sortBy = sortBy
+        pagination.value.descending = descending
+
+        // ...and turn of loading indicator
+        loading.value = false
+      }, 500)
+    }
+
+    onMounted(() => {
+      getUsers()
+      tableRef.value.requestServerInteraction()
     })
 
     return {
@@ -268,16 +355,36 @@ export default {
       toggleManager,
       toggleAdmin,
       search,
+      startRows,
       openSettings() {
         settings.value = true
       },
-      permissions: ref(null),
+      onRequest,
+      getUsers,
+      permissions,
       options: ['REGULAR', 'MANAGER', 'AUDITOR', 'ADMIN'],
       maximizedToggle: ref(true),
-      permission: ref(false),
+      permission,
       selected_row: ref({}),
       deleteConfirm: ref(false),
       ph: ref(''),
+      submitPermissionChange(row) {
+        loading.value = true
+        setTimeout(() => {
+          console.log({id: row.id, permission: permissions.value})
+          $q.notify({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: `Permission for user ${row.username} changed with success`
+          })
+          permissions.value = []
+          permission.value = false
+          getUsers()
+          onRequest({filter: filter.value, pagination: pagination.value})
+          loading.value = false
+        }, 500)
+      },
     }
   },
   methods: {
@@ -289,21 +396,6 @@ export default {
     deleteUser(row) {
       this.selected_row = row;
       this.deleteConfirm = true;
-    },
-    submitPermissionChange(row) {
-      this.loading = true
-      setTimeout(() => {
-        console.log({id: row.id, permission: this.permissions})
-        Notify.create({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'check',
-          message: `Permission for user ${row.username} changed with success`
-        })
-        this.permissions = []
-        this.permission = false
-        this.loading = false
-      }, 500)
     },
     submitUserDeletion(row) {
       this.loading = true
@@ -323,26 +415,27 @@ export default {
       this.loading = true
       setTimeout(() => {
         let filteredRows = []
+        const data = this.startRows
         if (this.toggleRegular) {
-          const filtered = rows.filter(obj =>
+          const filtered = data.filter(obj =>
               obj.permission === 'REGULAR'
           )
           filteredRows.push(...filtered)
         }
         if (this.toggleAuditor) {
-          const filtered = rows.filter(obj =>
+          const filtered = data.filter(obj =>
               obj.permission === 'AUDITOR'
           )
           filteredRows.push(...filtered)
         }
         if (this.toggleManager) {
-          const filtered = rows.filter(obj =>
+          const filtered = data.filter(obj =>
               obj.permission === 'MANAGER'
           )
           filteredRows.push(...filtered)
         }
         if (this.toggleAdmin) {
-          const filtered = rows.filter(obj =>
+          const filtered = data.filter(obj =>
               obj.permission === 'ADMIN'
           )
           filteredRows.push(...filtered)

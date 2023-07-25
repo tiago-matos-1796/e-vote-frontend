@@ -512,7 +512,6 @@ export default {
           },
           withCredentials: true
         }).then(function (response) {
-          console.log(response.data)
           originalRows = response.data
         }).catch(function (error) {
           if(error.response.status === 403 || error.response.status === 401) {
