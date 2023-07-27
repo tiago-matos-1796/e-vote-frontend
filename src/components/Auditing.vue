@@ -20,7 +20,7 @@
           </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+              <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
             </q-avatar>
             <q-tooltip>Account</q-tooltip>
           </q-btn>
@@ -61,17 +61,20 @@
                             <div class="q-pa-md">
                               <q-table
                                   flat bordered
+                                  ref="tableRef"
                                   title=""
-                                  :rows="internalRows"
+                                  :rows="rows"
                                   :columns="internalColumns"
-                                  row-key="name"
+                                  row-key="id"
                                   :filter="filter"
                                   :loading="loading"
                                   :pagination="pagination"
+                                  @request="onRequest"
                               >
 
                                 <template v-slot:top-right>
-                                  <q-input dense debounce="400" color="primary" v-model="filter" placeholder="Search by row">
+                                  <q-input dense debounce="400" color="primary" v-model="filter"
+                                           placeholder="Search log">
                                     <template v-slot:append>
                                       <q-icon name="search"/>
                                     </template>
@@ -86,10 +89,11 @@
                             <div class="q-pa-md">
                               <q-table
                                   flat bordered
+                                  ref="electionTableRef"
                                   title=""
                                   :rows="electionRows"
                                   :columns="electionsColumns"
-                                  row-key="name"
+                                  row-key="id"
                                   binary-state-sort
                                   :loading="electionLoading"
                                   :pagination="pagination"
@@ -103,7 +107,7 @@
                                     <q-input dense debounce="400" color="primary" v-model="search"
                                              placeholder="Search by election" @keyup.enter="customSort">
                                       <template v-slot:append>
-                                        <q-icon name="close" @click="clearSearch" class="cursor-pointer" />
+                                        <q-icon name="close" @click="clearSearch" class="cursor-pointer"/>
                                         <q-icon name="search" @click="customSort" class="cursor-pointer"/>
                                       </template>
                                     </q-input>
@@ -160,10 +164,10 @@
       <q-card-section class="row items-center no-wrap">
         <div class="column items-center">
           <q-avatar size="72px">
-            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+            <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
           </q-avatar>
 
-          <div class="text-subtitle1 q-mt-md q-mb-xs">John Doe</div>
+          <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('username') }}</div>
           <q-btn
               color="primary"
               label="Profile"
@@ -187,138 +191,156 @@
 </template>
 
 <script>
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {Cookies, SessionStorage} from "quasar";
+import axios from "axios";
 
 const electionsColumns = [
   {
-    name: 'election',
+    name: 'election_title',
     required: true,
     label: 'Election',
     align: 'left',
-    field: row => row.election,
+    field: row => row.election_title,
     format: val => `${val}`,
     sortable: true
   },
   {name: 'log', align: 'center', label: 'Log', field: 'log', sortable: true},
-  {name: 'createdAt', label: 'Created at', field: 'createdAt', sortable: true},
+  {name: 'log_creation', label: 'Created at', field: 'log_creation', sortable: true},
   {name: 'severity', label: 'Severity', field: 'severity', sortable: true}
 ]
 
 const internalColumns = [
   {name: 'log', align: 'center', label: 'Log', field: 'log', sortable: true},
-  {name: 'createdAt', label: 'Created at', field: 'createdAt', sortable: true},
-  {name: 'createdBy', label: 'Created by', field: 'createdBy', sortable: true}
+  {name: 'log_creation', label: 'Created at', field: 'log_creation', sortable: true},
+  {name: 'type', label: 'Type', field: 'type', sortable: true}
 ]
 
-let electionRows = [
-  {
-    id: 1,
-    election: 'Election1',
-    log: 'Election created',
-    createdAt: '23/05/2023',
-    severity: 'NONE'
-  },
-  {
-    id: 2,
-    election: 'Election1',
-    log: 'Vote submitted',
-    createdAt: '24/05/2023',
-    severity: 'NONE'
-  },
-  {
-    id: 3,
-    election: 'Election1',
-    log: 'Vote submitted',
-    createdAt: '24/05/2023',
-    severity: 'NONE'
-  },
-  {
-    id: 4,
-    election: 'Election1',
-    log: 'Signature not validated',
-    createdAt: '24/05/2023',
-    severity: 'HIGH'
-  },
-  {
-    id: 5,
-    election: 'Election1',
-    log: 'Duplicated vote',
-    createdAt: '24/05/2023',
-    severity: 'LOW'
-  },
-  {
-    id: 6,
-    election: 'Election1',
-    log: 'Hash not validated',
-    createdAt: '24/05/2023',
-    severity: 'MEDIUM'
-  },
-  {
-    id: 7,
-    election: 'Election2',
-    log: 'Election created',
-    createdAt: '24/05/2023',
-    severity: 'NONE'
-  },
-  {
-    id: 8,
-    election: 'Election2',
-    log: 'Signature not validated',
-    createdAt: '24/05/2023',
-    severity: 'HIGH'
-  }
-]
+const internalRows = []
 
-const internalRows = [
-  {
-    id: 1,
-    log: 'Permission changed from REGULAR to ADMIN',
-    createdAt: '23/05/2023',
-    createdBy: 'admin1'
-  },
-  {
-    id: 2,
-    log: 'Permission changed from REGULAR to MANAGER',
-    createdAt: '23/05/2023',
-    createdBy: 'admin1'
-  },
-  {
-    id: 3,
-    log: 'Permission changed from MANAGER to AUDITOR',
-    createdAt: '23/05/2023',
-    createdBy: 'admin1'
-  },
-  {
-    id: 4,
-    log: 'Permission changed from REGULAR to MANAGER',
-    createdAt: '23/06/2023',
-    createdBy: 'admin2'
-  },
-  {
-    id: 5,
-    log: 'Permission changed from MANAGER to AUDITOR',
-    createdAt: '23/06/2023',
-    createdBy: 'admin2'
-  }
-]
+let originalRows = []
+
+let originalElectionRows = []
 export default {
   name: "Auditing",
 
   setup() {
+    const tableRef = ref()
+    const electionTableRef = ref()
     const settings = ref(false)
     const internalFilter = ref('')
     const loading = ref(false)
     const filter = ref('')
     const toggleNone = ref(true)
+    const rows = ref([])
+    const startRows = ref([])
+    const electionRows = ref([])
+    const startElectionRows = ref([])
     const toggleLow = ref(true)
     const toggleMedium = ref(true)
     const toggleHigh = ref(true)
     const search = ref('')
     const electionLoading = ref(false)
+    const pagination = ref({
+      sortBy: 'log_creation',
+      descending: true,
+      page: 1,
+      rowPerPage: 10,
+      rowsNumber: 10
+    })
+
+    async function getLogs() {
+      const uri = `http://localhost:8080/log`
+      return await axios.get(uri, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        originalRows = response.data.internal_logs
+        electionRows.value = response.data.election_logs
+        startElectionRows.value = response.data.election_logs
+      }).catch(function (error) {
+
+      })
+    }
+
+    function fetchFromServer(startRow, count, filter, sortBy, descending) {
+      const data = filter
+          ? originalRows.filter(row => row.log.includes(filter))
+          : originalRows.slice()
+      // handle sortBy
+      if (sortBy) {
+        const sortFn = (descending
+                ? (a, b) => (a[sortBy] > b[sortBy] ? -1 : a[sortBy] < b[sortBy] ? 1 : 0)
+                : (a, b) => (a[sortBy] > b[sortBy] ? 1 : a[sortBy] < b[sortBy] ? -1 : 0)
+        )
+        data.sort(sortFn)
+      }
+
+      return data.slice(startRow, startRow + count)
+    }
+
+    // emulate 'SELECT count(*) FROM ...WHERE...'
+    function getRowsNumberCount(filter) {
+      if (!filter) {
+        return originalRows.length
+      }
+      let count = 0
+      originalRows.forEach(treat => {
+        if (treat.log.includes(filter)) {
+          ++count
+        }
+      })
+      return count
+    }
+
+    function onRequest(props) {
+      const {page, rowsPerPage, sortBy, descending} = props.pagination
+      const filter = props.filter
+
+      loading.value = true
+
+      // emulate server
+      setTimeout(() => {
+        // update rowsCount with appropriate value
+        pagination.value.rowsNumber = getRowsNumberCount(filter)
+
+        // get all rows if "All" (0) is selected
+        const fetchCount = rowsPerPage === 0 ? pagination.value.rowsNumber : rowsPerPage
+
+        // calculate starting row of data
+        const startRow = (page - 1) * rowsPerPage
+
+        // fetch data from "server"
+        const returnedData = fetchFromServer(startRow, fetchCount, filter, sortBy, descending)
+
+        // clear out existing data and add new
+        rows.value.splice(0, rows.value.length, ...returnedData)
+        startRows.value.splice(0, rows.value.length, ...returnedData)
+
+        // don't forget to update local pagination object
+        pagination.value.page = page
+        pagination.value.rowsPerPage = rowsPerPage
+        pagination.value.sortBy = sortBy
+        pagination.value.descending = descending
+
+        // ...and turn of loading indicator
+        loading.value = false
+      }, 500)
+    }
+
+    onMounted(() => {
+      getLogs()
+      tableRef.value.requestServerInteraction()
+    })
 
     return {
+      tableRef,
+      electionTableRef,
       settings,
+      filter,
+      pagination,
       openSettings() {
         settings.value = true
       },
@@ -327,63 +349,60 @@ export default {
       electionRows,
       internalColumns,
       internalRows,
+      rows,
       loading,
       electionLoading,
-      filter,
-      pagination: ref({
-        sortBy: 'createdAt',
-        descending: true,
-        page: 1,
-        rowPerPage: 10
-      }),
       toggleNone,
       toggleLow,
       toggleMedium,
       toggleHigh,
       internalFilter,
       search,
+      onRequest,
+      customSort() {
+        electionLoading .value= true
+        setTimeout(() => {
+          electionRows.value = startElectionRows.value
+          const data = electionRows.value
+          let filteredRows = []
+          if (toggleNone.value) {
+            const filtered = data.filter(obj =>
+                obj.severity === 'NONE'
+            )
+            filteredRows.push(...filtered)
+          }
+          if (toggleLow.value) {
+            const filtered = data.filter(obj =>
+                obj.severity === 'LOW'
+            )
+            filteredRows.push(...filtered)
+          }
+          if (toggleMedium.value) {
+            const filtered = data.filter(obj =>
+                obj.severity === 'MEDIUM'
+            )
+            filteredRows.push(...filtered)
+          }
+          if (toggleHigh.value) {
+            const filtered = data.filter(obj =>
+                obj.severity === 'HIGH'
+            )
+            filteredRows.push(...filtered)
+          }
+          if (search.value) {
+            filteredRows = filteredRows.filter(obj =>
+                obj.election_title.toLowerCase().includes(search.value.toLowerCase())
+            )
+          }
+          electionRows.value = filteredRows
+          electionLoading.value = false
+        }, 500)
+
+      },
     }
   },
   computed: {},
   methods: {
-    customSort (rows, sortBy, descending) {
-      this.electionLoading = true
-      setTimeout(() => {
-        let filteredRows = []
-        if(this.toggleNone) {
-          const filtered = electionRows.filter(obj =>
-              obj.severity === 'NONE'
-          )
-          filteredRows.push(...filtered)
-        }
-        if(this.toggleLow) {
-          const filtered = electionRows.filter(obj =>
-              obj.severity === 'LOW'
-          )
-          filteredRows.push(...filtered)
-        }
-        if(this.toggleMedium) {
-          const filtered = electionRows.filter(obj =>
-              obj.severity === 'MEDIUM'
-          )
-          filteredRows.push(...filtered)
-        }
-        if(this.toggleHigh) {
-          const filtered = electionRows.filter(obj =>
-              obj.severity === 'HIGH'
-          )
-          filteredRows.push(...filtered)
-        }
-        if(this.search) {
-          filteredRows = filteredRows.filter(obj =>
-              obj.election.toLowerCase().includes(this.search.toLowerCase())
-          )
-        }
-        this.electionRows = filteredRows
-        this.electionLoading = false
-      }, 500)
-
-    },
     clearSearch() {
       this.search = ''
       this.customSort()

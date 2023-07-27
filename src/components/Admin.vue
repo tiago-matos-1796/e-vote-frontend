@@ -211,8 +211,10 @@
 <script>
 import {onMounted, ref} from 'vue'
 import {Cookies, Notify, SessionStorage, useQuasar} from 'quasar'
-import {useAuthStore} from "@/stores/auth";
 import axios from "axios";
+import {useRouter} from "vue-router";
+
+const router = useRouter();
 
 const columns = [
   {
@@ -249,6 +251,7 @@ export default {
     const toggleAuditor = ref(true)
     const toggleAdmin = ref(true)
     const search = ref('')
+    const deleteConfirm = ref(false)
     const pagination = ref({
       sortBy: 'username',
       descending: false,
@@ -267,7 +270,40 @@ export default {
       }).then(function (response) {
         originalRows = response.data
       }).catch(function (error) {
+        if(error.response.status === 403 || error.response.status === 401) {
+          router.push({name: 'AccessDenied'})
+        } else {
+          router.push({name: 'Error'})
+        }
+      })
+    }
 
+    async function changeUserPermission(id, permission) {
+      const uri = `http://localhost:8080/users/admin/${id}`
+      const data = {permission: permission}
+      return await axios.patch(uri, data, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+          return response.data
+      }).catch(function (error) {
+          return error
+      })
+    }
+
+    async function deleteUser(id) {
+      const uri = `http://localhost:8080/users/admin/${id}`
+      return await axios.delete(uri, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response.data
+      }).catch(function (error) {
+        return error
       })
     }
 
@@ -360,29 +396,93 @@ export default {
         settings.value = true
       },
       onRequest,
-      getUsers,
       permissions,
       options: ['REGULAR', 'MANAGER', 'AUDITOR', 'ADMIN'],
       maximizedToggle: ref(true),
       permission,
       selected_row: ref({}),
-      deleteConfirm: ref(false),
+      deleteConfirm,
       ph: ref(''),
       submitPermissionChange(row) {
+        if(!permissions.value) {
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'Please choose a permission'
+          })
+        } else {
+          loading.value = true
+          setTimeout(() => {
+            changeUserPermission(row.id, permissions.value).then(function (response) {
+              if(row.id === $q.sessionStorage.getItem("id")) {
+                $q.sessionStorage.set('permission', '');
+                $q.sessionStorage.set('id', '');
+                $q.sessionStorage.set('avatar', '');
+                $q.cookies.remove('token');
+                router.push({name: 'Login'})
+              } else {
+                $q.notify({
+                  color: 'green-4',
+                  textColor: 'white',
+                  icon: 'check',
+                  message: `Permission for user ${row.username} changed with success`
+                })
+                permissions.value = []
+                permission.value = false
+                getUsers()
+                onRequest({filter: filter.value, pagination: pagination.value})
+                loading.value = false
+              }
+            }).catch(function (error) {
+
+            })
+          }, 500)
+        }
+      },
+      submitUserDeletion(row) {
         loading.value = true
         setTimeout(() => {
-          console.log({id: row.id, permission: permissions.value})
-          $q.notify({
-            color: 'green-4',
-            textColor: 'white',
-            icon: 'check',
-            message: `Permission for user ${row.username} changed with success`
+          deleteUser(row.id).then(function (response) {
+            if(response.code === 'ERR_BAD_REQUEST') {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: 'Cannot delete user; User is voter in at least 1 election'
+              })
+              deleteConfirm.value = false
+              loading.value = false
+            } else {
+              if(row.id === $q.sessionStorage.getItem("id")) {
+                $q.sessionStorage.set('permission', '');
+                $q.sessionStorage.set('id', '');
+                $q.sessionStorage.set('avatar', '');
+                $q.cookies.remove('token');
+                router.push({name: 'Login'})
+              } else {
+                Notify.create({
+                  color: 'green-4',
+                  textColor: 'white',
+                  icon: 'check',
+                  message: `User ${row.username} deleted with success`
+                })
+                deleteConfirm.value = false;
+                getUsers()
+                onRequest({filter: filter.value, pagination: pagination.value})
+                loading.value = false
+              }
+            }
+          }).catch(function (error) {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: 'An error has occurred, Please try again later'
+            })
+            deleteConfirm.value = false
+            loading.value = false
           })
-          permissions.value = []
-          permission.value = false
-          getUsers()
-          onRequest({filter: filter.value, pagination: pagination.value})
-          loading.value = false
         }, 500)
       },
     }
@@ -396,20 +496,6 @@ export default {
     deleteUser(row) {
       this.selected_row = row;
       this.deleteConfirm = true;
-    },
-    submitUserDeletion(row) {
-      this.loading = true
-      setTimeout(() => {
-        console.log({id: row.id})
-        Notify.create({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'check',
-          message: `User ${row.username} deleted with success`
-        })
-        this.deleteConfirm = false;
-        this.loading = false
-      }, 500)
     },
     customSort() {
       this.loading = true
@@ -454,10 +540,10 @@ export default {
       this.customSort()
     },
     logout() {
-      const store = useAuthStore();
       SessionStorage.set('permission', '');
+      SessionStorage.set('id', '');
+      SessionStorage.set('avatar', '');
       Cookies.remove('token');
-      store.logOut();
       this.$router.push('login');
     }
   }
