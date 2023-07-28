@@ -1,4 +1,4 @@
-<template>
+<template xmlns="http://www.w3.org/1999/html">
   <q-layout view="lHh Lpr fff" class="bg-grey-1">
     <q-header elevated class="bg-white text-grey-8" height-hint="64">
       <q-toolbar class="GPL__toolbar" style="height: 64px">
@@ -20,7 +20,7 @@
           </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+              <img :src="avatar">
             </q-avatar>
             <q-tooltip>Account</q-tooltip>
           </q-btn>
@@ -40,12 +40,17 @@
                         expand-separator
                         icon="perm_identity"
                         label="Account settings"
-                        caption="John Doe"
+                        :caption="oldDisplayName"
                     >
                       <q-card>
                         <q-card-section>
                           <q-card>
                             <q-card-section>
+                              <div class="q-pa-md row justify-center">
+                                <q-avatar size="100px" font-size="52px" color="teal" text-color="white">
+                                  <img :src="avatar"/>
+                                </q-avatar>
+                              </div>
                               <div class="q-pa-md">
 
                                 <q-form
@@ -111,6 +116,27 @@
                                       />
                                     </template>
                                   </q-input>
+                                  <q-toggle v-model="editImage" label="Change avatar?">
+                                    <q-tooltip>
+                                      Toggle to change or remove current avatar
+                                    </q-tooltip>
+                                  </q-toggle>
+                                  <q-file
+                                      name="image_file"
+                                      v-model="file"
+                                      filled
+                                      clearable
+                                      clear-icon="close"
+                                      label="Select image (max: 1MB)"
+                                      accept=".jpg, .png, .svg"
+                                      max-file-size="1048576"
+                                      counter
+                                      max-files="1"
+                                      :disable="!editImage"
+                                      :hide-hint="!editImage"
+                                      hint="Leave empty to remove avatar"
+                                      @rejected="onRejected"
+                                  />
                                   <div>
                                     <q-btn label="Confirm changes" icon="edit" color="primary" @click="submitChanges"/>
                                     <q-btn label="Cancel" icon="close" color="negative" class="q-ml-sm"
@@ -213,39 +239,7 @@
                             <q-card-section>
                               <div class="q-pa-md">
 
-                                <q-form
-                                    @submit="onSubmitDelete"
-                                    @reset="onResetDelete"
-                                    class="q-gutter-md"
-                                >
-                                  <q-input
-                                      filled
-                                      clearable
-                                      clear-icon="close"
-                                      :type="isPwdDel ? 'password' : 'text'"
-                                      v-model="passwordDelete"
-                                      label="Password"
-                                      hint="Please insert your password to confirm account deletion"
-                                      lazy-rules
-                                      :rules="[
-              val => !!val || 'Please insert your password',
-              val => val.length >= 8 || 'Password must be at least 8 characters long',
-              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Password must have upper and lower case characters, special characters and digits',
-          ]"
-                                  >
-                                    <template v-slot:append>
-                                      <q-icon
-                                          :name="isPwdDel ? 'visibility_off' : 'visibility'"
-                                          class="cursor-pointer"
-                                          @click="isPwdDel = !isPwdDel"
-                                      />
-                                    </template>
-                                  </q-input>
-                                  <div>
-                                    <q-btn label="Confirm deletion" icon="cancel" type="submit" color="negative"/>
-                                    <q-btn label="Cancel" icon="close" type="reset" color="warning" class="q-ml-sm"/>
-                                  </div>
-                                </q-form>
+                                <q-btn label="Delete account" icon="cancel" color="negative" @click="deleteConfirmDialog"/>
 
                               </div>
                             </q-card-section>
@@ -260,6 +254,22 @@
           </div>
         </div>
       </div>
+      <q-dialog v-model="deleteConfirm">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Delete account</div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            Are you sure you want to delete your account?
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat label="Confirm" color="primary" @click="onSubmitDelete"/>
+            <q-btn flat label="Cancel" color="negative" @click="deleteConfirm=false"/>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
       <q-page-sticky v-if="$q.screen.gt.sm" expand position="left">
         <div class="fit q-pt-xl q-px-sm column">
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat color="grey-8" stack no-caps size="26px"
@@ -298,10 +308,10 @@
       <q-card-section class="row items-center no-wrap">
         <div class="column items-center">
           <q-avatar size="72px">
-            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+            <img :src="avatar">
           </q-avatar>
 
-          <div class="text-subtitle1 q-mt-md q-mb-xs">John Doe</div>
+          <div class="text-subtitle1 q-mt-md q-mb-xs">{{ displayName }}</div>
           <q-btn
               color="primary"
               label="Profile"
@@ -325,42 +335,136 @@
 </template>
 
 <script>
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import {Cookies, Notify, SessionStorage, useQuasar} from "quasar";
+import axios from "axios";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: "Profile",
   setup() {
     const settings = ref(false)
     const $q = useQuasar()
+    const image = ref(null)
+    const file = ref('')
+    const avatar = ref('')
     const displayName = ref('')
+    const oldDisplayName = ref('')
     const password = ref('')
     const passwordConfirm = ref('')
     const voteKey = ref('')
     const voteKeyConfirm = ref('')
     const passwordDelete = ref('')
+    const editImage = ref(false)
+    const deleteConfirm = ref(false)
+
+    async function getProfile() {
+      const uri = `http://localhost:8080/users/profile`
+      return await axios.get(uri, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        console.log(response)
+        image.value = response.data.image
+        displayName.value = response.data.display_name
+        oldDisplayName.value = response.data.display_name
+        avatar.value = `${api_routes.AVATAR_URI}/${response.data.image}`
+      }).catch(function (error) {
+        console.log(error)
+      })
+    }
+
+    async function editProfile(data) {
+      const uri = `http://localhost:8080/users/${$q.sessionStorage.getItem('id')}`
+      return await axios.put(uri, data, {
+        headers: {
+          "Content-type": "multipart/form-data"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
+
+    async function regenKeys(data) {
+      const uri = `http://localhost:8080/users/key`
+      return await axios.post(uri, data, {
+        headers: {
+          "Content-type": "multipart/form-data"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
+
+    async function deleteProfile() {
+      const uri = `http://localhost:8080/users/${$q.sessionStorage.getItem('id')}`
+      return await axios.delete(uri, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
+
+
+    onMounted(() => {
+      getProfile()
+    })
 
     return {
       settings,
       openSettings() {
         settings.value = true
       },
+      avatar,
       displayName,
+      oldDisplayName,
       password,
       passwordConfirm,
+      editImage,
+      file,
+      deleteConfirm,
       isPwd: ref(true),
       isPwdC: ref(true),
+      onRejected(rejectedEntries) {
+        $q.notify({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: `${rejectedEntries.length} file(s) did not pass validation constraints`
+        })
+      },
       submitChanges() {
         if (displayName.value.length > 0) {
           if (password.value.length > 0 && passwordConfirm.value.length > 0) {
             if (password.value === passwordConfirm.value) {
               if (password.value.length >= 8 && password.value.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$')) {
-                console.log({displayName: displayName.value, password: password.value})
-                Notify.create({
-                  color: 'green-4',
-                  textColor: 'white',
-                  icon: 'check',
-                  message: `Profile edited with success`
+                const data = {
+                  displayName: displayName.value,
+                  password: password.value,
+                  avatar: editImage.value,
+                  image: file.value
+                }
+                editProfile(data).then(function (response) {
+                  console.log(response)
+                  Notify.create({
+                    color: 'green-4',
+                    textColor: 'white',
+                    icon: 'check',
+                    message: `Profile edited with success`
+                  })
                 })
               } else {
                 Notify.create({
@@ -406,7 +510,7 @@ export default {
         }
       },
       cancelChanges() {
-        displayName.value = '' // replace with value fetched from API
+        displayName.value = oldDisplayName.value
         password.value = ''
         passwordConfirm.value = ''
       },
@@ -415,12 +519,13 @@ export default {
       isVk: ref(true),
       isVk1: ref(true),
       onSubmitKey() {
-        console.log({voteKey: voteKey.value})
-        Notify.create({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'check',
-          message: `Vote key changed with success`
+        regenKeys({voteKey: voteKey.value}).then(function (response) {
+          Notify.create({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: `Vote key changed with success`
+          })
         })
       },
       onResetKey() {
@@ -431,7 +536,20 @@ export default {
       passwordDelete,
       onResetDelete() {
         passwordDelete.value = ''
-      }
+      },
+      onSubmitDelete() {
+        deleteProfile().then(function (response) {
+          Notify.create({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: `Account deleted with success`
+          })
+          SessionStorage.set('permission', '');
+          Cookies.remove('token');
+          this.$router.push('login');
+        })
+      },
     }
   },
   methods: {
@@ -440,18 +558,9 @@ export default {
       Cookies.remove('token');
       this.$router.push('login');
     },
-    onSubmitDelete() {
-      console.log({password: this.passwordDelete})
-      Notify.create({
-        color: 'green-4',
-        textColor: 'white',
-        icon: 'check',
-        message: `Account deleted with success`
-      })
-      SessionStorage.set('permission', '');
-      Cookies.remove('token');
-      this.$router.push('login');
-    },
+    deleteConfirmDialog() {
+      this.deleteConfirm = true
+    }
   }
 }
 </script>

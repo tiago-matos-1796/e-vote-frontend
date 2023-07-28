@@ -352,7 +352,7 @@ export default {
       },
       onSubmit() {
         $q.loading.show({
-          message: 'Authentication in progress, please wait...',
+          message: 'Registration in progress, please wait...',
           spinner: QSpinnerGears,
         })
         setTimeout(() => {
