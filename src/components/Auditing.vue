@@ -12,15 +12,9 @@
         <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
-          <q-btn v-if="$q.sessionStorage.getItem('permission')" round dense flat color="grey-8" icon="notifications">
-            <q-badge color="red" text-color="white" floating>
-              2
-            </q-badge>
-            <q-tooltip>Notifications</q-tooltip>
-          </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
-              <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
+              <img :src="avatar">
             </q-avatar>
             <q-tooltip>Account</q-tooltip>
           </q-btn>
@@ -68,7 +62,7 @@
                                   row-key="id"
                                   :filter="filter"
                                   :loading="loading"
-                                  :pagination="pagination"
+                                  v-model:pagination="pagination"
                                   @request="onRequest"
                               >
 
@@ -96,7 +90,7 @@
                                   row-key="id"
                                   binary-state-sort
                                   :loading="electionLoading"
-                                  :pagination="pagination"
+                                  v-model:pagination="electionsPagination"
                               >
                                 <template v-slot:top-right>
                                   <div class="q-gutter-lg-x-md">
@@ -144,9 +138,6 @@
                  size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check"/>
             <div class="GPL__side-btn__label">Auditing</div>
-            <q-badge floating color="red" text-color="white" style="top: 8px; right: 16px">
-              1
-            </q-badge>
           </q-btn>
 
           <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps
@@ -164,7 +155,7 @@
       <q-card-section class="row items-center no-wrap">
         <div class="column items-center">
           <q-avatar size="72px">
-            <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
+            <img :src="avatar">
           </q-avatar>
 
           <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('username') }}</div>
@@ -192,8 +183,10 @@
 
 <script>
 import {onMounted, ref} from 'vue'
-import {Cookies, SessionStorage} from "quasar";
+import {Cookies, SessionStorage, useQuasar} from "quasar";
 import axios from "axios";
+import api_routes from "../../config/routes.config";
+import {useRouter} from "vue-router";
 
 const electionsColumns = [
   {
@@ -225,9 +218,12 @@ export default {
   name: "Auditing",
 
   setup() {
+    const $q = useQuasar()
+    const router = useRouter();
     const tableRef = ref()
     const electionTableRef = ref()
     const settings = ref(false)
+    const avatar = ref(null)
     const internalFilter = ref('')
     const loading = ref(false)
     const filter = ref('')
@@ -248,6 +244,12 @@ export default {
       rowPerPage: 10,
       rowsNumber: 10
     })
+    const electionsPagination = ref({
+      sortBy: 'log_creation',
+      descending: true,
+      page: 1,
+      rowPerPage: 10
+    })
 
     async function getLogs() {
       const uri = `http://localhost:8080/log`
@@ -261,7 +263,11 @@ export default {
         electionRows.value = response.data.election_logs
         startElectionRows.value = response.data.election_logs
       }).catch(function (error) {
-
+        if (error.response.status === 403 || error.response.status === 401) {
+          router.push({name: 'AccessDenied'})
+        } else {
+          router.push({name: 'Error'})
+        }
       })
     }
 
@@ -332,6 +338,7 @@ export default {
 
     onMounted(() => {
       getLogs()
+      avatar.value = $q.sessionStorage.getItem('avatar') ? `${api_routes.AVATAR_URI}/${$q.sessionStorage.getItem('avatar')}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
       tableRef.value.requestServerInteraction()
     })
 
@@ -341,6 +348,8 @@ export default {
       settings,
       filter,
       pagination,
+      electionsPagination,
+      avatar,
       openSettings() {
         settings.value = true
       },

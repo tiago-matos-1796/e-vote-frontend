@@ -12,15 +12,9 @@
         <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
-          <q-btn v-if="$q.sessionStorage.getItem('permission')" round dense flat color="grey-8" icon="notifications">
-            <q-badge color="red" text-color="white" floating>
-              2
-            </q-badge>
-            <q-tooltip>Notifications</q-tooltip>
-          </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
-              <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
+              <img :src="avatar">
             </q-avatar>
             <q-tooltip>Account</q-tooltip>
           </q-btn>
@@ -50,17 +44,21 @@
                     >
                       <template v-slot:top-right>
                         <div class="q-gutter-lg-x-md">
-                          <q-toggle v-model="toggleBefore" @click="customSort" :disable="loading" label="Show not started elections"/>
-                          <q-toggle v-model="toggleDuring" @click="customSort" :disable="loading" label="Show ongoing elections"/>
-                          <q-toggle v-model="toggleAfter" @click="customSort" :disable="loading" label="Show finished elections"/>
+                          <q-toggle v-model="toggleBefore" @click="customSort" :disable="loading"
+                                    label="Show not started elections"/>
+                          <q-toggle v-model="toggleDuring" @click="customSort" :disable="loading"
+                                    label="Show ongoing elections"/>
+                          <q-toggle v-model="toggleAfter" @click="customSort" :disable="loading"
+                                    label="Show finished elections"/>
                           <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
                                    placeholder="Search by election title" @keyup.enter="customSort">
                             <template v-slot:append>
-                              <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer" />
+                              <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
                               <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
                             </template>
                           </q-input>
-                          <q-checkbox v-model="toVote" @click="customSort" :disable="loading" label="Show only elections yet to vote"/>
+                          <q-checkbox v-model="toVote" @click="customSort" :disable="loading"
+                                      label="Show only elections yet to vote"/>
                           <q-checkbox v-model="hasResults" @click="customSort" :disable="loading"
                                       label="Show only elections with results"/>
                         </div>
@@ -77,13 +75,15 @@
                             {{ props.row.endDate }}
                           </q-td>
                           <q-td key="actions" :props="props">
-                            <q-btn square size="sm" name="vote" color="primary" :disabled="canVote(props.row)  || loading" label=''
+                            <q-btn square size="sm" name="vote" color="primary"
+                                   :disabled="canVote(props.row)  || loading" label=''
                                    icon='how_to_vote' @click="openBallot(props.row)">
                               <q-tooltip>
                                 Vote
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="results" color="info" :disabled="canSeeResults(props.row)  || loading"
+                            <q-btn square size="sm" name="results" color="info"
+                                   :disabled="canSeeResults(props.row)  || loading"
                                    label=''
                                    icon='summarize' @click="showResults(props.row)">
                               <q-tooltip>
@@ -135,9 +135,6 @@
                  size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check"/>
             <div class="GPL__side-btn__label">Auditing</div>
-            <q-badge floating color="red" text-color="white" style="top: 8px; right: 16px">
-              1
-            </q-badge>
           </q-btn>
 
           <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps
@@ -155,10 +152,10 @@
       <q-card-section class="row items-center no-wrap">
         <div class="column items-center">
           <q-avatar size="72px">
-            <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
+            <img :src="avatar">
           </q-avatar>
 
-          <div class="text-subtitle1 q-mt-md q-mb-xs">{{$q.sessionStorage.getItem('username')}}</div>
+          <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('username') }}</div>
           <q-btn
               color="primary"
               label="Profile"
@@ -184,12 +181,13 @@
 <script>
 import {onMounted, ref} from 'vue'
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
-import {Cookies, SessionStorage} from "quasar";
+import {Cookies, SessionStorage, useQuasar} from "quasar";
 import moment from 'moment'
 import axios from "axios";
 import {useRouter} from "vue-router";
 import ElectionBallot from "@/components/ElectionBallot.vue";
 import ElectionResultsUser from "./ElectionResultsUser.vue";
+import api_routes from "../../config/routes.config";
 
 const router = useRouter();
 
@@ -290,10 +288,13 @@ export default {
     ElectionBallot,
   },
   setup() {
+    const $q = useQuasar()
     const tableRef = ref()
+    const router = useRouter();
     const filter = ref('')
     const loading = ref(false)
     const settings = ref(false)
+    const avatar = ref(null)
     const toggleBefore = ref(true)
     const toggleDuring = ref(true)
     const toggleAfter = ref(true)
@@ -309,32 +310,28 @@ export default {
       descending: false,
       page: 1,
       rowsPerPage: 5,
-      rowsNumber:10
+      rowsNumber: 10
     })
 
     async function getElections() {
       const uri = 'http://localhost:8080/elections/voter'
-      try {
-        return await axios.get(uri, {
-          headers: {
-            "Content-type": "application/json"
-          },
-          withCredentials: true
-        }).then(function (response) {
-          originalRows = response.data
-        }).catch(function (error) {
-          if(error.response.status === 403 || error.response.status === 401) {
-            router.push({name: 'AccessDenied'})
-          } else {
-            router.push({name: 'Error'})
-          }
-        })
-      } catch (err) {
-        console.log(err)
-      }
+      return await axios.get(uri, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        originalRows = response.data
+      }).catch(function (error) {
+        if (error.response.status === 403 || error.response.status === 401) {
+          router.push({name: 'AccessDenied'})
+        } else {
+          router.push({name: 'Error'})
+        }
+      })
     }
 
-    function fetchFromServer (startRow, count, filter, sortBy, descending) {
+    function fetchFromServer(startRow, count, filter, sortBy, descending) {
       const data = filter
           ? originalRows.filter(row => row.title.includes(filter))
           : originalRows.slice()
@@ -352,7 +349,7 @@ export default {
     }
 
     // emulate 'SELECT count(*) FROM ...WHERE...'
-    function getRowsNumberCount (filter) {
+    function getRowsNumberCount(filter) {
       if (!filter) {
         return originalRows.length
       }
@@ -365,8 +362,8 @@ export default {
       return count
     }
 
-    function onRequest (props) {
-      const { page, rowsPerPage, sortBy, descending } = props.pagination
+    function onRequest(props) {
+      const {page, rowsPerPage, sortBy, descending} = props.pagination
       const filter = props.filter
 
       loading.value = true
@@ -403,6 +400,7 @@ export default {
     onMounted(() => {
       // get initial data from server (1st page)
       getElections()
+      avatar.value = $q.sessionStorage.getItem('avatar') ? `${api_routes.AVATAR_URI}/${$q.sessionStorage.getItem('avatar')}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
       tableRef.value.requestServerInteraction()
     })
 
@@ -413,6 +411,7 @@ export default {
       pagination,
       columns,
       rows,
+      avatar,
       startRows,
       toggleBefore,
       toggleDuring,

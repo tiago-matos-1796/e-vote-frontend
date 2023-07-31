@@ -332,9 +332,9 @@
 </template>
 
 <script>
-import {defineEmits, onMounted, ref} from "vue";
+import {onMounted, ref} from "vue";
 import moment from "moment";
-import {Notify, useQuasar} from "quasar";
+import {EventBus, Notify, useQuasar} from "quasar";
 import {v1} from "uuid";
 import axios from "axios";
 import {useRouter} from "vue-router";
@@ -344,6 +344,7 @@ export default {
   setup() {
     const router = useRouter();
     const $q = useQuasar()
+    const bus = new EventBus()
     const votersTableRef = ref()
     const filter = ref('')
     const startDate = ref('')
@@ -614,7 +615,6 @@ export default {
           this.newElection = false
           this.loading = true
           setTimeout(() => {
-            console.log(data)
             const uri = 'http://localhost:8080/elections/'
             axios.post(uri, data, {
               headers: {
@@ -628,8 +628,7 @@ export default {
                 icon: 'check',
                 message: 'Election created with success'
               })
-              const emit = defineEmits(['close-add-election'])
-              emit('close-add-election')
+              this.$emit('close-add-option', true)
             }).catch(function (error) {
               console.log(error)
               if(error.response.status === 406) {

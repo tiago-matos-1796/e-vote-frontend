@@ -12,15 +12,9 @@
         <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
-          <q-btn v-if="$q.sessionStorage.getItem('permission')" round dense flat color="grey-8" icon="notifications">
-            <q-badge color="red" text-color="white" floating>
-              2
-            </q-badge>
-            <q-tooltip>Notifications</q-tooltip>
-          </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
-              <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
+              <img :src="avatar">
             </q-avatar>
             <q-tooltip>Account</q-tooltip>
           </q-btn>
@@ -182,7 +176,7 @@
       <q-card-section class="row items-center no-wrap">
         <div class="column items-center">
           <q-avatar size="72px">
-            <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
+            <img :src="avatar">
           </q-avatar>
 
           <div class="text-subtitle1 q-mt-md q-mb-xs">{{$q.sessionStorage.getItem('username')}}</div>
@@ -213,8 +207,7 @@ import {onMounted, ref} from 'vue'
 import {Cookies, Notify, SessionStorage, useQuasar} from 'quasar'
 import axios from "axios";
 import {useRouter} from "vue-router";
-
-const router = useRouter();
+import api_routes from "../../config/routes.config";
 
 const columns = [
   {
@@ -238,7 +231,9 @@ export default {
   name: 'Admin',
   setup() {
     const $q = useQuasar()
+    const router = useRouter();
     const tableRef = ref()
+    const avatar = ref(null)
     const filter = ref('')
     const loading = ref(false)
     const settings = ref(false)
@@ -375,6 +370,7 @@ export default {
 
     onMounted(() => {
       getUsers()
+      avatar.value = $q.sessionStorage.getItem('avatar') ? `${api_routes.AVATAR_URI}/${$q.sessionStorage.getItem('avatar')}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
       tableRef.value.requestServerInteraction()
     })
 
@@ -385,6 +381,7 @@ export default {
       pagination,
       columns,
       rows,
+      avatar,
       settings,
       toggleRegular,
       toggleAuditor,

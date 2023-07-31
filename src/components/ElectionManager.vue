@@ -12,15 +12,9 @@
         <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
-          <q-btn v-if="$q.sessionStorage.getItem('permission')" round dense flat color="grey-8" icon="notifications">
-            <q-badge color="red" text-color="white" floating>
-              2
-            </q-badge>
-            <q-tooltip>Notifications</q-tooltip>
-          </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
-              <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
+              <img :src="avatar">
             </q-avatar>
             <q-tooltip>Account</q-tooltip>
           </q-btn>
@@ -308,7 +302,7 @@
       <q-card-section class="row items-center no-wrap">
         <div class="column items-center">
           <q-avatar size="72px">
-            <img :src="`data:image/jpg;base64,${$q.sessionStorage.getItem('avatar')}`">
+            <img :src="avatar">
           </q-avatar>
 
           <div class="text-subtitle1 q-mt-md q-mb-xs">{{$q.sessionStorage.getItem('username')}}</div>
@@ -345,6 +339,7 @@ import EditElection from "@/components/EditElection.vue";
 import ElectionStatus from "./ElectionStatus.vue";
 import ElectionResults from "./ElectionResults.vue";
 import {useRouter} from "vue-router";
+import api_routes from "../../config/routes.config";
 
 const router = useRouter();
 
@@ -648,6 +643,7 @@ export default {
     onMounted(() => {
       // get initial data from server (1st page)
       getElections()
+      avatar.value = $q.sessionStorage.getItem('avatar') ? `${api_routes.AVATAR_URI}/${$q.sessionStorage.getItem('avatar')}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
       tableRef.value.requestServerInteraction()
     })
 

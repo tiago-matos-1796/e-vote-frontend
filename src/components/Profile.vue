@@ -339,6 +339,7 @@ import {onMounted, ref} from "vue";
 import {Cookies, Notify, SessionStorage, useQuasar} from "quasar";
 import axios from "axios";
 import api_routes from '../../config/routes.config'
+import {useRouter} from "vue-router";
 
 export default {
   name: "Profile",
@@ -346,6 +347,7 @@ export default {
     const settings = ref(false)
     const $q = useQuasar()
     const image = ref(null)
+    const router = useRouter();
     const file = ref('')
     const avatar = ref('')
     const displayName = ref('')
@@ -366,13 +368,15 @@ export default {
         },
         withCredentials: true
       }).then(function (response) {
-        console.log(response)
-        image.value = response.data.image
         displayName.value = response.data.display_name
         oldDisplayName.value = response.data.display_name
-        avatar.value = `${api_routes.AVATAR_URI}/${response.data.image}`
+        avatar.value = response.data.image ? `${api_routes.AVATAR_URI}/${response.data.image}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
       }).catch(function (error) {
-        console.log(error)
+        if(error.response.status === 403 || error.response.status === 401) {
+          router.push({name: 'AccessDenied'})
+        } else {
+          router.push({name: 'Error'})
+        }
       })
     }
 
@@ -394,7 +398,7 @@ export default {
       const uri = `http://localhost:8080/users/key`
       return await axios.post(uri, data, {
         headers: {
-          "Content-type": "multipart/form-data"
+          "Content-type": "application/json"
         },
         withCredentials: true
       }).then(function (response) {
@@ -447,18 +451,20 @@ export default {
         })
       },
       submitChanges() {
+        const data = {
+          displayName: displayName.value,
+          password: password.value,
+          avatar: editImage.value,
+          image: file.value
+        }
         if (displayName.value.length > 0) {
           if (password.value.length > 0 && passwordConfirm.value.length > 0) {
             if (password.value === passwordConfirm.value) {
               if (password.value.length >= 8 && password.value.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$')) {
-                const data = {
-                  displayName: displayName.value,
-                  password: password.value,
-                  avatar: editImage.value,
-                  image: file.value
-                }
                 editProfile(data).then(function (response) {
-                  console.log(response)
+                  displayName.value = response.data.display_name
+                  oldDisplayName.value = response.data.display_name
+                  avatar.value = response.data.image ? `${api_routes.AVATAR_URI}/${response.data.image}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
                   Notify.create({
                     color: 'green-4',
                     textColor: 'white',
@@ -491,12 +497,17 @@ export default {
                 message: 'Cannot edit profile; Both password fields must be filled'
               })
             } else {
-              console.log({displayName: displayName.value})
-              Notify.create({
-                color: 'green-4',
-                textColor: 'white',
-                icon: 'check',
-                message: `Profile edited with success`
+              editProfile(data).then(function (response) {
+                console.log(response.data)
+                displayName.value = response.data.display_name
+                oldDisplayName.value = response.data.display_name
+                avatar.value = response.data.image ? `${api_routes.AVATAR_URI}/${response.data.image}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
+                Notify.create({
+                  color: 'green-4',
+                  textColor: 'white',
+                  icon: 'check',
+                  message: `Profile edited with success`
+                })
               })
             }
           }
@@ -519,7 +530,8 @@ export default {
       isVk: ref(true),
       isVk1: ref(true),
       onSubmitKey() {
-        regenKeys({voteKey: voteKey.value}).then(function (response) {
+        const data = {key: voteKey.value}
+        regenKeys(data).then(function (response) {
           Notify.create({
             color: 'green-4',
             textColor: 'white',
@@ -547,7 +559,7 @@ export default {
           })
           SessionStorage.set('permission', '');
           Cookies.remove('token');
-          this.$router.push('login');
+          router.push({name: 'Login'});
         })
       },
     }
