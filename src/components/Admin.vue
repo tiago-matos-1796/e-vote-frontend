@@ -29,6 +29,12 @@
             <div class=" bg-grey-6" style="overflow: auto;">
               <q-card class="no-border-radius">
                 <q-card-section>
+                  <div class="q-pa-md q-gutter-sm">
+                    <q-btn color="positive" :disable="loading" icon="do_not_disturb_on" label="Add email to blacklist"
+                           @click="showElectionWindow"/>
+                    <q-btn color="negative" :disable="loading" icon="do_not_disturb_off" label="Remove email from blacklist"
+                           @click="showElectionWindow"/>
+                  </div>
                   <div class="q-pa-md">
                     <q-table
                         flat bordered
@@ -44,14 +50,17 @@
                     >
                       <template v-slot:top-right>
                         <div class="q-gutter-lg-x-md">
-                          <q-toggle v-model="toggleRegular" @click="customSort" :disable="loading" label="Show regular"/>
-                          <q-toggle v-model="toggleManager" @click="customSort" :disable="loading" label="Show manager"/>
-                          <q-toggle v-model="toggleAuditor" @click="customSort" :disable="loading" label="Show auditor"/>
+                          <q-toggle v-model="toggleRegular" @click="customSort" :disable="loading"
+                                    label="Show regular"/>
+                          <q-toggle v-model="toggleManager" @click="customSort" :disable="loading"
+                                    label="Show manager"/>
+                          <q-toggle v-model="toggleAuditor" @click="customSort" :disable="loading"
+                                    label="Show auditor"/>
                           <q-toggle v-model="toggleAdmin" @click="customSort" :disable="loading" label="Show admin"/>
                           <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
                                    placeholder="Search by email" @keyup.enter="customSort">
                             <template v-slot:append>
-                              <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer" />
+                              <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
                               <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
                             </template>
                           </q-input>
@@ -71,6 +80,9 @@
                           <q-td key="permission" :props="props">
                             {{ props.row.permission }}
                           </q-td>
+                          <q-td key="blocked" :props="props">
+                            {{ props.row.blocked ? 'Yes' : 'No' }}
+                          </q-td>
                           <q-td key="actions" :props="props">
                             <q-btn square size="sm" name="edit" color="primary" label='' icon='badge' :disable="loading"
                                    @click="changePermissions(props.row)">
@@ -78,7 +90,15 @@
                                 Change permission
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="delete" color="negative" label='' icon='person_remove' :disable="loading"
+                            <q-btn square size="sm" name="block" :color=" props.row.blocked ? 'indigo' : 'deep-orange'" label='' :icon="props.row.blocked ? 'check_circle' : 'block' "
+                                   :disable="loading"
+                                   @click="props.row.blocked ? unblockUser(props.row) : blockUser(props.row)">
+                              <q-tooltip>
+                                {{props.row.blocked ? 'Unblock user' : 'Block user'}}
+                              </q-tooltip>
+                            </q-btn>
+                            <q-btn square size="sm" name="delete" color="negative" label='' icon='person_remove'
+                                   :disable="loading"
                                    @click="deleteUser(props.row)">
                               <q-tooltip>
                                 Remove user
@@ -131,6 +151,38 @@
                         </q-card-actions>
                       </q-card>
                     </q-dialog>
+                    <q-dialog v-model="blockConfirm">
+                      <q-card>
+                        <q-card-section>
+                          <div class="text-h6">Block User</div>
+                        </q-card-section>
+
+                        <q-card-section class="q-pt-none">
+                          Are you sure you want to block user {{ selected_row.username }}?
+                        </q-card-section>
+
+                        <q-card-actions align="right">
+                          <q-btn flat label="Confirm" color="primary" @click="submitUserBlock(selected_row)"/>
+                          <q-btn flat label="Cancel" color="negative" @click="blockConfirm=false"/>
+                        </q-card-actions>
+                      </q-card>
+                    </q-dialog>
+                    <q-dialog v-model="unblockConfirm">
+                      <q-card>
+                        <q-card-section>
+                          <div class="text-h6">Unblock User</div>
+                        </q-card-section>
+
+                        <q-card-section class="q-pt-none">
+                          Are you sure you want to unblock user {{ selected_row.username }}?
+                        </q-card-section>
+
+                        <q-card-actions align="right">
+                          <q-btn flat label="Confirm" color="primary" @click="submitUserUnblock(selected_row)"/>
+                          <q-btn flat label="Cancel" color="negative" @click="unblockConfirm=false"/>
+                        </q-card-actions>
+                      </q-card>
+                    </q-dialog>
                   </div>
                 </q-card-section>
               </q-card>
@@ -179,7 +231,7 @@
             <img :src="avatar">
           </q-avatar>
 
-          <div class="text-subtitle1 q-mt-md q-mb-xs">{{$q.sessionStorage.getItem('username')}}</div>
+          <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('username') }}</div>
           <q-btn
               color="primary"
               label="Profile"
@@ -222,6 +274,13 @@ const columns = [
   {name: 'display_name', align: 'center', label: 'Display Name', field: 'display_name', sortable: true},
   {name: 'username', align: 'center', label: 'Username', field: 'username', sortable: true},
   {name: 'permission', align: 'center', label: 'Permission', field: 'permission', sortable: true},
+  {
+    name: 'blocked',
+    align: 'center',
+    label: 'Blocked',
+    field: 'blocked',
+    sortable: true
+  },
   {name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: false},
 ]
 
@@ -247,12 +306,14 @@ export default {
     const toggleAdmin = ref(true)
     const search = ref('')
     const deleteConfirm = ref(false)
+    const blockConfirm = ref(false)
+    const unblockConfirm = ref(false)
     const pagination = ref({
       sortBy: 'username',
       descending: false,
       page: 1,
       rowsPerPage: 5,
-      rowsNumber:10
+      rowsNumber: 10
     })
 
     async function getUsers() {
@@ -263,9 +324,10 @@ export default {
         },
         withCredentials: true
       }).then(function (response) {
+        console.log(response.data)
         originalRows = response.data
       }).catch(function (error) {
-        if(error.response.status === 403 || error.response.status === 401) {
+        if (error.response.status === 403 || error.response.status === 401) {
           router.push({name: 'AccessDenied'})
         } else {
           router.push({name: 'Error'})
@@ -282,9 +344,9 @@ export default {
         },
         withCredentials: true
       }).then(function (response) {
-          return response.data
+        return response.data
       }).catch(function (error) {
-          return error
+        return error
       })
     }
 
@@ -302,7 +364,35 @@ export default {
       })
     }
 
-    function fetchFromServer (startRow, count, filter, sortBy, descending) {
+    async function blockUser(id) {
+      const uri = `http://localhost:8080/users/admin/block/${id}`
+      return await axios.patch(uri, {}, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
+
+    async function unblockUser(id) {
+      const uri = `http://localhost:8080/users/admin/unblock/${id}`
+      return await axios.patch(uri,{}, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
+
+    function fetchFromServer(startRow, count, filter, sortBy, descending) {
       const data = filter
           ? originalRows.filter(row => row.title.includes(filter))
           : originalRows.slice()
@@ -320,7 +410,7 @@ export default {
     }
 
     // emulate 'SELECT count(*) FROM ...WHERE...'
-    function getRowsNumberCount (filter) {
+    function getRowsNumberCount(filter) {
       if (!filter) {
         return originalRows.length
       }
@@ -333,8 +423,8 @@ export default {
       return count
     }
 
-    function onRequest (props) {
-      const { page, rowsPerPage, sortBy, descending } = props.pagination
+    function onRequest(props) {
+      const {page, rowsPerPage, sortBy, descending} = props.pagination
       const filter = props.filter
 
       loading.value = true
@@ -399,9 +489,11 @@ export default {
       permission,
       selected_row: ref({}),
       deleteConfirm,
+      blockConfirm,
+      unblockConfirm,
       ph: ref(''),
       submitPermissionChange(row) {
-        if(!permissions.value) {
+        if (!permissions.value) {
           $q.notify({
             color: 'red-10',
             textColor: 'white',
@@ -412,7 +504,7 @@ export default {
           loading.value = true
           setTimeout(() => {
             changeUserPermission(row.id, permissions.value).then(function (response) {
-              if(row.id === $q.sessionStorage.getItem("id")) {
+              if (row.id === $q.sessionStorage.getItem("id")) {
                 $q.sessionStorage.set('permission', '');
                 $q.sessionStorage.set('id', '');
                 $q.sessionStorage.set('avatar', '');
@@ -441,7 +533,7 @@ export default {
         loading.value = true
         setTimeout(() => {
           deleteUser(row.id).then(function (response) {
-            if(response.code === 'ERR_BAD_REQUEST') {
+            if (response.code === 'ERR_BAD_REQUEST') {
               $q.notify({
                 color: 'red-10',
                 textColor: 'white',
@@ -451,7 +543,7 @@ export default {
               deleteConfirm.value = false
               loading.value = false
             } else {
-              if(row.id === $q.sessionStorage.getItem("id")) {
+              if (row.id === $q.sessionStorage.getItem("id")) {
                 $q.sessionStorage.set('permission', '');
                 $q.sessionStorage.set('id', '');
                 $q.sessionStorage.set('avatar', '');
@@ -482,6 +574,70 @@ export default {
           })
         }, 500)
       },
+      submitUserBlock(row) {
+        loading.value = true
+        setTimeout(() => {
+          blockUser(row.id).then(function (response) {
+            if (response.code === 'ERR_BAD_REQUEST') {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: 'Cannot block user; User is voter in at least 1 election'
+              })
+              blockConfirm.value = false
+              loading.value = false
+            } else {
+              $q.notify({
+                color: 'green-4',
+                textColor: 'white',
+                icon: 'check',
+                message: `User ${row.username} blocked with success`
+              })
+              blockConfirm.value = false
+              getUsers()
+              onRequest({filter: filter.value, pagination: pagination.value})
+              loading.value = false
+            }
+          }).catch(function (error) {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: 'An error has occurred, Please try again later'
+            })
+            blockConfirm.value = false
+            loading.value = false
+          })
+        }, 500)
+      },
+      submitUserUnblock(row) {
+        loading.value = true
+        setTimeout(() => {
+          unblockUser(row.id).then(function (response) {
+            console.log(response)
+            $q.notify({
+              color: 'green-4',
+              textColor: 'white',
+              icon: 'check',
+              message: `User ${row.username} unblocked with success`
+            })
+            unblockConfirm.value = false
+            getUsers()
+            onRequest({filter: filter.value, pagination: pagination.value})
+            loading.value = false
+          }).catch(function (error) {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: 'An error has occurred, Please try again later'
+            })
+            unblockConfirm.value = false
+            loading.value = false
+          })
+        }, 500)
+      }
     }
   },
   methods: {
@@ -493,6 +649,14 @@ export default {
     deleteUser(row) {
       this.selected_row = row;
       this.deleteConfirm = true;
+    },
+    blockUser(row) {
+      this.selected_row = row;
+      this.blockConfirm = true;
+    },
+    unblockUser(row) {
+      this.selected_row = row;
+      this.unblockConfirm = true;
     },
     customSort() {
       this.loading = true
