@@ -129,8 +129,9 @@
                         :maximized="maximizedToggle"
                         transition-show="slide-up"
                         transition-hide="slide-down"
+                        @close-add-option="newElection = false"
                     >
-                      <AddElection @close-add-election="newElection=false"></AddElection>
+                      <AddElection></AddElection>
                     </q-dialog>
                     <q-dialog
                         v-model="editElection"
@@ -462,6 +463,7 @@ export default {
     const deleteConfirm = ref(false)
     const resultsElectionKey = ref('')
     const electionResults = ref(false)
+    const newElection = ref(false)
     const pagination = ref({
       sortBy: 'title',
       descending: false,
@@ -673,7 +675,7 @@ export default {
       maximizedToggle: ref(true),
       confirmDates,
       editElection: ref(false),
-      newElection: ref(false),
+      newElection,
       selected_row: ref({}),
       deleteConfirm,
       ph: ref(''),

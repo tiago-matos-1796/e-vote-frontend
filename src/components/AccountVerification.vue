@@ -20,12 +20,14 @@
               <q-card class="no-border-radius" style="min-height: 400px">
                 <q-card-section vertical align="center">
                   <div class="q-ma-xl" style="max-width: 500px">
-                    <div class="text-h4">Your account has successfully been activated</div>
+                    <div class="text-h4">{{text}}</div>
                   </div>
                 </q-card-section>
                 <q-card-section vertical align="center">
                   <div class="q-ma-xl" style="max-width: 500px">
-                    <router-link to="login"><div class="text-h5">Return to login</div></router-link>
+                    <router-link to @click="goToLogin">
+                      <div class="text-h5">Return to login</div>
+                    </router-link>
                   </div>
                 </q-card-section>
               </q-card>
@@ -38,8 +40,41 @@
 </template>
 
 <script>
+import {useRoute, useRouter} from 'vue-router'
+import {onMounted, ref} from "vue";
+import axios from "axios";
+
 export default {
-  name: "AccountVerification"
+  name: "AccountVerification",
+  setup() {
+    const route = useRoute()
+    const router = useRouter()
+    const text = ref('')
+
+    async function verify(token) {
+      const uri = `http://localhost:8080/users/verify/${token}`
+      return await axios.patch(uri, {}, {
+        headers: {
+          "Content-type": "multipart/form-data"
+        }
+      }).then(function (response) {
+        text.value = 'Your account has successfully been activated'
+      }).catch(function (error) {
+        text.value = 'Could not verify your account, make sure to use correct link sent to you via email'
+      })
+    }
+
+    onMounted(() => {
+      verify(route.params.token)
+    })
+
+    return {
+      text,
+      goToLogin() {
+        router.push({name: 'Login'})
+      }
+    }
+  }
 }
 </script>
 

@@ -81,8 +81,12 @@
                         <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
-                    <p><router-link to="register">Don't have an account?</router-link></p>
-                    <p><router-link to="forgot-password">Forgot your password?</router-link></p>
+                    <p>
+                      <router-link to="register">Don't have an account?</router-link>
+                    </p>
+                    <p>
+                      <router-link to="forgot-password">Forgot your password?</router-link>
+                    </p>
                   </div>
                 </q-card-section>
               </q-card>
@@ -171,7 +175,6 @@ export default {
     const settings = ref(false)
     const email = ref(null)
     const password = ref(null)
-    const store = useAuthStore();
 
     async function login() {
       const uri = 'http://localhost:8080/users/login'
@@ -179,53 +182,15 @@ export default {
         email: email.value,
         password: password.value
       }
-      try {
-        return await axios.post(uri, data, {
-          headers: {
-            "Content-type": "application/json"
-          }
-        }).then(function (response) {
-          $q.sessionStorage.set('permission', response.data.permissions);
-          $q.sessionStorage.set('id', response.data.id);
-          $q.sessionStorage.set('avatar', response.data.image);
-          $q.sessionStorage.set('username', response.data.username);
-          /*$q.cookies.set('token', response.data.token, { // production
-            httpOnly: true,
-            secure: true
-          });*/
-          $q.cookies.set('token', response.data.token);
-          $q.notify({
-            color: 'green-4',
-            textColor: 'white',
-            icon: 'check',
-            message: 'Authenticated with success'
-          });
-          router.push({name: 'Elections'});
-        }).catch(function (error) {
-          if(!error.response) {
-            $q.notify({
-              color: 'red-10',
-              textColor: 'white',
-              icon: 'cancel',
-              message: `An error has occurred while logging in, please try again later`
-            })
-          } else {
-            $q.notify({
-              color: 'red-10',
-              textColor: 'white',
-              icon: 'cancel',
-              message: `Email and/or password is wrong`
-            })
-          }
-        })
-      } catch (err) {
-        $q.notify({
-          color: 'red-10',
-          textColor: 'white',
-          icon: 'cancel',
-          message: `An error has occurred while logging in, please try again later`
-        })
-      }
+      return await axios.post(uri, data, {
+        headers: {
+          "Content-type": "application/json"
+        }
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
     }
 
     return {
@@ -241,10 +206,62 @@ export default {
           message: 'Authentication in progress, please wait...',
           spinner: QSpinnerGears,
         })
-        setTimeout(() => {
-          login()
+        login().then(function (response) {
+          console.log(response)
+          if(response.response) {
+            if(response.response.status === 406) {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: `Your account is not yet active, please check your inbox for the activation email`
+              })
+            }
+            if(response.response.status === 403) {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: `Your account is temporarily unavailable, please try again later`
+              })
+            }
+          } else {
+            $q.sessionStorage.set('permission', response.data.permissions);
+           $q.sessionStorage.set('id', response.data.id);
+           $q.sessionStorage.set('avatar', response.data.image);
+           $q.sessionStorage.set('username', response.data.username);
+           /*$q.cookies.set('token', response.data.token, { // production
+             httpOnly: true,
+             secure: true
+           });*/
+            $q.cookies.set('token', response.data.token);
+            $q.notify({
+              color: 'green-4',
+              textColor: 'white',
+              icon: 'check',
+              message: 'Authenticated with success'
+            });
+            router.push({name: 'Elections'});
+          }
+        }).catch(function (error) {
+          if (!error.response) {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: `An error has occurred while logging in, please try again later`
+            })
+          } else {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: `Email and/or password is wrong`
+            })
+          }
+        }).finally(() => {
           $q.loading.hide()
-        }, 500)
+        })
       },
       onReset() {
         email.value = null

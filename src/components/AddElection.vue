@@ -212,8 +212,8 @@
                 </q-card-section>
                 <q-card-actions align="center">
                   <q-btn label="Create election" @click="createElection" color="primary"/>
-                  <q-btn label="Cancel" type="reset" color="negative" @click="undoElection"
-                         v-close-popup/>
+                  <q-btn label="Cancel" class="close" type="reset" color="negative" @click="undoElection"
+                        v-close-popup />
                 </q-card-actions>
               </q-card>
             </div>
@@ -628,9 +628,7 @@ export default {
                 icon: 'check',
                 message: 'Election created with success'
               })
-              this.$emit('close-add-option', true)
             }).catch(function (error) {
-              console.log(error)
               if(error.response.status === 406) {
                 Notify.create({
                   color: 'red-10',

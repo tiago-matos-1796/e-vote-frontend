@@ -400,6 +400,7 @@ export default {
   props: {
     id: String
   },
+  emits: [''],
   setup(props) {
     const $q = useQuasar()
     const router = useRouter();

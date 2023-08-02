@@ -281,53 +281,15 @@ export default {
         sign_key: voteKey.value,
         image: file.value
       }
-      try {
-        return await axios.post(uri, data, {
-          headers: {
-            "Content-type": "multipart/form-data"
-          }
-        }).then(function (response) {
-          $q.notify({
-            color: 'green-4',
-            textColor: 'white',
-            icon: 'check',
-            message: 'An email has been sent to you to verify the registration, please check your inbox'
-          })
-          router.push('login')
-        }).catch(function (error) {
-          if(!error.response) {
-            $q.notify({
-              color: 'red-10',
-              textColor: 'white',
-              icon: 'cancel',
-              message: `An error has occurred while registering, please try again later`
-            })
-          } else {
-            if(error.toJSON().status === 409) {
-              $q.notify({
-                color: 'red-10',
-                textColor: 'white',
-                icon: 'cancel',
-                message: `Error: Email is already registered`
-              })
-            } else {
-              $q.notify({
-                color: 'red-10',
-                textColor: 'white',
-                icon: 'cancel',
-                message: `An error has occurred while registering, please try again later`
-              })
-            }
-          }
-        })
-      } catch (err) {
-        $q.notify({
-          color: 'red-10',
-          textColor: 'white',
-          icon: 'cancel',
-          message: `An error has occurred while registering, please try again later`
-        })
-      }
+      return await axios.post(uri, data, {
+        headers: {
+          "Content-type": "multipart/form-data"
+        }
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
     }
 
     return {
@@ -355,10 +317,43 @@ export default {
           message: 'Registration in progress, please wait...',
           spinner: QSpinnerGears,
         })
-        setTimeout(() => {
-          register()
+        register().then(function (response) {
+          $q.notify({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: 'An email has been sent to you to verify the registration, please check your inbox'
+          })
+          router.push('login')
+        }).catch(function (error) {
+          if (!error.response) {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: `An error has occurred while registering, please try again later`
+            })
+          } else {
+            if (error.toJSON().status === 409) {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: `Error: Email is already registered`
+              })
+            } else {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: `An error has occurred while registering, please try again later`
+              })
+              
+            }
+          }
+        }).finally(() => {
           $q.loading.hide()
-        }, 3000)
+        })
       },
 
       onReset() {

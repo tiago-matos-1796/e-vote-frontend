@@ -75,7 +75,7 @@ const router = createRouter({
       },
     },
     {
-      path: "/recovery",
+      path: "/recovery/:token",
       name: "Recovery",
       component: ResetPassword,
     },
@@ -85,7 +85,7 @@ const router = createRouter({
       component: ForgotPassword,
     },
     {
-      path: "/verification",
+      path: "/verification/:token",
       name: "Verification",
       component: AccountVerification,
     },
