@@ -207,7 +207,6 @@ export default {
           spinner: QSpinnerGears,
         })
         login().then(function (response) {
-          console.log(response)
           if(response.response) {
             if(response.response.status === 406) {
               $q.notify({
@@ -223,6 +222,14 @@ export default {
                 textColor: 'white',
                 icon: 'cancel',
                 message: `Your account is temporarily unavailable, please try again later`
+              })
+            }
+            if(response.response.status === 400) {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: `Email and/or password wrong`
               })
             }
           } else {

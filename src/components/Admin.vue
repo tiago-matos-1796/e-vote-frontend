@@ -30,10 +30,8 @@
               <q-card class="no-border-radius">
                 <q-card-section>
                   <div class="q-pa-md q-gutter-sm">
-                    <q-btn color="positive" :disable="loading" icon="do_not_disturb_on" label="Add email to blacklist"
-                           @click="showElectionWindow"/>
-                    <q-btn color="negative" :disable="loading" icon="do_not_disturb_off" label="Remove email from blacklist"
-                           @click="showElectionWindow"/>
+                    <q-btn color="primary" :disable="loading" icon="view_list" label="Show blacklist"
+                           @click="showBlacklist"/>
                   </div>
                   <div class="q-pa-md">
                     <q-table
@@ -252,6 +250,78 @@
       </q-card-section>
     </q-card>
   </q-dialog>
+  <q-dialog
+      v-model="blacklist"
+      persistent
+      full-width
+  >
+    <div class="flex flex-center column">
+      <div id="parent" class="fit wrap justify-center items-start content-start"
+           style="overflow: hidden;">
+        <q-card class="no-border-radius">
+          <q-toolbar>
+            <q-toolbar-title><span class="text-weight-bold">Blacklist</span>
+            </q-toolbar-title>
+            <q-btn flat round dense icon="close" v-close-popup/>
+          </q-toolbar>
+          <q-card-section>
+            <div class="q-pa-md">
+              <q-table
+                  flat bordered
+                  title="Emails"
+                  :rows="blacklistRows"
+                  :columns="blacklistColumns"
+                  row-key="email"
+                  selection="multiple"
+                  v-model:selected="blacklistedEmails"
+                  v-model:pagination="blacklistPagination"
+                  :filter="filter"
+                  :loading="blacklistLoading"
+                  binary-state-sort
+
+              >
+                <template v-slot:top-right>
+                  <q-btn color="green" :disable="blacklistLoading" label="Add email to blacklist"
+                         @click="showNewBlacklisted"/>
+                  <q-btn class="q-ml-sm" color="negative" :disable="blacklistLoading"
+                         label="Remove selected emails from blacklist" @click="removeBlacklisted"/>
+                  <q-space/>
+                </template>
+              </q-table>
+            </div>
+          </q-card-section>
+          <q-card-actions align="center">
+            <q-btn label="Confirm blacklist" color="primary" @click="submitBlacklist"
+                   v-close-popup/>
+            <q-btn label="Close" color="negative"
+                   v-close-popup/>
+          </q-card-actions>
+        </q-card>
+      </div>
+    </div>
+  </q-dialog>
+  <q-dialog v-model="addBlacklisted">
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Please insert the email you want to blacklist</div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        <q-form
+            class="q-gutter-md"
+        >
+          <q-input v-model="blacklistedEmail" type="email" filled hint="Email to blacklist"
+                   :rules="[ val => !!val || 'Field must not be empty']">
+          </q-input>
+        </q-form>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Confirm" color="primary" @click="insertBlacklisted" v-close-popup/>
+        <q-btn flat label="Cancel" color="negative" @click="addBlacklisted=false" v-close-popup/>
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
@@ -284,6 +354,10 @@ const columns = [
   {name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: false},
 ]
 
+const blacklistColumns = [{
+  name: 'email', align: 'center', label: 'Email', field: 'email', sortable: true
+}]
+
 let originalRows = []
 
 export default {
@@ -297,6 +371,7 @@ export default {
     const loading = ref(false)
     const settings = ref(false)
     const rows = ref([])
+    const blacklistRows = ref([])
     const startRows = ref([])
     const permissions = ref(null)
     const permission = ref(false)
@@ -308,12 +383,23 @@ export default {
     const deleteConfirm = ref(false)
     const blockConfirm = ref(false)
     const unblockConfirm = ref(false)
+    const blacklist = ref(false)
+    const addBlacklisted = ref(false)
+    const blacklistedEmail = ref('')
+    const blacklistLoading = ref(false)
+    const blacklistedEmails = ref([])
     const pagination = ref({
       sortBy: 'username',
       descending: false,
       page: 1,
       rowsPerPage: 5,
       rowsNumber: 10
+    })
+    const blacklistPagination = ref({
+      sortBy: 'email',
+      descending: false,
+      page: 1,
+      rowsPerPage: 5
     })
 
     async function getUsers() {
@@ -325,7 +411,8 @@ export default {
         withCredentials: true
       }).then(function (response) {
         console.log(response.data)
-        originalRows = response.data
+        originalRows = response.data.users
+        blacklistRows.value = response.data.blacklist
       }).catch(function (error) {
         if (error.response.status === 403 || error.response.status === 401) {
           router.push({name: 'AccessDenied'})
@@ -381,6 +468,20 @@ export default {
     async function unblockUser(id) {
       const uri = `http://localhost:8080/users/admin/unblock/${id}`
       return await axios.patch(uri,{}, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
+
+    async function blacklistEmails(data) {
+      const uri = `http://localhost:8080/users//admin/blacklist`
+      return await axios.post(uri, data, {
         headers: {
           "Content-type": "application/json"
         },
@@ -469,6 +570,7 @@ export default {
       filter,
       loading,
       pagination,
+      blacklistPagination,
       columns,
       rows,
       avatar,
@@ -479,6 +581,13 @@ export default {
       toggleAdmin,
       search,
       startRows,
+      blacklist,
+      blacklistRows,
+      blacklistColumns,
+      addBlacklisted,
+      blacklistedEmail,
+      blacklistLoading,
+      blacklistedEmails,
       openSettings() {
         settings.value = true
       },
@@ -615,7 +724,6 @@ export default {
         loading.value = true
         setTimeout(() => {
           unblockUser(row.id).then(function (response) {
-            console.log(response)
             $q.notify({
               color: 'green-4',
               textColor: 'white',
@@ -637,6 +745,28 @@ export default {
             loading.value = false
           })
         }, 500)
+      },
+      submitBlacklist() {
+        loading.value = true
+        blacklistEmails(blacklistRows.value).then(function (response) {
+          $q.notify({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: `Blacklist updated with success`
+          })
+          getUsers()
+          onRequest({filter: filter.value, pagination: pagination.value})
+        }).catch(function (error) {
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'An error has occurred, Please try again later'
+          })
+        }).finally(() => {
+          loading.value = false
+        })
       }
     }
   },
@@ -699,6 +829,33 @@ export default {
     clearSearch() {
       this.search = ''
       this.customSort()
+    },
+    showBlacklist() {
+      this.blacklist = true
+    },
+    showNewBlacklisted() {
+      this.addBlacklisted = true
+    },
+    removeBlacklisted() {
+      this.blacklistLoading = true
+      setTimeout(() => {
+        for (const be of this.blacklistedEmails) {
+          const index = this.blacklistRows.findIndex(object => {
+            return object.email === be.email;
+          });
+          this.blacklistRows.splice(index, 1);
+        }
+        this.blacklistedEmails = []
+        this.blacklistLoading = false
+      }, 500)
+    },
+    insertBlacklisted() {
+      this.blacklistLoading = true
+      setTimeout(() => {
+        this.blacklistRows.push({email: this.blacklistedEmail})
+        this.blacklistedEmail = ''
+        this.blacklistLoading = false
+      }, 500)
     },
     logout() {
       SessionStorage.set('permission', '');

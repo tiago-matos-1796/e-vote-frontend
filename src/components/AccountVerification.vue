@@ -55,7 +55,7 @@ export default {
       const uri = `http://localhost:8080/users/verify/${token}`
       return await axios.patch(uri, {}, {
         headers: {
-          "Content-type": "multipart/form-data"
+          "Content-type": "application/json"
         }
       }).then(function (response) {
         text.value = 'Your account has successfully been activated'

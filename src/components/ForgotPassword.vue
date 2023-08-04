@@ -41,7 +41,7 @@
 
                       <div>
                         <q-btn label="Send email" type="submit" color="primary"/>
-                        <q-btn label="Reset" color="negative" type="reset" flat class="q-ml-sm" />
+                        <q-btn label="Reset" color="negative" type="reset" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
                   </div>
@@ -59,6 +59,7 @@
 import {ref} from "vue";
 import {useQuasar} from "quasar"
 import {useRouter} from 'vue-router'
+import axios from "axios";
 
 export default {
   name: "ForgotPassword",
@@ -67,17 +68,48 @@ export default {
     const email = ref(null)
     const router = useRouter()
 
+    async function forgotPassword(email) {
+      const uri = `http://localhost:8080/users/forgot-password`
+      const data = {email: email}
+      return await axios.post(uri, data, {
+        headers: {
+          "Content-type": "application/json"
+        }
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
+
     return {
       email,
       submit() {
-        console.log(email)
-        $q.notify({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'check',
-          message: 'An email has been sent with details about password recovery'
-        });
-        router.push('login')
+        forgotPassword(email.value).then(function (response) {
+          if(response.code === "ERR_BAD_REQUEST") {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: 'The inserted email does not exist'
+            })
+          } else {
+            $q.notify({
+              color: 'green-4',
+              textColor: 'white',
+              icon: 'check',
+              message: 'An email has been sent with details about password recovery'
+            });
+            router.push('login')
+          }
+        }).catch(function (error) {
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'An error has occurred, Please try again later'
+          })
+        })
       },
       reset() {
         email.value = ''

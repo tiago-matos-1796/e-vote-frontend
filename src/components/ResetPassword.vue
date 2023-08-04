@@ -29,8 +29,6 @@
 
                       <q-input
                           filled
-                          clearable
-                          clear-icon="close"
                           :type="isPwd ? 'password' : 'text'"
                           v-model="password"
                           label="Password"
@@ -52,8 +50,6 @@
                       </q-input>
                       <q-input
                           filled
-                          clearable
-                          clear-icon="close"
                           :type="isPwd1 ? 'password' : 'text'"
                           v-model="passwordConfirm"
                           label="Confirm password"
@@ -94,7 +90,8 @@
 <script>
 import {ref} from "vue";
 import {useQuasar} from "quasar";
-import {useRouter} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
+import axios from "axios";
 
 export default {
   name: "ForgotPassword",
@@ -103,6 +100,21 @@ export default {
     const password = ref(null)
     const passwordConfirm = ref(null)
     const router = useRouter()
+    const route = useRoute()
+
+    async function recoverPassword(password, token) {
+      const uri = `http://localhost:8080/users/password-recovery/${token}`
+      const data = {password: password}
+      return await axios.patch(uri, data, {
+        headers: {
+          "Content-type": "application/json"
+        }
+      }).then(function (response) {
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
 
     return {
       password,
@@ -110,14 +122,31 @@ export default {
       isPwd: ref(true),
       isPwd1: ref(true),
       submit() {
-        console.log({password})
-        $q.notify({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'check',
-          message: 'Password changed with success'
-        });
-        router.push('login')
+        recoverPassword(password.value, route.params.token).then(function (response) {
+          if(response.code === "ERR_BAD_REQUEST") {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: 'Token could not be verified'
+            })
+          } else {
+            $q.notify({
+              color: 'green-4',
+              textColor: 'white',
+              icon: 'check',
+              message: 'Password changed with success'
+            });
+            router.push({name: 'Login'})
+          }
+        }).catch(function (error) {
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'An error has occurred, Please try again later'
+          })
+        })
       },
       reset() {
           password.value = ''
