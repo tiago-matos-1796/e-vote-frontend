@@ -748,7 +748,7 @@ export default {
       },
       submitBlacklist() {
         loading.value = true
-        blacklistEmails(blacklistRows.value).then(function (response) {
+        blacklistEmails({blacklist: blacklistRows.value}).then(function (response) {
           $q.notify({
             color: 'green-4',
             textColor: 'white',
