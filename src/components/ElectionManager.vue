@@ -737,6 +737,10 @@ export default {
         if (key.length === 16) {
           if (key.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$')) {
             const data = {key: key}
+            $q.loading.show({
+              message: 'Counting election votes, please wait...',
+              spinner: QSpinnerGears,
+            })
             countVotes(id, data).then(function (response) {
               if(response.code) {
                 Notify.create({
@@ -753,9 +757,12 @@ export default {
                   icon: 'check',
                   message: `Election results counted with success`
                 })
+                resultsElectionKey.value = ''
                 electionResults.value = false
               }
             }).catch(function (error) {
+            }).finally(() => {
+              $q.loading.hide()
             })
           } else {
             Notify.create({

@@ -73,8 +73,8 @@
                   </div>
                 </q-card-section>
                 <q-card-actions align="center">
-                  <q-btn label="Download XLS" color="secondary"/>
-                  <q-btn label="Download PDF" color="primary"/>
+                  <q-btn label="Download XLS" color="secondary" @click="getXls"/>
+                  <q-btn label="Download PDF" color="primary" @click="getPdf"/>
                   <q-btn label="Close" color="negative" v-close-popup/>
                 </q-card-actions>
               </q-card>
@@ -89,6 +89,7 @@
 <script>
 import {onMounted, ref} from "vue";
 import axios from "axios";
+import {QSpinnerGears, useQuasar} from "quasar";
 
 export default {
   name: "ElectionResults",
@@ -97,11 +98,14 @@ export default {
     title: String
   },
   setup(props) {
+    const $q = useQuasar()
     const loading = ref(false)
     const voterResultsRows = ref([])
     const resultsRows = ref([])
     const abstentionData = ref(null)
     const voteData = ref(null)
+    const pdf = ref(null)
+    const xlsx = ref(null)
 
     const resultsColumns = [
       {
@@ -171,8 +175,49 @@ export default {
         resultsRows.value = response.data.candidates
         abstentionData.value = response.data.abstention
         voteData.value = response.data.voteData
+        pdf.value = response.data.pdf
+        xlsx.value = response.data.xlsx
       }).catch(function (error) {
 
+      })
+    }
+
+    async function exportPdf() {
+      const uri = `http://localhost:8080/exports/pdf/${pdf.value}`
+      return await axios.get(uri, {
+        withCredentials: true,
+        responseType: 'blob',
+      }).then(function (response) {
+        const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', 'report.pdf'); //any other extension
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return response
+      }).catch(function (error) {
+        return error
+      })
+    }
+
+    async function exportXls() {
+      const uri = `http://localhost:8080/exports/xlsx/${xlsx.value}`
+      return await axios.get(uri, {
+        withCredentials: true,
+        responseType: 'blob',
+      }).then(function (response) {
+        console.log(response)
+        const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', 'report.xlsx'); //any other extension
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return response
+      }).catch(function (error) {
+        return error
       })
     }
 
@@ -188,7 +233,53 @@ export default {
       loading,
       pagination,
       abstentionData,
-      voteData
+      voteData,
+      getPdf() {
+        $q.loading.show({
+          message: 'Creating PDF document, please wait...',
+          spinner: QSpinnerGears,
+        })
+        exportPdf().then(() => {
+          $q.notify({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: 'PDF document created with success'
+          })
+        }).catch(() => {
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: `Error creating PDF document, please try again later`
+          })
+        }).finally(() => {
+          $q.loading.hide()
+        })
+      },
+      getXls() {
+        $q.loading.show({
+          message: 'Creating XLS document, please wait...',
+          spinner: QSpinnerGears,
+        })
+        exportXls().then(() => {
+          $q.notify({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'check',
+            message: 'XLS document created with success'
+          })
+        }).catch(() => {
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: `Error creating XLS document, please try again later`
+          })
+        }).finally(() => {
+          $q.loading.hide()
+        })
+      }
     }
   }
 }
