@@ -12,6 +12,7 @@ import AccountVerification from "@/components/AccountVerification.vue";
 import NotFound from "@/components/NotFound.vue";
 import AccessDenied from "@/components/AccessDenied.vue";
 import Error from "@/components/Error.vue";
+import PartialRegister from "@/components/PartialRegister.vue";
 import { SessionStorage } from "quasar";
 
 const router = createRouter({
@@ -30,6 +31,11 @@ const router = createRouter({
       path: "/register",
       name: "Register",
       component: Register,
+    },
+    {
+      path: "/register/:token",
+      name: "PartialRegister",
+      component: PartialRegister,
     },
     {
       path: "/elections",

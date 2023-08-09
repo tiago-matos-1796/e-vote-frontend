@@ -43,10 +43,12 @@
 import {useRoute, useRouter} from 'vue-router'
 import {onMounted, ref} from "vue";
 import axios from "axios";
+import {useQuasar} from "quasar";
 
 export default {
   name: "AccountVerification",
   setup() {
+    const $q = useQuasar()
     const route = useRoute()
     const router = useRouter()
     const text = ref('')
@@ -65,6 +67,11 @@ export default {
     }
 
     onMounted(() => {
+      if($q.sessionStorage.has('id')) {
+        if($q.sessionStorage.getItem('id').length > 0) {
+          router.push('elections')
+        }
+      }
       verify(route.params.token)
     })
 

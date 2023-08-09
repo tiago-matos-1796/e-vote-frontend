@@ -10,6 +10,7 @@
         <q-space/>
 
         <q-space/>
+
       </q-toolbar>
     </q-header>
 
@@ -37,17 +38,6 @@
                           lazy-rules
                           hint="Please insert your display name"
                           :rules="[ val => !!val || 'Please insert your display name']"
-                      />
-
-                      <q-input
-                          filled
-                          clear-icon="close"
-                          v-model="email"
-                          type="email"
-                          label="Email"
-                          lazy-rules
-                          hint="Please insert your email"
-                          :rules="[ val => !!val || 'Please insert your email']"
                       />
 
                       <q-input
@@ -165,7 +155,6 @@
                         <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
-                    <router-link to="login">Already have an account?</router-link>
                   </div>
                 </q-card-section>
               </q-card>
@@ -178,35 +167,33 @@
 </template>
 
 <script>
-import {Cookies, QSpinnerGears, SessionStorage, useQuasar} from 'quasar'
-import {onMounted, ref} from 'vue'
-import {useRouter} from 'vue-router'
+import {Cookies, QSpinnerGears, SessionStorage, useQuasar} from "quasar";
+import {useRoute, useRouter} from "vue-router";
+import {ref} from "vue";
 import axios from "axios";
 
 export default {
-  name: 'Register',
-  setup() {
+  name: "PartialRegister",
+  setup(){
     const $q = useQuasar()
     const router = useRouter();
-    const settings = ref(false)
+    const route = useRoute();
     const displayName = ref(null)
-    const email = ref(null)
     const password = ref(null)
     const passwordConfirm = ref(null)
     const voteKey = ref(null)
     const voteKeyConfirm = ref(null)
     const file = ref(null)
 
-    async function register() {
-      const uri = 'http://localhost:8080/users/'
+    async function register(token) {
+      const uri = `http://localhost:8080/users/register/${token}`
       const data = {
-        email: email.value,
         display_name: displayName.value,
         password: password.value,
         sign_key: voteKey.value,
         image: file.value
       }
-      return await axios.post(uri, data, {
+      return await axios.patch(uri, data, {
         headers: {
           "Content-type": "multipart/form-data"
         }
@@ -217,17 +204,16 @@ export default {
       })
     }
 
-    onMounted(() => {
+    /*onMounted(() => {
       if($q.sessionStorage.has('id')) {
         if($q.sessionStorage.getItem('id').length > 0) {
           router.push('elections')
         }
       }
-    })
+    })*/
 
     return {
       displayName,
-      email,
       password,
       passwordConfirm,
       isPwd: ref(true),
@@ -241,49 +227,37 @@ export default {
       filesMaxSize: ref(null),
       filesMaxTotalSize: ref(null),
       filesMaxNumber: ref(null),
-      settings,
-      openSettings() {
-        settings.value = true
-      },
       onSubmit() {
         $q.loading.show({
           message: 'Registration in progress, please wait...',
           spinner: QSpinnerGears,
         })
-        register().then(function (response) {
-          $q.notify({
-            color: 'green-4',
-            textColor: 'white',
-            icon: 'check',
-            message: 'An email has been sent to you to verify the registration, please check your inbox'
-          })
-          router.push('login')
-        }).catch(function (error) {
-          if (!error.response) {
-            $q.notify({
-              color: 'red-10',
-              textColor: 'white',
-              icon: 'cancel',
-              message: `An error has occurred while registering, please try again later`
-            })
-          } else {
-            if (error.toJSON().status === 409) {
-              $q.notify({
-                color: 'red-10',
-                textColor: 'white',
-                icon: 'cancel',
-                message: `Error: Email is already registered`
-              })
-            } else {
+        register(route.params.token).then(function (response) {
+          if(response.response) {
+            if(response.response.status === 500) {
               $q.notify({
                 color: 'red-10',
                 textColor: 'white',
                 icon: 'cancel',
                 message: `An error has occurred while registering, please try again later`
               })
-              
             }
+          } else {
+            $q.notify({
+              color: 'green-4',
+              textColor: 'white',
+              icon: 'check',
+              message: 'Registered with success'
+            })
+            router.push('login')
           }
+        }).catch(function (error) {
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: `An error has occurred while registering, please try again later`
+          })
         }).finally(() => {
           $q.loading.hide()
         })
@@ -291,7 +265,6 @@ export default {
 
       onReset() {
         displayName.value = null
-        email.value = null
         password.value = null
         passwordConfirm.value = null
         voteKey.value = null
@@ -321,47 +294,6 @@ export default {
 }
 </script>
 
-<style lang="sass">
-.GPL
+<style scoped>
 
-  &__toolbar
-    height: 64px
-
-  &__toolbar-input
-    width: 35%
-
-  &__drawer-item
-    line-height: 24px
-    border-radius: 0 24px 24px 0
-    margin-right: 12px
-
-    .q-item__section--avatar
-      padding-left: 12px
-
-      .q-icon
-        color: #5f6368
-
-    .q-item__label:not(.q-item__label--caption)
-      color: #3c4043
-      letter-spacing: .01785714em
-      font-size: .875rem
-      font-weight: 500
-      line-height: 1.25rem
-
-    &--storage
-      border-radius: 0
-      margin-right: 0
-      padding-top: 24px
-      padding-bottom: 24px
-
-  &__side-btn
-    &__label
-      font-size: 12px
-      line-height: 24px
-      letter-spacing: .01785714em
-      font-weight: 500
-
-  @media (min-width: 1024px)
-    &__page-container
-      padding-left: 94px
 </style>

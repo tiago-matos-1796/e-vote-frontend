@@ -56,7 +56,7 @@
 </template>
 
 <script>
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import {useQuasar} from "quasar"
 import {useRouter} from 'vue-router'
 import axios from "axios";
@@ -81,6 +81,14 @@ export default {
         return error
       })
     }
+
+    onMounted(() => {
+      if($q.sessionStorage.has('id')) {
+        if($q.sessionStorage.getItem('id').length > 0) {
+          router.push('elections')
+        }
+      }
+    })
 
     return {
       email,
