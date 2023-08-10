@@ -169,7 +169,7 @@
 <script>
 import {Cookies, QSpinnerGears, SessionStorage, useQuasar} from "quasar";
 import {useRoute, useRouter} from "vue-router";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import axios from "axios";
 
 export default {
@@ -204,13 +204,13 @@ export default {
       })
     }
 
-    /*onMounted(() => {
+    onMounted(() => {
       if($q.sessionStorage.has('id')) {
         if($q.sessionStorage.getItem('id').length > 0) {
           router.push('elections')
         }
       }
-    })*/
+    })
 
     return {
       displayName,
@@ -228,39 +228,48 @@ export default {
       filesMaxTotalSize: ref(null),
       filesMaxNumber: ref(null),
       onSubmit() {
-        $q.loading.show({
-          message: 'Registration in progress, please wait...',
-          spinner: QSpinnerGears,
-        })
-        register(route.params.token).then(function (response) {
-          if(response.response) {
-            if(response.response.status === 500) {
+        if(route.query.token) {
+          $q.loading.show({
+            message: 'Registration in progress, please wait...',
+            spinner: QSpinnerGears,
+          })
+          register(route.query.token).then(function (response) {
+            if(response.response) {
+              if(response.response.status === 500) {
+                $q.notify({
+                  color: 'red-10',
+                  textColor: 'white',
+                  icon: 'cancel',
+                  message: `An error has occurred while registering, please try again later`
+                })
+              }
+            } else {
               $q.notify({
-                color: 'red-10',
+                color: 'green-4',
                 textColor: 'white',
-                icon: 'cancel',
-                message: `An error has occurred while registering, please try again later`
+                icon: 'check',
+                message: 'Registered with success'
               })
+              router.push({name: 'Login'})
             }
-          } else {
+          }).catch(function (error) {
             $q.notify({
-              color: 'green-4',
+              color: 'red-10',
               textColor: 'white',
-              icon: 'check',
-              message: 'Registered with success'
+              icon: 'cancel',
+              message: `An error has occurred while registering, please try again later`
             })
-            router.push('login')
-          }
-        }).catch(function (error) {
+          }).finally(() => {
+            $q.loading.hide()
+          })
+        } else {
           $q.notify({
             color: 'red-10',
             textColor: 'white',
             icon: 'cancel',
-            message: `An error has occurred while registering, please try again later`
+            message: `Token is missing, please check if the uri is the same as the one sent to you via email`
           })
-        }).finally(() => {
-          $q.loading.hide()
-        })
+        }
       },
 
       onReset() {

@@ -33,7 +33,7 @@ const router = createRouter({
       component: Register,
     },
     {
-      path: "/register/:token",
+      path: "/register-confirm",
       name: "PartialRegister",
       component: PartialRegister,
     },
@@ -81,7 +81,7 @@ const router = createRouter({
       },
     },
     {
-      path: "/recovery/:token",
+      path: "/recovery",
       name: "Recovery",
       component: ResetPassword,
     },
@@ -91,7 +91,7 @@ const router = createRouter({
       component: ForgotPassword,
     },
     {
-      path: "/verification/:token",
+      path: "/verification",
       name: "Verification",
       component: AccountVerification,
     },

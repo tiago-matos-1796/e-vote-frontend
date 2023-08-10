@@ -130,31 +130,40 @@ export default {
       isPwd: ref(true),
       isPwd1: ref(true),
       submit() {
-        recoverPassword(password.value, route.params.token).then(function (response) {
-          if(response.code === "ERR_BAD_REQUEST") {
+        if(route.query.token) {
+          recoverPassword(password.value, route.query.token).then(function (response) {
+            if(response.code === "ERR_BAD_REQUEST") {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: 'Token could not be verified'
+              })
+            } else {
+              $q.notify({
+                color: 'green-4',
+                textColor: 'white',
+                icon: 'check',
+                message: 'Password changed with success'
+              });
+              router.push({name: 'Login'})
+            }
+          }).catch(function (error) {
             $q.notify({
               color: 'red-10',
               textColor: 'white',
               icon: 'cancel',
-              message: 'Token could not be verified'
+              message: 'An error has occurred, Please try again later'
             })
-          } else {
-            $q.notify({
-              color: 'green-4',
-              textColor: 'white',
-              icon: 'check',
-              message: 'Password changed with success'
-            });
-            router.push({name: 'Login'})
-          }
-        }).catch(function (error) {
+          })
+        } else {
           $q.notify({
             color: 'red-10',
             textColor: 'white',
             icon: 'cancel',
-            message: 'An error has occurred, Please try again later'
+            message: 'Token is missing, please check if the uri is the same as the one sent to you via email'
           })
-        })
+        }
       },
       reset() {
           password.value = ''

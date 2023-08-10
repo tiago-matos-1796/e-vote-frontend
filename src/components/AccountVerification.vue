@@ -72,7 +72,12 @@ export default {
           router.push('elections')
         }
       }
-      verify(route.params.token)
+      if(route.query.token) {
+        verify(route.query.token)
+      } else {
+        text.value = 'Could not verify your account, make sure to use correct link sent to you via email'
+      }
+
     })
 
     return {
