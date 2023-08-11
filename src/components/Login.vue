@@ -88,7 +88,6 @@
 import {Cookies, QSpinnerGears, SessionStorage, useQuasar} from 'quasar'
 import {onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
-import {useAuthStore} from '@/stores/auth'
 import axios from "axios";
 
 
