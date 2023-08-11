@@ -197,7 +197,23 @@
                             :loading="voterLoading"
                             binary-state-sort
                         >
-
+                          <template v-slot:top-left>
+                            <q-file ref="file" style="display: none" v-model="voterCSV" max-file-size="2048" accept=".csv"
+                                    @rejected="onRejected"></q-file>
+                            <q-btn
+                                color="positive"
+                                icon-right="unarchive"
+                                label="Import voters from csv"
+                                @click="importCSV"
+                            />
+                            <q-btn
+                                class="q-ml-sm"
+                                color="primary"
+                                icon-right="archive"
+                                label="Export voters to csv"
+                                @click="exportTable"
+                            />
+                          </template>
                           <template v-slot:top-right>
                             <q-btn color="green" :disable="voterLoading" label="Add voter"
                                    @click="showVoterAdd"/>
@@ -334,7 +350,7 @@
 <script>
 import {onMounted, ref} from "vue";
 import moment from "moment";
-import {EventBus, Notify, useQuasar} from "quasar";
+import {EventBus, exportFile, Notify, useQuasar} from "quasar";
 import {v1} from "uuid";
 import axios from "axios";
 import {useRouter} from "vue-router";
@@ -405,6 +421,7 @@ export default {
     const newVoterSelected = ref([])
     const newVoterLoading = ref(false)
     const editCandidateDialog = ref(false)
+    const voterCSV = ref(null)
     const pagination = ref({
       sortBy: 'email',
       descending: false,
@@ -438,6 +455,26 @@ export default {
       } catch (err) {
         console.log(err)
       }
+    }
+
+    function wrapCsvValue (val, formatFn, row) {
+      let formatted = formatFn !== void 0
+          ? formatFn(val, row)
+          : val
+
+      formatted = formatted === void 0 || formatted === null
+          ? ''
+          : String(formatted)
+
+      formatted = formatted.split('"').join('""')
+      /**
+       * Excel accepts \n and \r in strings, but some other CSV parsers do not
+       * Uncomment the next two lines to escape new lines
+       */
+      // .split('\n').join('\\n')
+      // .split('\r').join('\\r')
+
+      return `"${formatted}"`
     }
 
     onMounted(() => {
@@ -483,6 +520,7 @@ export default {
       selectedVoters,
       voterLoading,
       userRows,
+      voterCSV,
       addCandidate: ref(false),
       newVoter: ref(false),
       candidateName: ref(null),
@@ -524,6 +562,38 @@ export default {
           voterLoading.value = false
         }, 500)
       },
+      exportTable () {
+        // naive encoding to csv format
+        const content = [userColumns.map(col => wrapCsvValue(col.label))].concat(
+            voterRows.value.map(row => userColumns.map(col => wrapCsvValue(
+                typeof col.field === 'function'
+                    ? col.field(row)
+                    : row[ col.field === void 0 ? col.name : col.field ],
+                col.format,
+                row
+            )).join(','))
+        ).join('\r\n')
+
+        const status = exportFile(
+            `voters.csv`,
+            content,
+            'text/csv'
+        )
+
+        if (status !== true) {
+          $q.notify({
+            message: 'Browser denied file download...',
+            color: 'negative',
+            icon: 'warning'
+          })
+        }
+      },
+      onRejected () {
+        $q.notify({
+          type: 'negative',
+          message: 'Please upload only CSV files with maximum size of 2MB'
+        })
+      }
     }
   },
   watch: {
@@ -531,6 +601,11 @@ export default {
       this.allowEndDate = value
       this.minEndDate = moment(value).format('YYYY/MM/DD')
     },
+    voterCSV: function (value) {
+      if (value !== null) {
+        this.addVotersFromCSV(value)
+      }
+    }
   },
   methods: {
     newCandidate() {
@@ -665,6 +740,51 @@ export default {
       this.candidateRows = []
       this.voterRows = []
     },
+    importCSV() {
+      this.$refs.file.pickFiles();
+    },
+    addVotersFromCSV(file) {
+      this.voterLoading = true
+      setTimeout(() => {
+        const reader = new FileReader()
+        reader.readAsText(file)
+        reader.onload = () => {
+          const csv = reader.result
+          const rows = csv.split("\r")
+          const result = []
+          const properties = []
+          for(const h of rows[0].split(",")) {
+            properties.push(h.split(" ").join("_").toLowerCase().replaceAll('"', ''))
+          }
+          for(let i = 1; i < rows.length; i++) {
+            let obj = {}
+            const values = rows[i].split(",")
+            for(let j = 0; j < properties.length; j++) {
+              obj[properties[j]] = values[j].replaceAll('"', '').replaceAll("\n", '')
+            }
+            result.push(obj)
+          }
+          for(const r of result) {
+            const user = this.userRows.find(x => x.email === r.email)
+            if(user) {
+              const index = this.userRows.findIndex(object => {
+                return object.id === user.id;
+              });
+              this.userRows.splice(index, 1);
+              this.voterRows.push(user)
+            }
+          }
+        }
+        this.voterCSV = null
+        Notify.create({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'check',
+          message: `Added voters from csv`
+        })
+      }, 500)
+      this.voterLoading = false
+    }
   }
 }
 </script>

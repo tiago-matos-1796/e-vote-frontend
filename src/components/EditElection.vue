@@ -179,6 +179,23 @@
                               binary-state-sort
                           >
 
+                            <template v-slot:top-left>
+                              <q-file ref="file" style="display: none" v-model="voterCSV" max-file-size="2048" accept=".csv"
+                                      @rejected="onRejected"></q-file>
+                              <q-btn
+                                  color="positive"
+                                  icon-right="unarchive"
+                                  label="Import voters from csv"
+                                  @click="importCSV"
+                              />
+                              <q-btn
+                                  class="q-ml-sm"
+                                  color="primary"
+                                  icon-right="archive"
+                                  label="Export voters to csv"
+                                  @click="exportTable"
+                              />
+                            </template>
                             <template v-slot:top-right>
                               <q-btn color="green" :disable="editVoterLoading" label="Add voter"
                                      @click="editShowVoterAdd"/>
@@ -390,7 +407,7 @@
 <script>
 import {onMounted, ref} from "vue";
 import moment from "moment/moment";
-import {Notify, useQuasar} from "quasar";
+import {exportFile, Notify, useQuasar} from "quasar";
 import {v1} from "uuid";
 import axios from "axios";
 import {useRouter} from "vue-router";
@@ -476,6 +493,7 @@ export default {
     const editCandidateName = ref(null)
     const editCandidateImage = ref(null)
     const editImage = ref(false)
+    const voterCSV = ref(null)
 
     function confirmDates(date) {
       if (date.length === 0) {
@@ -508,6 +526,26 @@ export default {
           router.push({name: 'Error'})
         }
       })
+    }
+
+    function wrapCsvValue (val, formatFn, row) {
+      let formatted = formatFn !== void 0
+          ? formatFn(val, row)
+          : val
+
+      formatted = formatted === void 0 || formatted === null
+          ? ''
+          : String(formatted)
+
+      formatted = formatted.split('"').join('""')
+      /**
+       * Excel accepts \n and \r in strings, but some other CSV parsers do not
+       * Uncomment the next two lines to escape new lines
+       */
+      // .split('\n').join('\\n')
+      // .split('\r').join('\\r')
+
+      return `"${formatted}"`
     }
 
     onMounted(() => {
@@ -646,11 +684,49 @@ export default {
         newManager.value = false
       },
       selected_row: ref({}),
+      voterCSV,
+      exportTable () {
+        // naive encoding to csv format
+        const content = [userColumns.map(col => wrapCsvValue(col.label))].concat(
+            editVoterRows.value.map(row => userColumns.map(col => wrapCsvValue(
+                typeof col.field === 'function'
+                    ? col.field(row)
+                    : row[ col.field === void 0 ? col.name : col.field ],
+                col.format,
+                row
+            )).join(','))
+        ).join('\r\n')
+
+        const status = exportFile(
+            `voters.csv`,
+            content,
+            'text/csv'
+        )
+
+        if (status !== true) {
+          $q.notify({
+            message: 'Browser denied file download...',
+            color: 'negative',
+            icon: 'warning'
+          })
+        }
+      },
+      onRejected () {
+        $q.notify({
+          type: 'negative',
+          message: 'Please upload only CSV files with maximum size of 2MB'
+        })
+      }
     }
   },
   watch: {
     editStartDate: function (value) {
       this.allowEditEndDate = value
+    },
+    voterCSV: function (value) {
+      if(value !== null) {
+        this.addVotersFromCSV(value)
+      }
     }
   },
   methods: {
@@ -717,14 +793,19 @@ export default {
               })
               this.editElection = false;
             }).catch(function (error) {
-              console.log(error)
+              Notify.create({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: 'An error has occurred while editing the election; Please try again later'
+              })
             })
           } else {
             Notify.create({
               color: 'red-10',
               textColor: 'white',
               icon: 'cancel',
-              message: 'Cannot create election; Election must have at least 1 manager'
+              message: 'Cannot edit election; Election must have at least 1 manager'
             })
           }
         } else {
@@ -732,7 +813,7 @@ export default {
             color: 'red-10',
             textColor: 'white',
             icon: 'cancel',
-            message: 'Cannot create election; Please insert an election title'
+            message: 'Cannot edit election; Please insert an election title'
           })
         }
       } else {
@@ -765,6 +846,51 @@ export default {
         })
       }
     },
+    importCSV() {
+      this.$refs.file.pickFiles();
+    },
+    addVotersFromCSV(file) {
+      this.editNewVoterLoading = true
+      setTimeout(() => {
+        const reader = new FileReader()
+        reader.readAsText(file)
+        reader.onload = () => {
+          const csv = reader.result
+          const rows = csv.split("\r")
+          const result = []
+          const properties = []
+          for(const h of rows[0].split(",")) {
+            properties.push(h.split(" ").join("_").toLowerCase().replaceAll('"', ''))
+          }
+          for(let i = 1; i < rows.length; i++) {
+            let obj = {}
+            const values = rows[i].split(",")
+            for(let j = 0; j < properties.length; j++) {
+              obj[properties[j]] = values[j].replaceAll('"', '').replaceAll("\n", '')
+            }
+            result.push(obj)
+          }
+          for(const r of result) {
+            const user = this.editUserRows.find(x => x.email === r.email)
+            if(user) {
+              const index = this.editUserRows.findIndex(object => {
+                return object.id === user.id;
+              });
+              this.editUserRows.splice(index, 1);
+              this.editVoterRows.push(user)
+            }
+          }
+        }
+        this.voterCSV = null
+        Notify.create({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'check',
+          message: `Added voters from csv`
+        })
+      }, 500)
+      this.editNewVoterLoading = false
+    }
   }
 }
 </script>
