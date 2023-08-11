@@ -537,7 +537,8 @@ export default {
           icon: 'check',
           message: `Election deleted with success`
         })
-        router.go(0)
+        getElections()
+        onRequest({filter: filter.value, pagination: pagination.value})
       }).catch(function (error) {
         if(error.response.status === 403 || error.response.status === 401) {
           router.push({name: 'AccessDenied'})

@@ -22,11 +22,10 @@
                             class="my-card"
                         >
                           <q-card-section>
-                            <div class="text-h6">Votes</div>
+                            <div class="text-h6">Abstention</div>
                           </q-card-section>
-                          <pie-chart :data="voteData"></pie-chart>
-                          <q-card-section class="q-pt-none">
-
+                          <pie-chart :data="abstentionData"></pie-chart>
+                          <q-card-section class="q-pt-none" align="center">
                           </q-card-section>
                         </q-card>
 
@@ -36,10 +35,11 @@
                             class="my-card"
                         >
                           <q-card-section>
-                            <div class="text-h6">Abstention</div>
+                            <div class="text-h6">Votes</div>
                           </q-card-section>
-                          <pie-chart :data="abstentionData"></pie-chart>
-                          <q-card-section class="q-pt-none" align="center">
+                          <pie-chart :data="voteData"></pie-chart>
+                          <q-card-section class="q-pt-none">
+
                           </q-card-section>
                         </q-card>
 
