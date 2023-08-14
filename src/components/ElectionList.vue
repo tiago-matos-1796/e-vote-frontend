@@ -2,7 +2,9 @@
   <q-layout view="lHh Lpr fff" class="bg-grey-1">
     <q-header elevated class="bg-white text-grey-8" height-hint="64">
       <q-toolbar class="GPL__toolbar" style="height: 64px">
-
+        <q-avatar>
+          <img src="src/assets/UAlg-ico.ico">
+        </q-avatar>
         <q-toolbar-title v-if="$q.screen.gt.sm" shrink class="row items-center no-wrap">
           <span class="q-ml-sm">UAlg Secure Vote</span>
         </q-toolbar-title>
@@ -99,7 +101,7 @@
                         persistent
                         full-width
                     >
-                      <ElectionBallot :id="electionId"></ElectionBallot>
+                      <ElectionBallot :id="electionId" @close-ballot="closeBallot"></ElectionBallot>
                     </q-dialog>
                     <q-dialog
                         v-model="electionResults"
@@ -305,6 +307,7 @@ export default {
     const startRows = ref([])
     const electionId = ref('')
     const electionTitle = ref('')
+    const ballot = ref(false)
     const pagination = ref({
       sortBy: 'title',
       descending: false,
@@ -433,12 +436,27 @@ export default {
       maximizedToggle: ref(true),
       selected: ref([]),
       selected_row: ref({}),
-      ballot: ref(false),
+      ballot,
       vote: ref(false),
       settings,
       openSettings() {
         settings.value = true
-      }
+      },
+      closeBallot() {
+        ballot.value = false
+        $q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'check',
+          message: `Vote submitted with success. Thank you!`
+        })
+        loading.value = true
+        setTimeout(() => {
+          getElections()
+          onRequest({filter: filter.value, pagination: pagination.value})
+        }, 500)
+        loading.value = false
+      },
     }
   },
   methods: {

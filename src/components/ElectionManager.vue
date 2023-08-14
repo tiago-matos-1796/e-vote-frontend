@@ -2,7 +2,9 @@
   <q-layout view="lHh Lpr fff" class="bg-grey-1">
     <q-header elevated class="bg-white text-grey-8" height-hint="64">
       <q-toolbar class="GPL__toolbar" style="height: 64px">
-
+        <q-avatar>
+          <img src="src/assets/UAlg-ico.ico">
+        </q-avatar>
         <q-toolbar-title v-if="$q.screen.gt.sm" shrink class="row items-center no-wrap">
           <span class="q-ml-sm">UAlg Secure Vote</span>
         </q-toolbar-title>
@@ -108,7 +110,7 @@
                                    :disable="isAfterEnd(props.row.endDate) || loading" label='' icon='data_thresholding'
                                    @click="showResults(props.row)">
                               <q-tooltip>
-                                {{hasResults(props.row.results) ? 'Count election votes' : 'Recount election votes'}}
+                                {{ hasResults(props.row.results) ? 'Count election votes' : 'Recount election votes' }}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="results" color="info"
@@ -129,9 +131,8 @@
                         :maximized="maximizedToggle"
                         transition-show="slide-up"
                         transition-hide="slide-down"
-                        @close-add-option="newElection = false"
                     >
-                      <AddElection></AddElection>
+                      <AddElection @close-add="closeNewElection"></AddElection>
                     </q-dialog>
                     <q-dialog
                         v-model="editElection"
@@ -140,7 +141,7 @@
                         transition-show="slide-up"
                         transition-hide="slide-down"
                     >
-                      <EditElection :id="electionId"></EditElection>
+                      <EditElection :id="electionId" @close-edit="closeEditElection"></EditElection>
                     </q-dialog>
                     <q-dialog v-model="deleteConfirm">
                       <q-card>
@@ -306,7 +307,7 @@
             <img :src="avatar">
           </q-avatar>
 
-          <div class="text-subtitle1 q-mt-md q-mb-xs">{{$q.sessionStorage.getItem('username')}}</div>
+          <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('username') }}</div>
           <q-btn
               color="primary"
               label="Profile"
@@ -464,12 +465,13 @@ export default {
     const resultsElectionKey = ref('')
     const electionResults = ref(false)
     const newElection = ref(false)
+    const editElection = ref(false)
     const pagination = ref({
       sortBy: 'title',
       descending: false,
       page: 1,
       rowsPerPage: 5,
-      rowsNumber:10
+      rowsNumber: 10
     })
 
     function confirmDates(date, type) {
@@ -500,6 +502,7 @@ export default {
     function canStatus(start, end) {
       return !(moment().isAfter(moment(start, 'DD-MM-YYYY HH:mm')) && moment().isBefore(moment(end, 'DD-MM-YYYY HH:mm')));
     }
+
     async function getElections() {
       const uri = 'http://localhost:8080/elections/manager'
       try {
@@ -511,8 +514,8 @@ export default {
         }).then(function (response) {
           originalRows = response.data
         }).catch(function (error) {
-          if(error.response.status === 403 || error.response.status === 401) {
-           router.push({name: 'AccessDenied'})
+          if (error.response.status === 403 || error.response.status === 401) {
+            router.push({name: 'AccessDenied'})
           } else {
             router.push({name: 'Error'})
           }
@@ -540,7 +543,7 @@ export default {
         getElections()
         onRequest({filter: filter.value, pagination: pagination.value})
       }).catch(function (error) {
-        if(error.response.status === 403 || error.response.status === 401) {
+        if (error.response.status === 403 || error.response.status === 401) {
           router.push({name: 'AccessDenied'})
         } else {
           router.push({name: 'Error'})
@@ -577,7 +580,7 @@ export default {
       })
     }
 
-    function fetchFromServer (startRow, count, filter, sortBy, descending) {
+    function fetchFromServer(startRow, count, filter, sortBy, descending) {
       const data = filter
           ? originalRows.filter(row => row.title.includes(filter))
           : originalRows.slice()
@@ -595,7 +598,7 @@ export default {
     }
 
     // emulate 'SELECT count(*) FROM ...WHERE...'
-    function getRowsNumberCount (filter) {
+    function getRowsNumberCount(filter) {
       if (!filter) {
         return originalRows.length
       }
@@ -608,8 +611,8 @@ export default {
       return count
     }
 
-    function onRequest (props) {
-      const { page, rowsPerPage, sortBy, descending } = props.pagination
+    function onRequest(props) {
+      const {page, rowsPerPage, sortBy, descending} = props.pagination
       const filter = props.filter
 
       loading.value = true
@@ -675,7 +678,7 @@ export default {
       searchCandidate,
       maximizedToggle: ref(true),
       confirmDates,
-      editElection: ref(false),
+      editElection,
       newElection,
       selected_row: ref({}),
       deleteConfirm,
@@ -743,7 +746,7 @@ export default {
               spinner: QSpinnerGears,
             })
             countVotes(id, data).then(function (response) {
-              if(response.code) {
+              if (response.code) {
                 Notify.create({
                   color: 'red-10',
                   textColor: 'white',
@@ -751,7 +754,6 @@ export default {
                   message: 'Cannot count election results; Election key is not correct'
                 })
               } else {
-                console.log(response)
                 Notify.create({
                   color: 'green-4',
                   textColor: 'white',
@@ -760,6 +762,12 @@ export default {
                 })
                 resultsElectionKey.value = ''
                 electionResults.value = false
+                loading.value = true
+                setTimeout(() => {
+                  getElections()
+                  onRequest({filter: filter.value, pagination: pagination.value})
+                }, 500)
+                loading.value = false
               }
             }).catch(function (error) {
             }).finally(() => {
@@ -782,10 +790,39 @@ export default {
           })
         }
       },
+      closeNewElection() {
+        newElection.value = false
+        $q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'check',
+          message: 'Election created with success'
+        })
+        loading.value = true
+        setTimeout(() => {
+          getElections()
+          onRequest({filter: filter.value, pagination: pagination.value})
+        }, 500)
+        loading.value = false
+      },
+      closeEditElection() {
+        editElection.value = false
+        $q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'check',
+          message: 'Election edited with success'
+        })
+        loading.value = true
+        setTimeout(() => {
+          getElections()
+          onRequest({filter: filter.value, pagination: pagination.value})
+        }, 500)
+        loading.value = false
+      }
     }
   },
-  watch: {
-  },
+  watch: {},
   methods: {
     openmodel(row) {
       this.selected_row = row;
@@ -864,7 +901,7 @@ export default {
     clearSearchMain() {
       this.searchMain = ''
       this.customSortMain()
-    }
+    },
   }
 }
 </script>

@@ -108,7 +108,7 @@ export default {
   props: {
     id: String
   },
-  setup(props) {
+  setup(props, context) {
     const $q = useQuasar()
     const electionKey = ref('')
     const hashMethod = ref('')
@@ -222,15 +222,9 @@ export default {
           const data = {data: encryptedVote, key: key}
           const hash = crypto.Hash(hashMethod.value)
           hash.update(encryptedVote)
-          getSignature(data).then(function (response) {
-            //console.log({id: props.id, vote: encryptedVote, signature: response, hash: hash.digest('base64')})
-            submitVote(props.id, {vote: encryptedVote, signature: response, hash: hash.digest('base64')}).then(function (response) {
-              Notify.create({
-                color: 'green-4',
-                textColor: 'white',
-                icon: 'check',
-                message: `Vote submitted with success. Thank you!`
-              })
+          getSignature(data).then(response => {
+            submitVote(props.id, {vote: encryptedVote, signature: response, hash: hash.digest('base64')}).then(response => {
+              context.emit('closeBallot')
             }).catch(function (error) {
               Notify.create({
                 color: 'red-10',

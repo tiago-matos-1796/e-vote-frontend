@@ -784,14 +784,8 @@ export default {
                 "Content-type": "multipart/form-data"
               },
               withCredentials: true
-            }).then(function (response) {
-              Notify.create({
-                color: 'green-4',
-                textColor: 'white',
-                icon: 'check',
-                message: `Election ${title} edited with success`
-              })
-              this.editElection = false;
+            }).then(response => {
+              this.$emit('closeEdit')
             }).catch(function (error) {
               Notify.create({
                 color: 'red-10',

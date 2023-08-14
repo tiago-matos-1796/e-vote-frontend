@@ -228,8 +228,8 @@
                 </q-card-section>
                 <q-card-actions align="center">
                   <q-btn label="Create election" @click="createElection" color="primary"/>
-                  <q-btn label="Cancel" class="close" type="reset" color="negative" @click="undoElection"
-                        v-close-popup />
+                  <q-btn label="Cancel" class="close" type="reset" color="negative" @click="undoElection;"
+                         v-close-popup />
                 </q-card-actions>
               </q-card>
             </div>
@@ -350,20 +350,24 @@
 <script>
 import {onMounted, ref} from "vue";
 import moment from "moment";
-import {EventBus, exportFile, Notify, useQuasar} from "quasar";
+import {exportFile, Loading, Notify, QSpinnerGears, useQuasar} from "quasar";
 import {v1} from "uuid";
 import axios from "axios";
 import {useRouter} from "vue-router";
 
 export default {
   name: 'AddElection',
-  setup() {
+  emits: ['closeAdd'],
+  setup({emit}) {
     const router = useRouter();
     const $q = useQuasar()
-    const bus = new EventBus()
     const votersTableRef = ref()
     const filter = ref('')
+    const electionTitle = ref('')
     const startDate = ref('')
+    const endDate = ref('')
+    const electionKey = ref(null)
+    const electionKey1 = ref(null)
     const allowEndDate = ref(true)
     const candidateRows = ref([])
     const selected = ref([])
@@ -439,46 +443,46 @@ export default {
 
     async function getUsers() {
       const uri = 'http://localhost:8080/users/user-list'
-      try {
-        return await axios.get(uri, {
+      return await axios.get(uri, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(function (response) {
+        for (const user of response.data) {
+          userRows.value.push(user)
+        }
+      }).catch(function (error) {
+        console.log(error)
+      })
+    }
+
+    async function createElection(data) {
+      const uri = 'http://localhost:8080/elections/'
+      return await axios.post(uri, data, {
           headers: {
-            "Content-type": "application/json"
+            "Content-type": "multipart/form-data"
           },
           withCredentials: true
         }).then(function (response) {
-          for (const user of response.data) {
-            userRows.value.push(user)
-          }
+          return response
         }).catch(function (error) {
-          console.log(error)
+          return error
         })
-      } catch (err) {
-        console.log(err)
-      }
     }
 
     function wrapCsvValue (val, formatFn, row) {
       let formatted = formatFn !== void 0
           ? formatFn(val, row)
           : val
-
       formatted = formatted === void 0 || formatted === null
           ? ''
           : String(formatted)
-
       formatted = formatted.split('"').join('""')
-      /**
-       * Excel accepts \n and \r in strings, but some other CSV parsers do not
-       * Uncomment the next two lines to escape new lines
-       */
-      // .split('\n').join('\\n')
-      // .split('\r').join('\\r')
-
       return `"${formatted}"`
     }
 
     onMounted(() => {
-      // get initial data from server (1st page)
       getUsers()
     })
 
@@ -486,21 +490,21 @@ export default {
       votersTableRef,
       pagination,
       filter,
-      electionTitle: ref(''),
+      electionTitle,
       startDate,
       startDateOptions(date) {
         const today = moment().format('YYYY/MM/DD')
         return date >= today
       },
-      endDate: ref(''),
+      endDate,
       allowEndDate,
       confirmDates,
       endDateOptions(date) {
         const minDate = moment().format('YYYY/MM/DD')
         return date >= minDate
       },
-      electionKey: ref(null),
-      electionKey1: ref(null),
+      electionKey,
+      electionKey1,
       isPwd: ref(true),
       isPwd1: ref(true),
       candidateRows,
@@ -563,7 +567,6 @@ export default {
         }, 500)
       },
       exportTable () {
-        // naive encoding to csv format
         const content = [userColumns.map(col => wrapCsvValue(col.label))].concat(
             voterRows.value.map(row => userColumns.map(col => wrapCsvValue(
                 typeof col.field === 'function'
@@ -593,7 +596,7 @@ export default {
           type: 'negative',
           message: 'Please upload only CSV files with maximum size of 2MB'
         })
-      }
+      },
     }
   },
   watch: {
@@ -659,78 +662,6 @@ export default {
       }, 500)
       this.newVoter = false
     },
-    createElection() {
-      let data = new FormData();
-      data.append('title', this.electionTitle)
-      data.append('start_date', this.startDate)
-      data.append('end_date', this.endDate)
-      data.append('key', this.electionKey)
-      const start = this.startDate
-      const end = this.endDate
-      const key = this.electionKey
-      const keyConfirm = this.electionKey1
-      for (const candidate of this.candidateRows) {
-        data.append('candidates[]', JSON.stringify({name: candidate.name, image: candidate.image ? candidate.image.name : null}))
-        if(candidate.image) {
-          data.append('images', candidate.image)
-        }
-      }
-      for (const voter of this.voterRows) {
-        data.append('voters[]', voter.id)
-      }
-      if (this.candidateRows.length === 0) {
-        Notify.create({
-          color: 'red-10',
-          textColor: 'white',
-          icon: 'cancel',
-          message: 'Cannot create election; Election must have at least 1 candidate'
-        })
-      } else {
-        if (key !== null && key === keyConfirm && moment(start).isBefore(moment(end))) {
-          this.newElection = false
-          this.loading = true
-          setTimeout(() => {
-            const uri = 'http://localhost:8080/elections/'
-            axios.post(uri, data, {
-              headers: {
-                "Content-type": "multipart/form-data"
-              },
-              withCredentials: true
-            }).then(function (response) {
-              Notify.create({
-                color: 'green-4',
-                textColor: 'white',
-                icon: 'check',
-                message: 'Election created with success'
-              })
-            }).catch(function (error) {
-              if(error.response.status === 406) {
-                Notify.create({
-                  color: 'red-10',
-                  textColor: 'white',
-                  icon: 'cancel',
-                  message: 'Cannot create election; Candidate images must have unique names'
-                })
-              } else {
-                Notify.create({
-                  color: 'red-10',
-                  textColor: 'white',
-                  icon: 'cancel',
-                  message: 'Cannot create election; Errors are present'
-                })
-              }
-            })
-          }, 500)
-        } else {
-          Notify.create({
-            color: 'red-10',
-            textColor: 'white',
-            icon: 'cancel',
-            message: 'Cannot create election; Errors are present'
-          })
-        }
-      }
-    },
     undoElection() {
       this.electionTitle = ''
       this.startDate = ''
@@ -784,7 +715,80 @@ export default {
         })
       }, 500)
       this.voterLoading = false
-    }
+    },
+    closeDialog: function() {
+      this.$emit('closeAdd')
+    },
+    createElection() {
+      let data = new FormData();
+      data.append('title', this.electionTitle)
+      data.append('start_date', this.startDate)
+      data.append('end_date', this.endDate)
+      data.append('key', this.electionKey)
+      const start = this.startDate
+      const end = this.endDate
+      const key = this.electionKey
+      const keyConfirm = this.electionKey1
+      for (const candidate of this.candidateRows) {
+        data.append('candidates[]', JSON.stringify({name: candidate.name, image: candidate.image ? candidate.image.name : null}))
+        if(candidate.image) {
+          data.append('images', candidate.image)
+        }
+      }
+      for (const voter of this.voterRows) {
+        data.append('voters[]', voter.id)
+      }
+      if (this.candidateRows.length === 0) {
+        Notify.create({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: 'Cannot create election; Election must have at least 1 candidate'
+        })
+      } else {
+        if (key !== null && key === keyConfirm && moment(start).isBefore(moment(end))) {
+          Loading.show({
+            message: 'Authentication in progress, please wait...',
+            spinner: QSpinnerGears,
+          })
+          setTimeout(() => {
+            const uri = 'http://localhost:8080/elections/'
+            axios.post(uri, data, {
+              headers: {
+                "Content-type": "multipart/form-data"
+              },
+              withCredentials: true
+            }).then(response => {
+              this.$emit('closeAdd')
+            }).catch(function (error) {
+              if(error.response.status === 406) {
+                Notify.create({
+                  color: 'red-10',
+                  textColor: 'white',
+                  icon: 'cancel',
+                  message: 'Cannot create election; Candidate images must have unique names'
+                })
+              } else {
+                Notify.create({
+                  color: 'red-10',
+                  textColor: 'white',
+                  icon: 'cancel',
+                  message: 'Cannot create election; Errors are present'
+                })
+              }
+            })
+          }, 1000)
+        } else {
+          Notify.create({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'Cannot create election; Errors are present'
+          })
+        }
+      }
+      Loading.hide()
+    },
   }
 }
 </script>
