@@ -307,7 +307,7 @@
             <img :src="avatar">
           </q-avatar>
 
-          <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('username') }}</div>
+          <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('display') }}</div>
           <q-btn
               color="primary"
               label="Profile"

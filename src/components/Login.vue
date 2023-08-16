@@ -171,7 +171,7 @@ export default {
             $q.sessionStorage.set('permission', response.data.permissions);
            $q.sessionStorage.set('id', response.data.id);
            $q.sessionStorage.set('avatar', response.data.image);
-           $q.sessionStorage.set('username', response.data.username);
+           $q.sessionStorage.set('display', response.data.displayName);
            /*$q.cookies.set('token', response.data.token, { // production
              httpOnly: true,
              secure: true
@@ -217,9 +217,8 @@ export default {
       SessionStorage.set('permission', '');
       SessionStorage.set('id', '');
       SessionStorage.set('avatar', '');
-      SessionStorage.set('username', '');
+      SessionStorage.set('display', '');
       Cookies.remove('token');
-      store.logOut();
       this.$router.push('login');
     }
   }

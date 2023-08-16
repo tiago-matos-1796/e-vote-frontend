@@ -31,14 +31,16 @@
                     <q-card-section>
                       <q-checkbox dense v-model="props.selected" :label="props.row.name"/>
                     </q-card-section>
+                    <div v-if="props.row.image !== null">
                     <q-separator/>
                     <q-list dense>
                       <q-item>
                         <q-item-section>
-                          <q-item-label><img :src="`data:image/jpg;base64,${props.row.image}`"></q-item-label>
+                          <q-item-label><img :src="`${imageRoute}/${props.row.image}`"></q-item-label>
                         </q-item-section>
                       </q-item>
                     </q-list>
+                    </div>
                   </q-card>
                 </div>
               </template>
@@ -97,7 +99,8 @@ import {useRouter} from "vue-router";
 import {onMounted, ref} from "vue";
 import {Notify, useQuasar} from "quasar";
 import crypto from 'crypto-browserify'
-import {Buffer} from 'buffer/' // <-- no typo here ("/")
+import {Buffer} from 'buffer/'
+import api_routes from "../../config/routes.config"; // <-- no typo here ("/")
 
 globalThis.Buffer = Buffer
 
@@ -117,6 +120,7 @@ export default {
     const selected = ref([])
     const electionTitle = ref('')
     const candidateRows = ref([])
+    const imageRoute = ref(api_routes.CANDIDATE_IMAGE_URI)
     const candidateColumns = [
       {
         name: 'name',
@@ -211,6 +215,7 @@ export default {
       sign,
       signatureKey,
       signature,
+      imageRoute,
       hideSignKey: ref(true),
       electionTitle,
       selected_row: ref({}),
