@@ -95,12 +95,19 @@
                             </div>
                           </div>
                           <q-input filled v-model="electionKey" label="Election Key"
-                                   placeholder="Election Key" hint="Election Key" clear-icon="close"
+                                   placeholder="Election Key" hint="Election key must be exactly 16 characters long with upper and lower case characters, special characters and digits. A password manager is recommended to safeguard this key" clear-icon="close"
                                    :type="isPwd ? 'password' : 'text'"
                                    :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits',]"
                           >
                             <template v-slot:append>
+                              <q-icon
+                                  name="refresh"
+                                  class="cursor-pointer"
+                                  @click="generateElectionKey"
+                              ><q-tooltip>
+                                Generate election key
+                              </q-tooltip></q-icon>
                               <q-icon
                                   :name="isPwd ? 'visibility_off' : 'visibility'"
                                   class="cursor-pointer"
@@ -597,6 +604,20 @@ export default {
           message: 'Please upload only CSV files with maximum size of 2MB'
         })
       },
+      generateElectionKey() {
+        let strongPassword = new RegExp(
+            "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
+        );
+        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
+        let key = ""
+        for(let i = 0; i < 16; i++) {
+          const rand = Math.floor(Math.random() * characters.length)
+          key += characters[rand]
+        }
+        if(strongPassword.test(key)) {
+          electionKey.value = key
+        }
+      }
     }
   },
   watch: {

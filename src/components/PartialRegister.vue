@@ -38,7 +38,6 @@
                           type="text"
                           label="Display Name"
                           lazy-rules
-                          hint="Please insert your display name"
                           :rules="[ val => !!val || 'Please insert your display name']"
                       />
 
@@ -48,7 +47,6 @@
                           :type="isPwd ? 'password' : 'text'"
                           v-model="password"
                           label="Password"
-                          hint="Please insert your password"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please insert your password',
@@ -57,6 +55,13 @@
           ]"
                       >
                         <template v-slot:append>
+                          <q-icon
+                              name="refresh"
+                              class="cursor-pointer"
+                              @click="generatePassword"
+                          ><q-tooltip>
+                            Generate password
+                          </q-tooltip></q-icon>
                           <q-icon
                               :name="isPwd ? 'visibility_off' : 'visibility'"
                               class="cursor-pointer"
@@ -71,7 +76,6 @@
                           :type="isPwd1 ? 'password' : 'text'"
                           v-model="passwordConfirm"
                           label="Confirm password"
-                          hint="Please reinsert your password"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please reinsert your password',
@@ -95,7 +99,6 @@
                           :type="isVk ? 'password' : 'text'"
                           v-model="voteKey"
                           label="Voting Key"
-                          hint="Please insert your voting key"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please insert your voting key',
@@ -104,6 +107,13 @@
           ]"
                       >
                         <template v-slot:append>
+                          <q-icon
+                              name="refresh"
+                              class="cursor-pointer"
+                              @click="generateVoteKey"
+                          ><q-tooltip>
+                            Generate voting key
+                          </q-tooltip></q-icon>
                           <q-icon
                               :name="isVk ? 'visibility_off' : 'visibility'"
                               class="cursor-pointer"
@@ -118,7 +128,6 @@
                           :type="isVk1 ? 'password' : 'text'"
                           v-model="voteKeyConfirm"
                           label="Confirm Voting Key"
-                          hint="Please reinsert your voting key"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please reinsert your voting key',
@@ -289,6 +298,34 @@ export default {
           icon: 'cancel',
           message: `${rejectedEntries.length} file(s) did not pass validation constraints`
         })
+      },
+      generatePassword() {
+        let strongPassword = new RegExp(
+            "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
+        );
+        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
+        let key = ""
+        for(let i = 0; i < 12; i++) {
+          const rand = Math.floor(Math.random() * characters.length)
+          key += characters[rand]
+        }
+        if(strongPassword.test(key)) {
+          password.value = key
+        }
+      },
+      generateVoteKey() {
+        let strongPassword = new RegExp(
+            "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
+        );
+        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
+        let key = ""
+        for(let i = 0; i < 16; i++) {
+          const rand = Math.floor(Math.random() * characters.length)
+          key += characters[rand]
+        }
+        if(strongPassword.test(key)) {
+          voteKey.value = key
+        }
       }
     }
   },

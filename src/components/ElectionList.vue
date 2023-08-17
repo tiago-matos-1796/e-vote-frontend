@@ -2,6 +2,16 @@
   <q-layout view="lHh Lpr fff" class="bg-grey-1">
     <q-header elevated class="bg-white text-grey-8" height-hint="64">
       <q-toolbar class="GPL__toolbar" style="height: 64px">
+        <q-btn
+            v-if="$q.sessionStorage.getItem('permission')"
+            flat
+            dense
+            round
+            @click="toggleLeftDrawer"
+            aria-label="Menu"
+            icon="menu"
+            class="q-mx-md"
+        />
         <q-avatar>
           <img src="src/assets/UAlg-ico.ico">
         </q-avatar>
@@ -26,7 +36,7 @@
 
     <q-page-container class="GPL__page-container">
       <div class="flex flex-center column">
-        <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
+        <div class="row bg-blue-grey-2" style="min-height: 400px; width: 95%; padding: 24px;">
           <div id="parent" class="fit wrap justify-center items-start content-start" style="overflow: hidden;">
             <div class=" bg-grey-6" style="overflow: auto;">
               <q-card class="no-border-radius">
@@ -147,6 +157,73 @@
         </div>
       </q-page-sticky>
     </q-page-container>
+    <q-drawer
+        v-model="leftDrawerOpen"
+        bordered
+        behavior="mobile"
+        @click="leftDrawerOpen = false"
+    >
+      <q-scroll-area class="fit">
+        <q-toolbar class="GPL__toolbar">
+          <q-toolbar-title class="row items-center text-grey-8">
+            <img class="q-pl-md" src="src/assets/UAlg-ico.ico">
+            <span class="q-ml-sm">UAlg Secure Vote</span>
+          </q-toolbar-title>
+        </q-toolbar>
+
+        <q-list padding>
+          <div v-if="$q.sessionStorage.getItem('permission')">
+          <q-item clickable class="GPL__drawer-item" @click="$router.push('elections')">
+            <q-item-section avatar>
+              <q-icon name="ballot" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Elections</q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <q-separator class="q-my-md" />
+          </div>
+          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'">
+          <q-item clickable class="GPL__drawer-item" @click="$router.push('election-manager')">
+            <q-item-section avatar>
+              <q-icon name="edit_document" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Election Manager</q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <q-separator class="q-my-md" />
+          </div>
+          <div v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'">
+          <q-item clickable class="GPL__drawer-item" @click="$router.push('auditing')">
+            <q-item-section avatar>
+              <q-icon name="fact_check" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Auditing</q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <q-separator class="q-my-md" />
+          </div>
+          <div v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'">
+          <q-item clickable class="GPL__drawer-item" @click="$router.push('admin')">
+            <q-item-section avatar>
+              <q-icon name="admin_panel_settings" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Admin</q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <q-separator class="q-my-md" />
+          </div>
+
+        </q-list>
+      </q-scroll-area>
+    </q-drawer>
   </q-layout>
   <q-dialog v-model="settings" position="right">
     <q-card style="width: 350px">
@@ -293,6 +370,7 @@ export default {
     const $q = useQuasar()
     const tableRef = ref()
     const router = useRouter();
+    const leftDrawerOpen = ref(false)
     const filter = ref('')
     const loading = ref(false)
     const settings = ref(false)
@@ -315,6 +393,10 @@ export default {
       rowsPerPage: 5,
       rowsNumber: 10
     })
+
+    function toggleLeftDrawer () {
+      leftDrawerOpen.value = !leftDrawerOpen.value
+    }
 
     async function getElections() {
       const uri = 'http://localhost:8080/elections/voter'
@@ -409,6 +491,8 @@ export default {
 
     return {
       tableRef,
+      leftDrawerOpen,
+      toggleLeftDrawer,
       filter,
       loading,
       pagination,
@@ -525,7 +609,7 @@ export default {
         }
         if (this.hasResults) {
           filteredRows = filteredRows.filter(obj =>
-              obj.results !== null
+              obj.results === true
           )
         }
         this.rows = filteredRows
@@ -540,7 +624,7 @@ export default {
       SessionStorage.set('permission', '');
       SessionStorage.set('id', '');
       SessionStorage.set('avatar', '');
-      SessionStorage.set('username', '');
+      SessionStorage.set('display', '');
       Cookies.remove('token');
       this.$router.push('login');
     }

@@ -68,7 +68,7 @@
         <q-form
             class="q-gutter-md"
         >
-          <q-input v-model="signatureKey" filled hint="Vote key"
+          <q-input v-model="signatureKey" filled label="Voting key"
                    :type="hideSignKey ? 'password' : 'text'"
                    :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Vote key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Vote key must have upper and lower case characters, special characters and digits']"

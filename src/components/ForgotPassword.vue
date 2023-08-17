@@ -37,7 +37,6 @@
                           type="email"
                           label="Email"
                           lazy-rules
-                          hint="Please insert your email"
                           :rules="[ val => !!val || 'Please insert your email']"
                       />
 

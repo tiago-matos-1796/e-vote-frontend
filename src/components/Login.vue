@@ -37,7 +37,6 @@
                           type="email"
                           label="Email"
                           lazy-rules
-                          hint="Please insert your email"
                           :rules="[ val => !!val || 'Please insert your email']"
                       />
 
@@ -47,7 +46,6 @@
                           :type="isPwd ? 'password' : 'text'"
                           v-model="password"
                           label="Password"
-                          hint="Please insert your password"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please insert your password',

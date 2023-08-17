@@ -25,15 +25,14 @@
                           <q-form
                               class="q-gutter-md" style="min-width: 400px; padding: 24px;"
                           >
-                            <q-input filled v-model="editElectionTitle" label="Title"
-                                     placeholder="Election title" hint="Election title"
+                            <q-input filled v-model="editElectionTitle" label="Election title"
+                                     placeholder="Election title"
                                      :rules="[ val => !!val || 'Election title must not be empty']"
                             ></q-input>
 
                             <div class="row">
                               <div class="col">
-                                <q-input filled v-model="editStartDate" label="Start date and time"
-                                         hint="Start date and time">
+                                <q-input filled v-model="editStartDate" label="Start date and time">
                                   <template v-slot:prepend>
                                     <q-icon name="event" class="cursor-pointer">
                                       <q-popup-proxy cover transition-show="scale"
@@ -67,7 +66,7 @@
                               </div>
                               <div class="col">
                                 <q-input filled v-model="editEndDate" label="End date and time"
-                                         hint="End date and time" :disable="allowEditEndDate"
+                                         :disable="allowEditEndDate"
                                          :rules="[ val => confirmDates(val) || 'End date must be after start date']">
                                   <template v-slot:prepend>
                                     <q-icon name="event" class="cursor-pointer">

@@ -2,6 +2,16 @@
   <q-layout view="lHh Lpr fff" class="bg-grey-1">
     <q-header elevated class="bg-white text-grey-8" height-hint="64">
       <q-toolbar class="GPL__toolbar" style="height: 64px">
+        <q-btn
+            v-if="$q.sessionStorage.getItem('permission')"
+            flat
+            dense
+            round
+            @click="toggleLeftDrawer"
+            aria-label="Menu"
+            icon="menu"
+            class="q-mx-md"
+        />
         <q-avatar>
           <img src="src/assets/UAlg-ico.ico">
         </q-avatar>
@@ -14,12 +24,6 @@
         <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
-          <q-btn v-if="$q.sessionStorage.getItem('permission')" round dense flat color="grey-8" icon="notifications">
-            <q-badge color="red" text-color="white" floating>
-              2
-            </q-badge>
-            <q-tooltip>Notifications</q-tooltip>
-          </q-btn>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
               <img :src="avatar">
@@ -32,7 +36,7 @@
 
     <q-page-container class="GPL__page-container">
       <div class="flex flex-center column">
-        <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
+        <div class="row bg-blue-grey-2" style="min-height: 400px; width: 95%; padding: 24px;">
           <div id="parent" class="fit wrap justify-center items-start content-start" style="overflow: hidden;">
             <div class=" bg-grey-6" style="overflow: auto;">
               <q-card class="no-border-radius">
@@ -64,9 +68,8 @@
                                       clear-icon="close"
                                       v-model="displayName"
                                       type="text"
-                                      label="Display Name"
+                                      label="Display name"
                                       lazy-rules
-                                      hint="New display name"
                                       :rules="[ val => !!val || 'Please insert your new display name']"
                                   />
 
@@ -77,7 +80,7 @@
                                       :type="isPwd ? 'password' : 'text'"
                                       v-model="password"
                                       label="New password"
-                                      hint="New password"
+                                      hint="Password must be at least 8 characters long with upper and lower case characters, special characters and digits"
                                       lazy-rules
                                       :rules="[
               val => !!val || 'Please insert your new password',
@@ -86,6 +89,13 @@
           ]"
                                   >
                                     <template v-slot:append>
+                                      <q-icon
+                                          name="refresh"
+                                          class="cursor-pointer"
+                                          @click="generatePassword"
+                                      ><q-tooltip>
+                                        Generate password
+                                      </q-tooltip></q-icon>
                                       <q-icon
                                           :name="isPwd ? 'visibility_off' : 'visibility'"
                                           class="cursor-pointer"
@@ -100,8 +110,8 @@
                                       clear-icon="close"
                                       :type="isPwdC ? 'password' : 'text'"
                                       v-model="passwordConfirm"
-                                      label="Reinsert new password"
-                                      hint="Reinsert new password"
+                                      label="Confirm new password"
+                                      hint="Confirm new password"
                                       lazy-rules
                                       :rules="[
               val => !!val || 'Please reinsert your new password',
@@ -156,7 +166,7 @@
                     <q-expansion-item
                         expand-separator
                         icon="key"
-                        label="Regenerate signature key"
+                        label="Regenerate voting key"
                     >
                       <q-card>
                         <q-card-section>
@@ -176,7 +186,7 @@
                                       :type="isVk ? 'password' : 'text'"
                                       v-model="voteKey"
                                       label="New voting key"
-                                      hint="New voting key"
+                                      hint="Voting key must be exactly 16 characters long with upper and lower case characters, special characters and digits. A password manager is recommended to safeguard this key"
                                       lazy-rules
                                       :rules="[
               val => !!val || 'Please insert your voting key',
@@ -185,6 +195,13 @@
           ]"
                                   >
                                     <template v-slot:append>
+                                      <q-icon
+                                          name="refresh"
+                                          class="cursor-pointer"
+                                          @click="generateVoteKey"
+                                      ><q-tooltip>
+                                        Generate voting key
+                                      </q-tooltip></q-icon>
                                       <q-icon
                                           :name="isVk ? 'visibility_off' : 'visibility'"
                                           class="cursor-pointer"
@@ -198,8 +215,8 @@
                                       clear-icon="close"
                                       :type="isVk1 ? 'password' : 'text'"
                                       v-model="voteKeyConfirm"
-                                      label="Reinsert new voting key"
-                                      hint="Reinsert new voting key"
+                                      label="Confirm new voting key"
+                                      hint="Confirm new voting key"
                                       lazy-rules
                                       :rules="[
               val => !!val || 'Please reinsert your voting key',
@@ -290,9 +307,6 @@
                  size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check"/>
             <div class="GPL__side-btn__label">Auditing</div>
-            <q-badge floating color="red" text-color="white" style="top: 8px; right: 16px">
-              1
-            </q-badge>
           </q-btn>
 
           <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps
@@ -303,6 +317,73 @@
         </div>
       </q-page-sticky>
     </q-page-container>
+    <q-drawer
+        v-model="leftDrawerOpen"
+        bordered
+        behavior="mobile"
+        @click="leftDrawerOpen = false"
+    >
+      <q-scroll-area class="fit">
+        <q-toolbar class="GPL__toolbar">
+          <q-toolbar-title class="row items-center text-grey-8">
+            <img class="q-pl-md" src="src/assets/UAlg-ico.ico">
+            <span class="q-ml-sm">UAlg Secure Vote</span>
+          </q-toolbar-title>
+        </q-toolbar>
+
+        <q-list padding>
+          <div v-if="$q.sessionStorage.getItem('permission')">
+            <q-item clickable class="GPL__drawer-item" @click="$router.push('elections')">
+              <q-item-section avatar>
+                <q-icon name="ballot" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Elections</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-md" />
+          </div>
+          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'">
+            <q-item clickable class="GPL__drawer-item" @click="$router.push('election-manager')">
+              <q-item-section avatar>
+                <q-icon name="edit_document" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Election Manager</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-md" />
+          </div>
+          <div v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'">
+            <q-item clickable class="GPL__drawer-item" @click="$router.push('auditing')">
+              <q-item-section avatar>
+                <q-icon name="fact_check" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Auditing</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-md" />
+          </div>
+          <div v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'">
+            <q-item clickable class="GPL__drawer-item" @click="$router.push('admin')">
+              <q-item-section avatar>
+                <q-icon name="admin_panel_settings" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Admin</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-md" />
+          </div>
+
+        </q-list>
+      </q-scroll-area>
+    </q-drawer>
   </q-layout>
   <q-dialog v-model="settings" position="right">
     <q-card style="width: 350px">
@@ -348,7 +429,7 @@ export default {
   setup() {
     const settings = ref(false)
     const $q = useQuasar()
-    const image = ref(null)
+    const leftDrawerOpen = ref(false)
     const router = useRouter();
     const file = ref('')
     const avatar = ref('')
@@ -361,6 +442,10 @@ export default {
     const passwordDelete = ref('')
     const editImage = ref(false)
     const deleteConfirm = ref(false)
+
+    function toggleLeftDrawer () {
+      leftDrawerOpen.value = !leftDrawerOpen.value
+    }
 
     async function getProfile() {
       const uri = `http://localhost:8080/users/profile`
@@ -430,6 +515,8 @@ export default {
     })
 
     return {
+      leftDrawerOpen,
+      toggleLeftDrawer,
       settings,
       openSettings() {
         settings.value = true
@@ -564,11 +651,42 @@ export default {
           router.push({name: 'Login'});
         })
       },
+      generatePassword() {
+        let strongPassword = new RegExp(
+            "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
+        );
+        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
+        let key = ""
+        for(let i = 0; i < 12; i++) {
+          const rand = Math.floor(Math.random() * characters.length)
+          key += characters[rand]
+        }
+        if(strongPassword.test(key)) {
+          password.value = key
+        }
+      },
+      generateVoteKey() {
+        let strongPassword = new RegExp(
+            "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
+        );
+        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
+        let key = ""
+        for(let i = 0; i < 16; i++) {
+          const rand = Math.floor(Math.random() * characters.length)
+          key += characters[rand]
+        }
+        if(strongPassword.test(key)) {
+          voteKey.value = key
+        }
+      }
     }
   },
   methods: {
     logout() {
       SessionStorage.set('permission', '');
+      SessionStorage.set('id', '');
+      SessionStorage.set('avatar', '');
+      SessionStorage.set('display', '');
       Cookies.remove('token');
       this.$router.push('login');
     },

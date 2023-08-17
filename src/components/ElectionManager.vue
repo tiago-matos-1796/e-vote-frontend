@@ -2,6 +2,16 @@
   <q-layout view="lHh Lpr fff" class="bg-grey-1">
     <q-header elevated class="bg-white text-grey-8" height-hint="64">
       <q-toolbar class="GPL__toolbar" style="height: 64px">
+        <q-btn
+            v-if="$q.sessionStorage.getItem('permission')"
+            flat
+            dense
+            round
+            @click="toggleLeftDrawer"
+            aria-label="Menu"
+            icon="menu"
+            class="q-mx-md"
+        />
         <q-avatar>
           <img src="src/assets/UAlg-ico.ico">
         </q-avatar>
@@ -26,7 +36,7 @@
 
     <q-page-container class="GPL__page-container">
       <div class="flex flex-center column">
-        <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
+        <div class="row bg-blue-grey-2" style="min-height: 400px; width: 95%; padding: 24px;">
           <div id="parent" class="fit wrap justify-center items-start content-start" style="overflow: hidden;">
             <div class=" bg-grey-6" style="overflow: auto;">
               <q-card class="no-border-radius">
@@ -172,12 +182,19 @@
                           <q-form
                               class="q-gutter-md"
                           >
-                            <q-input v-model="newElectionKey" filled hint="New election key"
+                            <q-input v-model="newElectionKey" filled label="New election key" hint="A password manager is recommended to safeguard this key"
                                      :type="hideKey ? 'password' : 'text'"
                                      :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits',]"
                             >
                               <template v-slot:append>
+                                <q-icon
+                                    name="refresh"
+                                    class="cursor-pointer"
+                                    @click="generateVoteKey"
+                                ><q-tooltip>
+                                  Generate voting key
+                                </q-tooltip></q-icon>
                                 <q-icon
                                     :name="hideKey ? 'visibility_off' : 'visibility'"
                                     class="cursor-pointer"
@@ -185,7 +202,7 @@
                                 />
                               </template>
                             </q-input>
-                            <q-input v-model="newElectionKey1" filled hint="Confirm new election key"
+                            <q-input v-model="newElectionKey1" filled label="Confirm new election key"
                                      :type="hideKey1 ? 'password' : 'text'"
                                      :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits', val => val === newElectionKey || 'Election key must be the same as above']"
@@ -218,7 +235,7 @@
                           <q-form
                               class="q-gutter-md"
                           >
-                            <q-input v-model="resultsElectionKey" filled hint="Election key"
+                            <q-input v-model="resultsElectionKey" filled label="Election key"
                                      :type="hideResultsKey ? 'password' : 'text'"
                                      :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits']"
@@ -297,6 +314,73 @@
         </div>
       </q-page-sticky>
     </q-page-container>
+    <q-drawer
+        v-model="leftDrawerOpen"
+        bordered
+        behavior="mobile"
+        @click="leftDrawerOpen = false"
+    >
+      <q-scroll-area class="fit">
+        <q-toolbar class="GPL__toolbar">
+          <q-toolbar-title class="row items-center text-grey-8">
+            <img class="q-pl-md" src="src/assets/UAlg-ico.ico">
+            <span class="q-ml-sm">UAlg Secure Vote</span>
+          </q-toolbar-title>
+        </q-toolbar>
+
+        <q-list padding>
+          <div v-if="$q.sessionStorage.getItem('permission')">
+            <q-item clickable class="GPL__drawer-item" @click="$router.push('elections')">
+              <q-item-section avatar>
+                <q-icon name="ballot" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Elections</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-md" />
+          </div>
+          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'">
+            <q-item clickable class="GPL__drawer-item" @click="$router.push('election-manager')">
+              <q-item-section avatar>
+                <q-icon name="edit_document" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Election Manager</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-md" />
+          </div>
+          <div v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'">
+            <q-item clickable class="GPL__drawer-item" @click="$router.push('auditing')">
+              <q-item-section avatar>
+                <q-icon name="fact_check" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Auditing</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-md" />
+          </div>
+          <div v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'">
+            <q-item clickable class="GPL__drawer-item" @click="$router.push('admin')">
+              <q-item-section avatar>
+                <q-icon name="admin_panel_settings" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Admin</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-md" />
+          </div>
+
+        </q-list>
+      </q-scroll-area>
+    </q-drawer>
   </q-layout>
   <q-dialog v-model="settings" position="right">
     <q-card style="width: 350px">
@@ -444,6 +528,7 @@ export default {
     const $q = useQuasar()
     const router = useRouter();
     const tableRef = ref()
+    const leftDrawerOpen = ref(false)
     const filter = ref('')
     const loading = ref(false)
     const rows = ref([])
@@ -473,6 +558,10 @@ export default {
       rowsPerPage: 5,
       rowsNumber: 10
     })
+
+    function toggleLeftDrawer () {
+      leftDrawerOpen.value = !leftDrawerOpen.value
+    }
 
     function confirmDates(date, type) {
       if (date.length === 0) {
@@ -655,6 +744,8 @@ export default {
 
     return {
       tableRef,
+      leftDrawerOpen,
+      toggleLeftDrawer,
       filter,
       loading,
       pagination,
@@ -819,6 +910,20 @@ export default {
           onRequest({filter: filter.value, pagination: pagination.value})
         }, 500)
         loading.value = false
+      },
+      generateVoteKey() {
+        let strongPassword = new RegExp(
+            "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
+        );
+        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
+        let key = ""
+        for(let i = 0; i < 16; i++) {
+          const rand = Math.floor(Math.random() * characters.length)
+          key += characters[rand]
+        }
+        if(strongPassword.test(key)) {
+          newElectionKey.value = key
+        }
       }
     }
   },
@@ -855,7 +960,7 @@ export default {
       SessionStorage.set('permission', '');
       SessionStorage.set('id', '');
       SessionStorage.set('avatar', '');
-      SessionStorage.set('username', '');
+      SessionStorage.set('display', '');
       Cookies.remove('token');
       this.$router.push('login');
     },
