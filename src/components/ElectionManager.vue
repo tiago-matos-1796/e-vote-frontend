@@ -42,7 +42,7 @@
               <q-card class="no-border-radius">
                 <q-card-section>
                   <div class="q-pa-md q-gutter-sm">
-                    <q-btn color="green" :disable="loading" icon="add" label="Add election"
+                    <q-btn color="green" :disable="loading" icon="add" label="Add election" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
                            @click="showElectionWindow"/>
                   </div>
                   <div class="q-pa-md">
@@ -88,21 +88,21 @@
                             {{ props.row.endDate }}
                           </q-td>
                           <q-td key="actions" :props="props">
-                            <q-btn square size="sm" name="edit" color="amber"
+                            <q-btn square size="sm" name="edit" color="amber" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
                                    :disable="isAfterStart(props.row.startDate) || loading" label='' icon='edit'
                                    @click="openmodel(props.row)">
                               <q-tooltip>
                                 Edit election
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="delete" color="negative"
+                            <q-btn square size="sm" name="delete" color="negative" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
                                    :disable="isAfterStart(props.row.startDate) || loading" label='' icon='delete'
                                    @click="deleteElection(props.row)">
                               <q-tooltip>
                                 Delete election
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="renew" color="secondary"
+                            <q-btn square size="sm" name="renew" color="secondary" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
                                    :disable="isAfterStart(props.row.startDate) || loading" label='' icon='key'
                                    @click="regenerateKey(props.row)">
                               <q-tooltip>
@@ -116,7 +116,7 @@
                                 Show election status
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="results" color="primary"
+                            <q-btn square size="sm" name="results" color="primary" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
                                    :disable="isAfterEnd(props.row.endDate) || loading" label='' icon='data_thresholding'
                                    @click="showResults(props.row)">
                               <q-tooltip>
@@ -220,7 +220,7 @@
 
                         <q-card-actions align="right">
                           <q-btn flat label="Confirm" color="primary" @click="renewElectionKey(selected_row.id)"/>
-                          <q-btn flat label="Cancel" color="negative" @click="newElectionKey='';renewKey=false"/>
+                          <q-btn flat label="Cancel" color="negative" @click="newElectionKey='';newElectionKey1='';renewKey=false;"/>
                         </q-card-actions>
                       </q-card>
                     </q-dialog>
@@ -291,7 +291,7 @@
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
             <div class="GPL__side-btn__label">Election Manager</div>
@@ -301,9 +301,6 @@
                  size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check"/>
             <div class="GPL__side-btn__label">Auditing</div>
-            <q-badge floating color="red" text-color="white" style="top: 8px; right: 16px">
-              1
-            </q-badge>
           </q-btn>
 
           <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps
@@ -341,7 +338,7 @@
 
             <q-separator class="q-my-md" />
           </div>
-          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'">
+          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('election-manager')">
               <q-item-section avatar>
                 <q-icon name="edit_document" />
@@ -632,10 +629,20 @@ export default {
         getElections()
         onRequest({filter: filter.value, pagination: pagination.value})
       }).catch(function (error) {
-        if (error.response.status === 403 || error.response.status === 401) {
-          router.push({name: 'AccessDenied'})
+        if(error.response.status === 400) {
+          deleteConfirm.value = false
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: 'Error deleting election; Please try again later'
+          })
         } else {
-          router.push({name: 'Error'})
+          if (error.response.status === 403 || error.response.status === 401) {
+            router.push({name: 'AccessDenied'})
+          } else {
+            router.push({name: 'Error'})
+          }
         }
       })
     }
@@ -806,18 +813,59 @@ export default {
             spinner: QSpinnerGears,
           })
           setTimeout(() => {
-            regenerateKey(id, key)
-            newElectionKey.value = null
-            newElectionKey1.value = null
-            $q.loading.hide()
-            $q.notify({
-              color: 'green-4',
-              textColor: 'white',
-              icon: 'check',
-              message: `Election key changed with success`
+            regenerateKey(id, key).then(response => {
+              if(response.response) {
+                if(response.response.status === 400) {
+                  $q.loading.hide()
+                  $q.notify({
+                    color: 'red-10',
+                    textColor: 'white',
+                    icon: 'cancel',
+                    message: 'Cannot change key; Election is ongoing or has already finished'
+                  })
+                }
+                if(response.response.status === 401) {
+                  $q.loading.hide()
+                  router.push({name: 'AccessDenied'})
+                }
+                if(response.response.status === 500) {
+                  $q.loading.hide()
+                  $q.notify({
+                    color: 'red-10',
+                    textColor: 'white',
+                    icon: 'cancel',
+                    message: 'An error has occurred; Please try again later'
+                  })
+                } else {
+                  $q.loading.hide()
+                  $q.notify({
+                    color: 'red-10',
+                    textColor: 'white',
+                    icon: 'cancel',
+                    message: 'An error has occurred; Please try again later'
+                  })
+                }
+              } else {
+                newElectionKey.value = null
+                newElectionKey1.value = null
+                $q.loading.hide()
+                $q.notify({
+                  color: 'green-4',
+                  textColor: 'white',
+                  icon: 'check',
+                  message: `Election key changed with success`
+                })
+                renewKey.value = false
+              }
+            }).catch(error => {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: 'An error has occurred; Please try again later'
+              })
             })
-            renewKey.value = false
-          }, 3000)
+          }, 500)
         } else {
           $q.notify({
             color: 'red-10',
@@ -837,20 +885,48 @@ export default {
               spinner: QSpinnerGears,
             })
             countVotes(id, data).then(function (response) {
-              if (response.code) {
-                Notify.create({
-                  color: 'red-10',
-                  textColor: 'white',
-                  icon: 'cancel',
-                  message: 'Cannot count election results; Election key is not correct'
-                })
+              if (response.response) {
+                if(response.response.status === 400) {
+                  electionResults.value = false
+                  resultsElectionKey.value = ''
+                  Notify.create({
+                    color: 'red-10',
+                    textColor: 'white',
+                    icon: 'cancel',
+                    message: 'Cannot count election results; Please try again later'
+                  })
+                } else {
+                  Notify.create({
+                    color: 'red-10',
+                    textColor: 'white',
+                    icon: 'cancel',
+                    message: 'Cannot count election results; Election key is not correct'
+                  })
+                }
               } else {
-                Notify.create({
-                  color: 'green-4',
-                  textColor: 'white',
-                  icon: 'check',
-                  message: `Election results counted with success`
-                })
+                if(response.data) {
+                  if(response.data.detection) {
+                    Notify.create({
+                      color: 'green-4',
+                      textColor: 'white',
+                      icon: 'check',
+                      message: `Election results counted with success`
+                    })
+                    Notify.create({
+                      color: 'red-10',
+                      textColor: 'white',
+                      icon: 'warning',
+                      message: 'Possible fraud detected; Audit is recommended'
+                    })
+                  } else {
+                    Notify.create({
+                      color: 'green-4',
+                      textColor: 'white',
+                      icon: 'check',
+                      message: `Election results counted with success`
+                    })
+                  }
+                }
                 resultsElectionKey.value = ''
                 electionResults.value = false
                 loading.value = true
@@ -861,6 +937,12 @@ export default {
                 loading.value = false
               }
             }).catch(function (error) {
+              Notify.create({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: 'Cannot count election results; Please try again later'
+              })
             }).finally(() => {
               $q.loading.hide()
             })

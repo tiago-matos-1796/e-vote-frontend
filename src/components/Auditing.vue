@@ -41,7 +41,11 @@
             <div class=" bg-grey-6" style="overflow: auto;">
               <q-card class="no-border-radius">
                 <q-card-section>
-                  <div class="text-h6">Secure Vote Logs</div>
+                  <div class="q-pa-md row justify-left items-start q-gutter-lg">
+                    <div class="text-h6">Secure Vote Logs</div>
+                    <q-btn color="deep-orange" :disable="loading" icon="report" label="Fraudulent elections"
+                           @click="showFrauds"/>
+                  </div>
                 </q-card-section>
                 <q-card-section>
                   <div class="q-pa-md">
@@ -140,7 +144,7 @@
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
             <div class="GPL__side-btn__label">Election Manager</div>
@@ -178,50 +182,50 @@
           <div v-if="$q.sessionStorage.getItem('permission')">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('elections')">
               <q-item-section avatar>
-                <q-icon name="ballot" />
+                <q-icon name="ballot"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>Elections</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-separator class="q-my-md" />
+            <q-separator class="q-my-md"/>
           </div>
-          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'">
+          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('election-manager')">
               <q-item-section avatar>
-                <q-icon name="edit_document" />
+                <q-icon name="edit_document"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>Election Manager</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-separator class="q-my-md" />
+            <q-separator class="q-my-md"/>
           </div>
           <div v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('auditing')">
               <q-item-section avatar>
-                <q-icon name="fact_check" />
+                <q-icon name="fact_check"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>Auditing</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-separator class="q-my-md" />
+            <q-separator class="q-my-md"/>
           </div>
           <div v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('admin')">
               <q-item-section avatar>
-                <q-icon name="admin_panel_settings" />
+                <q-icon name="admin_panel_settings"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>Admin</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-separator class="q-my-md" />
+            <q-separator class="q-my-md"/>
           </div>
 
         </q-list>
@@ -258,11 +262,94 @@
       </q-card-section>
     </q-card>
   </q-dialog>
+  <q-dialog
+      v-model="frauds"
+      persistent
+      full-width
+  >
+    <div class="flex flex-center column">
+      <div id="parent" class="fit wrap justify-center items-start content-start"
+           style="overflow: hidden;">
+        <q-card class="no-border-radius">
+          <q-toolbar>
+            <q-toolbar-title><span class="text-weight-bold">Fraudulent Elections</span>
+            </q-toolbar-title>
+            <q-btn flat round dense icon="close" v-close-popup/>
+          </q-toolbar>
+          <q-card-section>
+            <div class="q-pa-md">
+              <q-table
+                  flat bordered
+                  :rows="fraudElections"
+                  :columns="fraudColumns"
+                  row-key="id"
+                  v-model:pagination="fraudPagination"
+                  :filter="filter"
+                  :loading="fraudLoading"
+                  binary-state-sort
+
+              >
+                <template v-slot:body="props">
+                  <q-tr :props="props">
+                    <q-td key="title" :props="props">
+                      {{ props.row.title }}
+                    </q-td>
+                    <q-td key="startDate" :props="props">
+                      {{ props.row.start_date }}
+                    </q-td>
+                    <q-td key="endDate" :props="props">
+                      {{ props.row.end_date }}
+                    </q-td>
+                    <q-td key="actions" :props="props">
+                      <q-btn square size="sm" name="deny" color="primary"
+                             :disable="fraudLoading" label='' icon='do_not_disturb_off'
+                             @click="showReason(props.row)">
+                        <q-tooltip>
+                          Deny fraud
+                        </q-tooltip>
+                      </q-btn>
+                    </q-td>
+                  </q-tr>
+                </template>
+              </q-table>
+            </div>
+          </q-card-section>
+          <q-card-actions align="center">
+            <q-btn label="Close" color="negative"
+                   v-close-popup/>
+          </q-card-actions>
+        </q-card>
+      </div>
+    </div>
+  </q-dialog>
+  <q-dialog v-model="denyReason">
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Please insert the reason for the denial of fraud of election {{ selectedFraud.title }}
+        </div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        <q-form
+            class="q-gutter-md"
+        >
+          <q-input v-model="reason" type="email" filled label="Reason"
+                   :rules="[ val => !!val || 'Field must not be empty']">
+          </q-input>
+        </q-form>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Confirm" color="primary" @click="denyFraud(selectedFraud)"/>
+        <q-btn flat label="Cancel" color="negative" @click="denyReason=false;reason=''" v-close-popup/>
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
 import {onMounted, ref} from 'vue'
-import {Cookies, SessionStorage, useQuasar} from "quasar";
+import {Cookies, Notify, SessionStorage, useQuasar} from "quasar";
 import axios from "axios";
 import api_routes from "../../config/routes.config";
 import {useRouter} from "vue-router";
@@ -287,11 +374,17 @@ const internalColumns = [
   {name: 'log_creation', label: 'Created at', field: 'log_creation', sortable: true},
 ]
 
+const fraudColumns = [
+  {name: 'title', align: 'left', label: 'Election', field: 'title', sortable: true},
+  {name: 'startDate', align: 'center', label: 'Start Date', field: 'startDate', sortable: true},
+  {name: 'endDate', align: 'center', label: 'End Date', field: 'endDate', sortable: true},
+  {name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: false},
+]
+
 const internalRows = []
 
 let originalRows = []
 
-let originalElectionRows = []
 export default {
   name: "Auditing",
 
@@ -305,6 +398,7 @@ export default {
     const avatar = ref(null)
     const internalFilter = ref('')
     const loading = ref(false)
+    const fraudLoading = ref(false)
     const filter = ref('')
     const toggleNone = ref(true)
     const rows = ref([])
@@ -316,6 +410,11 @@ export default {
     const toggleHigh = ref(true)
     const search = ref('')
     const electionLoading = ref(false)
+    const frauds = ref(false)
+    const fraudElections = ref([])
+    const denyReason = ref(false)
+    const selectedFraud = ref(null)
+    const reason = ref('')
     const pagination = ref({
       sortBy: 'log_creation',
       descending: true,
@@ -329,8 +428,14 @@ export default {
       page: 1,
       rowPerPage: 10
     })
+    const fraudPagination = ref({
+      sortBy: 'title',
+      descending: true,
+      page: 1,
+      rowPerPage: 10
+    })
 
-    function toggleLeftDrawer () {
+    function toggleLeftDrawer() {
       leftDrawerOpen.value = !leftDrawerOpen.value
     }
 
@@ -351,6 +456,38 @@ export default {
         } else {
           router.push({name: 'Error'})
         }
+      })
+    }
+
+    async function getFrauds() {
+      const uri = `http://localhost:8080/elections/fraud`
+      return await axios.get(uri, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(response => {
+        fraudElections.value = response.data
+      }).catch(error => {
+        if (error.response.status === 403 || error.response.status === 401) {
+          router.push({name: 'AccessDenied'})
+        } else {
+          router.push({name: 'Error'})
+        }
+      })
+    }
+
+    async function denyElectionFraud(id, reason) {
+      const uri = `http://localhost:8080/elections//fraud/${id}`
+      return await axios.patch(uri, {reason: reason}, {
+        headers: {
+          "Content-type": "application/json"
+        },
+        withCredentials: true
+      }).then(response => {
+        return response
+      }).catch(error => {
+        return error
       })
     }
 
@@ -421,6 +558,7 @@ export default {
 
     onMounted(() => {
       getLogs()
+      getFrauds()
       avatar.value = $q.sessionStorage.getItem('avatar') ? `${api_routes.AVATAR_URI}/${$q.sessionStorage.getItem('avatar')}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
       tableRef.value.requestServerInteraction()
     })
@@ -435,6 +573,8 @@ export default {
       pagination,
       electionsPagination,
       avatar,
+      frauds,
+      denyReason,
       openSettings() {
         settings.value = true
       },
@@ -443,6 +583,12 @@ export default {
       electionRows,
       internalColumns,
       internalRows,
+      fraudColumns,
+      fraudPagination,
+      fraudLoading,
+      fraudElections,
+      selectedFraud,
+      reason,
       rows,
       loading,
       electionLoading,
@@ -454,7 +600,7 @@ export default {
       search,
       onRequest,
       customSort() {
-        electionLoading .value= true
+        electionLoading.value = true
         setTimeout(() => {
           electionRows.value = startElectionRows.value
           const data = electionRows.value
@@ -493,6 +639,34 @@ export default {
         }, 500)
 
       },
+      denyFraud(row) {
+        if(reason.value.length > 0) {
+          loading.value = true
+          setTimeout(() => {
+            denyElectionFraud(row.id, reason.value).then(response => {
+              reason.value = ''
+              denyReason.value = false
+              frauds.value = false
+              Notify.create({
+                color: 'green-4',
+                textColor: 'white',
+                icon: 'check',
+                message: `${row.title}'s fraud denied with success`
+              })
+              getLogs()
+              onRequest({filter: filter.value, pagination: pagination.value})
+            }).catch(error => {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: 'An error has occurred, Please try again later'
+              })
+            })
+          }, 500)
+          loading.value = false
+        }
+      }
     }
   },
   computed: {},
@@ -500,6 +674,13 @@ export default {
     clearSearch() {
       this.search = ''
       this.customSort()
+    },
+    showFrauds() {
+      this.frauds = true
+    },
+    showReason(row) {
+      this.denyReason = true
+      this.selectedFraud = row
     },
     logout() {
       SessionStorage.set('permission', '');

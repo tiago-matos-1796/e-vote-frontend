@@ -16,6 +16,9 @@
               <q-card class="no-border-radius">
                 <q-card-section>
                   <div class="q-pa-md example-row-equal-width">
+                    <div v-if="detection" class="q-pa-md row justify-center items-start q-gutter-lg"
+                         style="overflow: hidden;">
+                      <h5 style="color: red">Possible fraud detected. An audit is recommended.</h5></div>
                     <div class="row">
                       <div class="col">
                         <q-card
@@ -106,6 +109,7 @@ export default {
     const voteData = ref(null)
     const pdf = ref(null)
     const xlsx = ref(null)
+    const detection = ref(null)
 
     const resultsColumns = [
       {
@@ -177,8 +181,9 @@ export default {
         voteData.value = response.data.voteData
         pdf.value = response.data.pdf
         xlsx.value = response.data.xlsx
+        detection.value = response.data.detection
       }).catch(function (error) {
-
+        return error
       })
     }
 
@@ -234,6 +239,7 @@ export default {
       pagination,
       abstentionData,
       voteData,
+      detection,
       getPdf() {
         $q.loading.show({
           message: 'Creating PDF document, please wait...',

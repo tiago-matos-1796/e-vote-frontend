@@ -111,7 +111,7 @@
                         persistent
                         full-width
                     >
-                      <ElectionBallot :id="electionId" @close-ballot="closeBallot"></ElectionBallot>
+                      <ElectionBallot :id="electionId" @close-ballot="closeBallot" @close-ballot-error="closeBallotError"></ElectionBallot>
                     </q-dialog>
                     <q-dialog
                         v-model="electionResults"
@@ -137,7 +137,7 @@
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
             <div class="GPL__side-btn__label">Election Manager</div>
@@ -184,7 +184,7 @@
 
           <q-separator class="q-my-md" />
           </div>
-          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'">
+          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'">
           <q-item clickable class="GPL__drawer-item" @click="$router.push('election-manager')">
             <q-item-section avatar>
               <q-icon name="edit_document" />
@@ -541,6 +541,15 @@ export default {
         }, 500)
         loading.value = false
       },
+      closeBallotError() {
+        ballot.value = false
+        $q.notify({
+          color: 'red-10',
+          textColor: 'white',
+          icon: 'cancel',
+          message: 'An error has occurred, please try again later'
+        })
+      }
     }
   },
   methods: {
@@ -561,7 +570,7 @@ export default {
       }
     },
     canSeeResults(row) {
-      if (moment().isAfter(moment(row.endDate, 'DD-MM-YYYY HH:mm'))) {
+      if (moment().isAfter(moment(row.endDate, 'DD-MM-YYYY HH:mm')) && !row.detection) {
         return !row.results;
       } else {
         return true

@@ -104,7 +104,6 @@ import api_routes from "../../config/routes.config"; // <-- no typo here ("/")
 
 globalThis.Buffer = Buffer
 
-const router = useRouter();
 
 export default {
   name: "ElectionBallot",
@@ -114,6 +113,7 @@ export default {
   setup(props, context) {
     const $q = useQuasar()
     const electionKey = ref('')
+    const router = useRouter();
     const hashMethod = ref('')
     const signature = ref('')
     const sign = ref(false)
@@ -150,10 +150,14 @@ export default {
           electionKey.value = response.data.election_key
           hashMethod.value = response.data.hash_method
         }).catch(function (error) {
-          if(error.response.status === 403 || error.response.status === 401) {
-            router.push({name: 'AccessDenied'})
+          if(error.response.status === 400) {
+            context.emit('closeBallotError')
           } else {
-            router.push({name: 'Error'})
+            if(error.response.status === 403 || error.response.status === 401) {
+              router.push({name: 'AccessDenied'})
+            } else {
+              router.push({name: 'Error'})
+            }
           }
         })
     }
@@ -168,12 +172,13 @@ export default {
       }).then(function (response) {
         return response.data.data
       }).catch(function (error) {
-        $q.notify({
+        return error
+        /*$q.notify({
           color: 'red-10',
           textColor: 'white',
           icon: 'cancel',
           message: 'An error has occurred while submitting your vote, please try again later'
-        })
+        })*/
       });
     }
 
@@ -187,12 +192,13 @@ export default {
       }).then(function (response) {
         return response
       }).catch(function (error) {
-        $q.notify({
+        return error
+        /*$q.notify({
           color: 'red-10',
           textColor: 'white',
           icon: 'cancel',
           message: 'An error has occurred while submitting your vote, please try again later'
-        })
+        })*/
       })
     }
 
@@ -221,24 +227,36 @@ export default {
       selected_row: ref({}),
       submitVote(id) {
         setTimeout(() => {
-          const vote = selected.value.length > 0 ? selected.value[0].id : "blank" // to be encrypted
+          const vote = selected.value.length > 0 ? selected.value[0].id : "blank"
           const key = signatureKey.value
           const encryptedVote = encrypt(vote, electionKey.value)
           const data = {data: encryptedVote, key: key}
           const hash = crypto.Hash(hashMethod.value)
           hash.update(encryptedVote)
           getSignature(data).then(response => {
-            submitVote(props.id, {vote: encryptedVote, signature: response, hash: hash.digest('base64')}).then(response => {
-              context.emit('closeBallot')
-            }).catch(function (error) {
-              Notify.create({
-                color: 'red-10',
-                textColor: 'white',
-                icon: 'cancel',
-                message: 'Cannot submit vote, cannot create signature'
+            if(response.response) {
+              if(response.response.status === 400) {
+                context.emit('closeBallotError')
+              }
+            } else {
+              submitVote(props.id, {vote: encryptedVote, signature: response, hash: hash.digest('base64')}).then(response => {
+                if(response.response) {
+                  if(response.response.status === 500) {
+                    context.emit('closeBallotError')
+                  }
+                } else {
+                  context.emit('closeBallot')
+                }
+              }).catch(error => {
+                Notify.create({
+                  color: 'red-10',
+                  textColor: 'white',
+                  icon: 'cancel',
+                  message: 'Cannot submit vote, cannot create signature'
+                })
               })
-            })
-          }).catch(function () {
+            }
+          }).catch(error => {
             Notify.create({
               color: 'red-10',
               textColor: 'white',

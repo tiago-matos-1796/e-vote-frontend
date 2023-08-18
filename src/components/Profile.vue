@@ -297,7 +297,7 @@
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
             <div class="GPL__side-btn__label">Election Manager</div>
@@ -344,7 +344,7 @@
 
             <q-separator class="q-my-md" />
           </div>
-          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'">
+          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('election-manager')">
               <q-item-section avatar>
                 <q-icon name="edit_document" />
@@ -621,12 +621,21 @@ export default {
       onSubmitKey() {
         const data = {key: voteKey.value}
         regenKeys(data).then(function (response) {
-          Notify.create({
-            color: 'green-4',
-            textColor: 'white',
-            icon: 'check',
-            message: `Vote key changed with success`
-          })
+          if(response.data) {
+            Notify.create({
+              color: 'green-4',
+              textColor: 'white',
+              icon: 'check',
+              message: `Vote key changed with success`
+            })
+          } else {
+            Notify.create({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: 'Cannot edit voting key; Please try again later'
+            })
+          }
         })
       },
       onResetKey() {

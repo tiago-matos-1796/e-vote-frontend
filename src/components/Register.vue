@@ -261,13 +261,22 @@ export default {
           spinner: QSpinnerGears,
         })
         register().then(function (response) {
-          $q.notify({
-            color: 'green-4',
-            textColor: 'white',
-            icon: 'check',
-            message: 'An email has been sent to you to verify the registration, please check your inbox'
-          })
-          router.push('login')
+          if(response.data) {
+            $q.notify({
+              color: 'green-4',
+              textColor: 'white',
+              icon: 'check',
+              message: 'An email has been sent to you to verify the registration, please check your inbox'
+            })
+            router.push('login')
+          } else {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: `An error has occurred while registering, please try again later`
+            })
+          }
         }).catch(function (error) {
           if (!error.response) {
             $q.notify({

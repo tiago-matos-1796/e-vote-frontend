@@ -460,7 +460,11 @@ export default {
           userRows.value.push(user)
         }
       }).catch(function (error) {
-        console.log(error)
+        if (error.response.status === 403 || error.response.status === 401) {
+          router.push({name: 'AccessDenied'})
+        } else {
+          router.push({name: 'Error'})
+        }
       })
     }
 
@@ -782,23 +786,32 @@ export default {
             }).then(response => {
               this.$emit('closeAdd')
             }).catch(function (error) {
-              if(error.response.status === 406) {
+              if(error.response.status === 500) {
                 Notify.create({
                   color: 'red-10',
                   textColor: 'white',
                   icon: 'cancel',
-                  message: 'Cannot create election; Candidate images must have unique names'
+                  message: 'Error creating election; Please try again later'
                 })
               } else {
-                Notify.create({
-                  color: 'red-10',
-                  textColor: 'white',
-                  icon: 'cancel',
-                  message: 'Cannot create election; Errors are present'
-                })
+                if(error.response.status === 406) {
+                  Notify.create({
+                    color: 'red-10',
+                    textColor: 'white',
+                    icon: 'cancel',
+                    message: 'Cannot create election; Candidate images must have unique names'
+                  })
+                } else {
+                  Notify.create({
+                    color: 'red-10',
+                    textColor: 'white',
+                    icon: 'cancel',
+                    message: 'Cannot create election; Errors are present'
+                  })
+                }
               }
             })
-          }, 1000)
+          }, 500)
         } else {
           Notify.create({
             color: 'red-10',

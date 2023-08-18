@@ -100,11 +100,12 @@
                                 Change permission
                               </q-tooltip>
                             </q-btn>
-                            <q-btn square size="sm" name="block" :color=" props.row.blocked ? 'indigo' : 'deep-orange'" label='' :icon="props.row.blocked ? 'check_circle' : 'block' "
+                            <q-btn square size="sm" name="block" :color=" props.row.blocked ? 'indigo' : 'deep-orange'"
+                                   label='' :icon="props.row.blocked ? 'check_circle' : 'block' "
                                    :disable="loading"
                                    @click="props.row.blocked ? unblockUser(props.row) : blockUser(props.row)">
                               <q-tooltip>
-                                {{props.row.blocked ? 'Unblock user' : 'Block user'}}
+                                {{ props.row.blocked ? 'Unblock user' : 'Block user' }}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="delete" color="negative" label='' icon='person_remove'
@@ -208,7 +209,7 @@
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'" round flat color="grey-8" stack no-caps
+          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
             <div class="GPL__side-btn__label">Election Manager</div>
@@ -246,50 +247,50 @@
           <div v-if="$q.sessionStorage.getItem('permission')">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('elections')">
               <q-item-section avatar>
-                <q-icon name="ballot" />
+                <q-icon name="ballot"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>Elections</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-separator class="q-my-md" />
+            <q-separator class="q-my-md"/>
           </div>
-          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'">
+          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('election-manager')">
               <q-item-section avatar>
-                <q-icon name="edit_document" />
+                <q-icon name="edit_document"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>Election Manager</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-separator class="q-my-md" />
+            <q-separator class="q-my-md"/>
           </div>
           <div v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('auditing')">
               <q-item-section avatar>
-                <q-icon name="fact_check" />
+                <q-icon name="fact_check"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>Auditing</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-separator class="q-my-md" />
+            <q-separator class="q-my-md"/>
           </div>
           <div v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('admin')">
               <q-item-section avatar>
-                <q-icon name="admin_panel_settings" />
+                <q-icon name="admin_panel_settings"/>
               </q-item-section>
               <q-item-section>
                 <q-item-label>Admin</q-item-label>
               </q-item-section>
             </q-item>
 
-            <q-separator class="q-my-md" />
+            <q-separator class="q-my-md"/>
           </div>
 
         </q-list>
@@ -479,7 +480,7 @@ export default {
       rowsPerPage: 5
     })
 
-    function toggleLeftDrawer () {
+    function toggleLeftDrawer() {
       leftDrawerOpen.value = !leftDrawerOpen.value
     }
 
@@ -491,7 +492,6 @@ export default {
         },
         withCredentials: true
       }).then(function (response) {
-        console.log(response.data)
         originalRows = response.data.users
         blacklistRows.value = response.data.blacklist
       }).catch(function (error) {
@@ -548,7 +548,7 @@ export default {
 
     async function unblockUser(id) {
       const uri = `http://localhost:8080/users/admin/unblock/${id}`
-      return await axios.patch(uri,{}, {
+      return await axios.patch(uri, {}, {
         headers: {
           "Content-type": "application/json"
         },
@@ -725,15 +725,27 @@ export default {
         loading.value = true
         setTimeout(() => {
           deleteUser(row.id).then(function (response) {
-            if (response.code === 'ERR_BAD_REQUEST') {
-              $q.notify({
-                color: 'red-10',
-                textColor: 'white',
-                icon: 'cancel',
-                message: 'Cannot delete user; User is voter in at least 1 election'
-              })
-              deleteConfirm.value = false
-              loading.value = false
+            if (response.code) {
+              if (response.code === 'ERR_BAD_REQUEST') {
+                $q.notify({
+                  color: 'red-10',
+                  textColor: 'white',
+                  icon: 'cancel',
+                  message: 'Cannot delete user; User is voter in at least 1 election'
+                })
+                deleteConfirm.value = false
+                loading.value = false
+              }
+              if (response.code === 'ERR_BAD_RESPONSE') {
+                $q.notify({
+                  color: 'red-10',
+                  textColor: 'white',
+                  icon: 'cancel',
+                  message: 'An error has occurred, Please try again later'
+                })
+                deleteConfirm.value = false
+                loading.value = false
+              }
             } else {
               if (row.id === $q.sessionStorage.getItem("id")) {
                 $q.sessionStorage.set('permission', '');
