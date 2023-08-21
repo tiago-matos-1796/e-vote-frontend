@@ -361,6 +361,7 @@ import {exportFile, Loading, Notify, QSpinnerGears, useQuasar} from "quasar";
 import {v1} from "uuid";
 import axios from "axios";
 import {useRouter} from "vue-router";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: 'AddElection',
@@ -449,7 +450,7 @@ export default {
     }
 
     async function getUsers() {
-      const uri = 'http://localhost:8080/users/user-list'
+      const uri = `${api_routes.MAIN_URI}/users/user-list`
       return await axios.get(uri, {
         headers: {
           "Content-type": "application/json"
@@ -467,21 +468,7 @@ export default {
         }
       })
     }
-
-    async function createElection(data) {
-      const uri = 'http://localhost:8080/elections/'
-      return await axios.post(uri, data, {
-          headers: {
-            "Content-type": "multipart/form-data"
-          },
-          withCredentials: true
-        }).then(function (response) {
-          return response
-        }).catch(function (error) {
-          return error
-        })
-    }
-
+    
     function wrapCsvValue (val, formatFn, row) {
       let formatted = formatFn !== void 0
           ? formatFn(val, row)
@@ -777,7 +764,7 @@ export default {
             spinner: QSpinnerGears,
           })
           setTimeout(() => {
-            const uri = 'http://localhost:8080/elections/'
+            const uri = `${api_routes.MAIN_URI}/elections/`
             axios.post(uri, data, {
               headers: {
                 "Content-type": "multipart/form-data"

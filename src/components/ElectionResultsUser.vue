@@ -75,6 +75,7 @@
 <script>
 import {onMounted, ref} from "vue";
 import axios from "axios";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: "ElectionResultsUser",
@@ -145,7 +146,7 @@ export default {
     })
 
     async function getResults() {
-      const uri = `http://localhost:8080/vote/results/user/${props.id}`
+      const uri = `${api_routes.MAIN_URI}/vote/results/user/${props.id}`
       return await axios.get(uri, {
         headers: {
           "Content-type": "application/json"

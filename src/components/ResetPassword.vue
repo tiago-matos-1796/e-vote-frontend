@@ -94,6 +94,7 @@ import {onMounted, ref} from "vue";
 import {useQuasar} from "quasar";
 import {useRoute, useRouter} from 'vue-router'
 import axios from "axios";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: "ForgotPassword",
@@ -105,7 +106,7 @@ export default {
     const route = useRoute()
 
     async function recoverPassword(password, token) {
-      const uri = `http://localhost:8080/users/password-recovery/${token}`
+      const uri = `${api_routes.MAIN_URI}/users/password-recovery/${token}`
       const data = {password: password}
       return await axios.patch(uri, data, {
         headers: {

@@ -61,6 +61,7 @@ import {onMounted, ref} from "vue";
 import {useQuasar} from "quasar"
 import {useRouter} from 'vue-router'
 import axios from "axios";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: "ForgotPassword",
@@ -70,7 +71,7 @@ export default {
     const router = useRouter()
 
     async function forgotPassword(email) {
-      const uri = `http://localhost:8080/users/forgot-password`
+      const uri = `${api_routes.MAIN_URI}/users/forgot-password`
       const data = {email: email}
       return await axios.post(uri, data, {
         headers: {

@@ -182,6 +182,7 @@ import {Cookies, QSpinnerGears, SessionStorage, useQuasar} from "quasar";
 import {useRoute, useRouter} from "vue-router";
 import {onMounted, ref} from "vue";
 import axios from "axios";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: "PartialRegister",
@@ -197,7 +198,7 @@ export default {
     const file = ref(null)
 
     async function register(token) {
-      const uri = `http://localhost:8080/users/register/${token}`
+      const uri = `${api_routes.MAIN_URI}/users/register/${token}`
       const data = {
         display_name: displayName.value,
         password: password.value,

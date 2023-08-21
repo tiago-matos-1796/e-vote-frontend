@@ -138,25 +138,25 @@
       </div>
       <q-page-sticky v-if="$q.screen.gt.sm" expand position="left">
         <div class="fit q-pt-xl q-px-sm column">
-          <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat color="grey-8" stack no-caps size="26px"
+          <q-btn v-if="permission" round flat color="grey-8" stack no-caps size="26px"
                  class="GPL__side-btn" @click="$router.push('elections')">
             <q-icon size="22px" name="ballot"/>
             <div class="GPL__side-btn__label">Elections</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'" round flat color="grey-8" stack no-caps
+          <q-btn v-if="permission === 'MANAGER' || permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
             <div class="GPL__side-btn__label">Election Manager</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'" round flat color="grey-8" stack no-caps
+          <q-btn v-if="permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check"/>
             <div class="GPL__side-btn__label">Auditing</div>
           </q-btn>
 
-          <q-btn v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'" round flat color="grey-8" stack no-caps
+          <q-btn v-if="permission === 'ADMIN'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('admin')">
             <q-icon size="22px" name="admin_panel_settings"/>
             <div class="GPL__side-btn__label">Admin</div>
@@ -179,7 +179,7 @@
         </q-toolbar>
 
         <q-list padding>
-          <div v-if="$q.sessionStorage.getItem('permission')">
+          <div v-if="permission">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('elections')">
               <q-item-section avatar>
                 <q-icon name="ballot"/>
@@ -191,7 +191,7 @@
 
             <q-separator class="q-my-md"/>
           </div>
-          <div v-if="$q.sessionStorage.getItem('permission') === 'MANAGER' || 'AUDITOR'">
+          <div v-if="permission === 'MANAGER' || permission === 'AUDITOR'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('election-manager')">
               <q-item-section avatar>
                 <q-icon name="edit_document"/>
@@ -203,7 +203,7 @@
 
             <q-separator class="q-my-md"/>
           </div>
-          <div v-if="$q.sessionStorage.getItem('permission') === 'AUDITOR'">
+          <div v-if="permission === 'AUDITOR'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('auditing')">
               <q-item-section avatar>
                 <q-icon name="fact_check"/>
@@ -215,7 +215,7 @@
 
             <q-separator class="q-my-md"/>
           </div>
-          <div v-if="$q.sessionStorage.getItem('permission') === 'ADMIN'">
+          <div v-if="permission === 'ADMIN'">
             <q-item clickable class="GPL__drawer-item" @click="$router.push('admin')">
               <q-item-section avatar>
                 <q-icon name="admin_panel_settings"/>
@@ -391,6 +391,7 @@ export default {
   setup() {
     const $q = useQuasar()
     const router = useRouter();
+    const permission = ref('')
     const tableRef = ref()
     const leftDrawerOpen = ref(false)
     const electionTableRef = ref()
@@ -440,7 +441,7 @@ export default {
     }
 
     async function getLogs() {
-      const uri = `http://localhost:8080/log`
+      const uri = `${api_routes.MAIN_URI}/log`
       return await axios.get(uri, {
         headers: {
           "Content-type": "application/json"
@@ -460,7 +461,7 @@ export default {
     }
 
     async function getFrauds() {
-      const uri = `http://localhost:8080/elections/fraud`
+      const uri = `${api_routes.MAIN_URI}/elections/fraud`
       return await axios.get(uri, {
         headers: {
           "Content-type": "application/json"
@@ -478,7 +479,7 @@ export default {
     }
 
     async function denyElectionFraud(id, reason) {
-      const uri = `http://localhost:8080/elections//fraud/${id}`
+      const uri = `${api_routes.MAIN_URI}/elections//fraud/${id}`
       return await axios.patch(uri, {reason: reason}, {
         headers: {
           "Content-type": "application/json"
@@ -557,14 +558,16 @@ export default {
     }
 
     onMounted(() => {
+      permission.value = $q.sessionStorage.getItem('permission')
       getLogs()
       getFrauds()
-      avatar.value = $q.sessionStorage.getItem('avatar') ? `${api_routes.AVATAR_URI}/${$q.sessionStorage.getItem('avatar')}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
+      avatar.value = $q.sessionStorage.getItem('avatar') ? `${api_routes.AVATAR_URI}/${$q.sessionStorage.getItem('avatar')}` : `/src/assets/user-icon.jpg`
       tableRef.value.requestServerInteraction()
     })
 
     return {
       tableRef,
+      permission,
       electionTableRef,
       leftDrawerOpen,
       toggleLeftDrawer,

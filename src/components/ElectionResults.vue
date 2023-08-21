@@ -93,6 +93,7 @@
 import {onMounted, ref} from "vue";
 import axios from "axios";
 import {QSpinnerGears, useQuasar} from "quasar";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: "ElectionResults",
@@ -168,7 +169,7 @@ export default {
     })
 
     async function getResults() {
-      const uri = `http://localhost:8080/vote/results/${props.id}`
+      const uri = `${api_routes.MAIN_URI}/vote/results/${props.id}`
       return await axios.get(uri, {
         headers: {
           "Content-type": "application/json"
@@ -188,7 +189,7 @@ export default {
     }
 
     async function exportPdf() {
-      const uri = `http://localhost:8080/exports/pdf/${pdf.value}`
+      const uri = `${api_routes.MAIN_URI}/exports/pdf/${pdf.value}`
       return await axios.get(uri, {
         withCredentials: true,
         responseType: 'blob',
@@ -207,7 +208,7 @@ export default {
     }
 
     async function exportXls() {
-      const uri = `http://localhost:8080/exports/xlsx/${xlsx.value}`
+      const uri = `${api_routes.MAIN_URI}/exports/xlsx/${xlsx.value}`
       return await axios.get(uri, {
         withCredentials: true,
         responseType: 'blob',

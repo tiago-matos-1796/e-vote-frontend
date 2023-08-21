@@ -89,6 +89,7 @@ import {Cookies, QSpinnerGears, SessionStorage, useQuasar} from 'quasar'
 import {onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import axios from "axios";
+import api_routes from '../../config/routes.config'
 
 
 export default {
@@ -102,7 +103,7 @@ export default {
     const password = ref(null)
 
     async function login() {
-      const uri = 'http://localhost:8080/users/login'
+      const uri = `${api_routes.MAIN_URI}/users/login`
       const data = {
         email: email.value,
         password: password.value
@@ -119,8 +120,8 @@ export default {
     }
 
     onMounted(() => {
-      if($q.sessionStorage.has('id')) {
-        if($q.sessionStorage.getItem('id').length > 0) {
+      if ($q.sessionStorage.has('id')) {
+        if ($q.sessionStorage.getItem('id').length > 0) {
           router.push('elections')
         }
       }
@@ -140,8 +141,8 @@ export default {
           spinner: QSpinnerGears,
         })
         login().then(function (response) {
-          if(response.response) {
-            if(response.response.status === 406) {
+          if (response.response) {
+            if (response.response.status === 406) {
               $q.notify({
                 color: 'red-10',
                 textColor: 'white',
@@ -149,7 +150,7 @@ export default {
                 message: `Your account is not yet active, please check your inbox for the activation email`
               })
             }
-            if(response.response.status === 403) {
+            if (response.response.status === 403) {
               $q.notify({
                 color: 'red-10',
                 textColor: 'white',
@@ -157,7 +158,7 @@ export default {
                 message: `Your account is temporarily unavailable, please try again later`
               })
             }
-            if(response.response.status === 400) {
+            if (response.response.status === 400) {
               $q.notify({
                 color: 'red-10',
                 textColor: 'white',
@@ -167,13 +168,17 @@ export default {
             }
           } else {
             $q.sessionStorage.set('permission', response.data.permissions);
-           $q.sessionStorage.set('id', response.data.id);
-           $q.sessionStorage.set('avatar', response.data.image);
-           $q.sessionStorage.set('display', response.data.displayName);
-           /*$q.cookies.set('token', response.data.token, { // production
-             httpOnly: true,
-             secure: true
-           });*/
+            $q.sessionStorage.set('id', response.data.id);
+            if(response.data.image) {
+              $q.sessionStorage.set('avatar', response.data.image);
+            } else {
+              $q.sessionStorage.set('avatar', '');
+            }
+            $q.sessionStorage.set('display', response.data.displayName);
+            /*$q.cookies.set('token', response.data.token, { // production
+              httpOnly: true,
+              secure: true
+            });*/
             $q.cookies.set('token', response.data.token);
             $q.notify({
               color: 'green-4',
@@ -211,7 +216,6 @@ export default {
   },
   methods: {
     logout() {
-      const store = useAuthStore();
       SessionStorage.set('permission', '');
       SessionStorage.set('id', '');
       SessionStorage.set('avatar', '');

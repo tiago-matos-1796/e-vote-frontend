@@ -114,7 +114,6 @@ export default {
     const $q = useQuasar()
     const electionKey = ref('')
     const router = useRouter();
-    const hashMethod = ref('')
     const signature = ref('')
     const sign = ref(false)
     const selected = ref([])
@@ -138,7 +137,7 @@ export default {
     ]
     const signatureKey = ref('')
     async function getBallot(id) {
-      const uri = `http://localhost:8080/elections/${id}`
+      const uri = `${api_routes.MAIN_URI}/elections/${id}`
         return await axios.get(uri, {
           headers: {
             "Content-type": "application/json"
@@ -148,7 +147,6 @@ export default {
           candidateRows.value = response.data.candidates
           electionTitle.value = response.data.title
           electionKey.value = response.data.election_key
-          hashMethod.value = response.data.hash_method
         }).catch(function (error) {
           if(error.response.status === 400) {
             context.emit('closeBallotError')
@@ -163,27 +161,21 @@ export default {
     }
 
     async function getSignature(data) {
-      const uri = `http://localhost:8080/elections/signature`
+      const uri = `${api_routes.MAIN_URI}/elections/signature`
       return await axios.post(uri, data, {
         headers: {
           "Content-type": "application/json"
         },
         withCredentials: true
       }).then(function (response) {
-        return response.data.data
+        return response.data
       }).catch(function (error) {
         return error
-        /*$q.notify({
-          color: 'red-10',
-          textColor: 'white',
-          icon: 'cancel',
-          message: 'An error has occurred while submitting your vote, please try again later'
-        })*/
       });
     }
 
     async function submitVote(id, data) {
-      const uri = `http://localhost:8080/vote/${id}`
+      const uri = `${api_routes.MAIN_URI}/vote/${id}`
       return await axios.post(uri, data, {
         headers: {
           "Content-type": "application/json"
@@ -193,12 +185,6 @@ export default {
         return response
       }).catch(function (error) {
         return error
-        /*$q.notify({
-          color: 'red-10',
-          textColor: 'white',
-          icon: 'cancel',
-          message: 'An error has occurred while submitting your vote, please try again later'
-        })*/
       })
     }
 
@@ -231,15 +217,13 @@ export default {
           const key = signatureKey.value
           const encryptedVote = encrypt(vote, electionKey.value)
           const data = {data: encryptedVote, key: key}
-          const hash = crypto.Hash(hashMethod.value)
-          hash.update(encryptedVote)
           getSignature(data).then(response => {
             if(response.response) {
               if(response.response.status === 400) {
                 context.emit('closeBallotError')
               }
             } else {
-              submitVote(props.id, {vote: encryptedVote, signature: response, hash: hash.digest('base64')}).then(response => {
+              submitVote(props.id, {vote: encryptedVote, signature: response.signature, hash: response.hash, key: key}).then(response => {
                 if(response.response) {
                   if(response.response.status === 500) {
                     context.emit('closeBallotError')

@@ -46,6 +46,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {onMounted, ref} from "vue";
 import axios from "axios";
 import {useQuasar} from "quasar";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: "AccountVerification",
@@ -56,7 +57,7 @@ export default {
     const text = ref('')
 
     async function verify(token) {
-      const uri = `http://localhost:8080/users/verify/${token}`
+      const uri = `${api_routes.MAIN_URI}/users/verify/${token}`
       return await axios.patch(uri, {}, {
         headers: {
           "Content-type": "application/json"

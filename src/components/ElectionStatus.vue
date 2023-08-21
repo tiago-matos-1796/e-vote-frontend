@@ -64,6 +64,7 @@
 <script lang="js">
 import {onMounted, ref} from "vue";
 import axios from "axios";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: "ElectionStatus",
@@ -110,14 +111,13 @@ export default {
     ]
 
     async function getStatus(id) {
-      const uri = `http://localhost:8080/vote/status/${id}`;
+      const uri = `${api_routes.MAIN_URI}/vote/status/${id}`;
       return await axios.get(uri, {
         headers: {
           "Content-type": "application/json"
         },
         withCredentials: true
       }).then(function (response) {
-        console.log(response.data)
         statusRows.value = response.data.voters
         graphData.value = response.data.data
       }).catch(function (error) {
@@ -126,7 +126,6 @@ export default {
     }
 
     onMounted(() => {
-      // get initial data from server (1st page)
       getStatus(props.id)
     })
 

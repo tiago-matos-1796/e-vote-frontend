@@ -192,6 +192,7 @@ import {Cookies, QSpinnerGears, SessionStorage, useQuasar} from 'quasar'
 import {onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import axios from "axios";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: 'Register',
@@ -208,7 +209,7 @@ export default {
     const file = ref(null)
 
     async function register() {
-      const uri = 'http://localhost:8080/users/'
+      const uri = `${api_routes.MAIN_URI}/users/`
       const data = {
         email: email.value,
         display_name: displayName.value,

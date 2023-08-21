@@ -410,6 +410,7 @@ import {exportFile, Notify, useQuasar} from "quasar";
 import {v1} from "uuid";
 import axios from "axios";
 import {useRouter} from "vue-router";
+import api_routes from '../../config/routes.config'
 
 export default {
   name: "EditElection",
@@ -503,7 +504,7 @@ export default {
     }
 
     async function getElection(id) {
-      const uri = `http://localhost:8080/elections/manager/${id}`
+      const uri = `${api_routes.MAIN_URI}/elections/manager/${id}`
       return await axios.get(uri, {
         headers: {
           "Content-type": "application/json"
@@ -537,12 +538,6 @@ export default {
           : String(formatted)
 
       formatted = formatted.split('"').join('""')
-      /**
-       * Excel accepts \n and \r in strings, but some other CSV parsers do not
-       * Uncomment the next two lines to escape new lines
-       */
-      // .split('\n').join('\\n')
-      // .split('\r').join('\\r')
 
       return `"${formatted}"`
     }
@@ -777,7 +772,7 @@ export default {
       if (moment(startDate, 'DD-MM-YYYY HH:mm').isBefore(moment(endDate, 'DD-MM-YYYY HH:mm'))) {
         if (title.length > 0) {
           if (managers.length > 0) {
-            const uri = `http://localhost:8080/elections/${id}`
+            const uri = `${api_routes.MAIN_URI}/elections/${id}`
             return axios.put(uri, data, {
               headers: {
                 "Content-type": "multipart/form-data"
