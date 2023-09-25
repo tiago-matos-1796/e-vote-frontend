@@ -175,10 +175,6 @@ export default {
               $q.sessionStorage.set('avatar', '');
             }
             $q.sessionStorage.set('display', response.data.displayName);
-            /*$q.cookies.set('token', response.data.token, { // production
-              httpOnly: true,
-              secure: true
-            });*/
             $q.cookies.set('token', response.data.token);
             $q.notify({
               color: 'green-4',
