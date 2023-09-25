@@ -35,7 +35,7 @@
                     <q-separator/>
                     <q-list dense>
                       <q-item>
-                        <q-item-section>
+                        <q-item-section class="row justify-center items-center">
                           <q-item-label><img :src="`${imageRoute}/${props.row.image}`"></q-item-label>
                         </q-item-section>
                       </q-item>
