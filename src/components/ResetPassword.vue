@@ -28,7 +28,18 @@
                         @submit="submit"
                         @reset="reset"
                     >
-
+                      <q-input
+                          filled
+                          :type="'text'"
+                          v-model="token"
+                          label="Token"
+                          hint="Please insert your token"
+                          lazy-rules
+                          :rules="[
+              val => !!val || 'Please insert your token',
+          ]"
+                      >
+                      </q-input>
                       <q-input
                           filled
                           :type="isPwd ? 'password' : 'text'"
@@ -75,7 +86,7 @@
 
                       <div>
                         <q-btn label="Submit new password" type="submit" color="primary"/>
-                        <q-btn label="Reset" color="negative" type="reset" flat class="q-ml-sm" />
+                        <q-btn label="Reset" color="negative" type="reset" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
                   </div>
@@ -102,12 +113,13 @@ export default {
     const $q = useQuasar()
     const password = ref(null)
     const passwordConfirm = ref(null)
+    const token = ref('')
     const router = useRouter()
     const route = useRoute()
 
     async function recoverPassword(password, token) {
-      const uri = `${api_routes.MAIN_URI}/users/password-recovery/${token}`
-      const data = {password: password}
+      const uri = `${api_routes.MAIN_URI}/users/password-recovery`
+      const data = {password: password, token: token}
       return await axios.patch(uri, data, {
         headers: {
           "Content-type": "application/json"
@@ -120,8 +132,8 @@ export default {
     }
 
     onMounted(() => {
-      if($q.sessionStorage.has('id')) {
-        if($q.sessionStorage.getItem('id').length > 0) {
+      if ($q.sessionStorage.has('id')) {
+        if ($q.sessionStorage.getItem('id').length > 0) {
           router.push('elections')
         }
       }
@@ -130,12 +142,13 @@ export default {
     return {
       password,
       passwordConfirm,
+      token,
       isPwd: ref(true),
       isPwd1: ref(true),
       submit() {
-        if(route.query.token) {
-          recoverPassword(password.value, route.query.token).then(function (response) {
-            if(response.code === "ERR_BAD_REQUEST") {
+        if (token.value) {
+          recoverPassword(password.value, token.value).then(function (response) {
+            if (response.code === "ERR_BAD_REQUEST") {
               $q.notify({
                 color: 'red-10',
                 textColor: 'white',
@@ -169,13 +182,13 @@ export default {
         }
       },
       reset() {
-          password.value = ''
-          passwordConfirm.value = ''
+        password.value = ''
+        passwordConfirm.value = ''
+        token.value = ''
       }
     }
   },
-  methods: {
-  }
+  methods: {}
 }
 </script>
 

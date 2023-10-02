@@ -61,6 +61,7 @@
               val => !!val || 'Please insert your password',
               val => val.length >= 8 || 'Password must be at least 8 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Password must have upper and lower case characters, special characters and digits',
+              val => val !== voteKey || 'Password must be different from your vote key'
           ]"
                       >
                         <template v-slot:append>
@@ -111,8 +112,9 @@
                           lazy-rules
                           :rules="[
               val => !!val || 'Please insert your voting key',
-              val => val.length === 16 || 'Voting key must be exactly 16 characters long',
+              val => val.length >= 12 || 'Voting key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
+              val => val !== password || 'Voting key must be different from your password'
           ]"
                       >
                         <template v-slot:append>
@@ -140,7 +142,7 @@
                           lazy-rules
                           :rules="[
               val => !!val || 'Please reinsert your voting key',
-              val => val.length === 16 || 'Voting key must be exactly 16 characters long',
+              val => val.length >= 12 || 'Voting key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
               val => val === voteKey || 'Both vote keys must be the same'
           ]"
@@ -332,7 +334,7 @@ export default {
         );
         const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
         let key = ""
-        for(let i = 0; i < 12; i++) {
+        for(let i = 0; i < 8; i++) {
           const rand = Math.floor(Math.random() * characters.length)
           key += characters[rand]
         }
@@ -346,7 +348,7 @@ export default {
         );
         const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
         let key = ""
-        for(let i = 0; i < 16; i++) {
+        for(let i = 0; i < 12; i++) {
           const rand = Math.floor(Math.random() * characters.length)
           key += characters[rand]
         }

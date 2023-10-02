@@ -34,6 +34,15 @@
                       <q-input
                           filled
                           clear-icon="close"
+                          v-model="token"
+                          type="text"
+                          label="Display Name"
+                          lazy-rules
+                          :rules="[ val => !!val || 'Please insert your token']"
+                      />
+                      <q-input
+                          filled
+                          clear-icon="close"
                           v-model="displayName"
                           type="text"
                           label="Display Name"
@@ -52,6 +61,7 @@
               val => !!val || 'Please insert your password',
               val => val.length >= 8 || 'Password must be at least 8 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Password must have upper and lower case characters, special characters and digits',
+              val => val !== voteKey || 'Password must be different from vote key'
           ]"
                       >
                         <template v-slot:append>
@@ -102,8 +112,9 @@
                           lazy-rules
                           :rules="[
               val => !!val || 'Please insert your voting key',
-              val => val.length === 16 || 'Voting key must be exactly 16 characters long',
+              val => val.length >= 12 || 'Voting key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
+              val => val !== password || 'Vote key must be different from password'
           ]"
                       >
                         <template v-slot:append>
@@ -131,7 +142,7 @@
                           lazy-rules
                           :rules="[
               val => !!val || 'Please reinsert your voting key',
-              val => val.length === 16 || 'Voting key must be exactly 16 characters long',
+              val => val.length >= 12 || 'Voting key must be at least 16 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
               val => val === voteKey || 'Both vote keys must be the same'
           ]"
@@ -196,14 +207,16 @@ export default {
     const voteKey = ref(null)
     const voteKeyConfirm = ref(null)
     const file = ref(null)
+    const token = ref('')
 
-    async function register(token) {
-      const uri = `${api_routes.MAIN_URI}/users/register/${token}`
+    async function register() {
+      const uri = `${api_routes.MAIN_URI}/users/register`
       const data = {
         display_name: displayName.value,
         password: password.value,
         sign_key: voteKey.value,
-        image: file.value
+        image: file.value,
+        token: token.value
       }
       return await axios.patch(uri, data, {
         headers: {
@@ -239,13 +252,14 @@ export default {
       filesMaxSize: ref(null),
       filesMaxTotalSize: ref(null),
       filesMaxNumber: ref(null),
+      token,
       onSubmit() {
-        if(route.query.token) {
+        if(token.value) {
           $q.loading.show({
             message: 'Registration in progress, please wait...',
             spinner: QSpinnerGears,
           })
-          register(route.query.token).then(function (response) {
+          register().then(function (response) {
             if(response.response) {
               if(response.response.status === 500) {
                 $q.notify({
@@ -291,6 +305,7 @@ export default {
         voteKey.value = null
         voteKeyConfirm.value = null
         file.value = null
+        token.value = null
       },
       onRejected(rejectedEntries) {
         $q.notify({

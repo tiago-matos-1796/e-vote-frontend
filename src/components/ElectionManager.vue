@@ -184,7 +184,7 @@
                           >
                             <q-input v-model="newElectionKey" filled label="New election key" hint="A password manager is recommended to safeguard this key"
                                      :type="hideKey ? 'password' : 'text'"
-                                     :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be 16 characters long',
+                                     :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 12 || 'Election key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits',]"
                             >
                               <template v-slot:append>
@@ -204,7 +204,7 @@
                             </q-input>
                             <q-input v-model="newElectionKey1" filled label="Confirm new election key"
                                      :type="hideKey1 ? 'password' : 'text'"
-                                     :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
+                                     :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 12 || 'Election key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits', val => val === newElectionKey || 'Election key must be the same as above']"
                             >
                               <template v-slot:append>
@@ -237,7 +237,7 @@
                           >
                             <q-input v-model="resultsElectionKey" filled label="Election key"
                                      :type="hideResultsKey ? 'password' : 'text'"
-                                     :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
+                                     :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 12 || 'Election key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits']"
                             >
                               <template v-slot:append>
@@ -879,7 +879,7 @@ export default {
       },
       countElectionResults(id) {
         const key = resultsElectionKey.value
-        if (key.length === 16) {
+        if (key.length >= 12) {
           if (key.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$')) {
             const data = {key: key}
             $q.loading.show({
@@ -961,7 +961,7 @@ export default {
             color: 'red-10',
             textColor: 'white',
             icon: 'cancel',
-            message: 'Cannot count election results; Election key must be 16 characters long'
+            message: 'Cannot count election results; Election key must be at least 12 characters long'
           })
         }
       },
@@ -1001,7 +1001,7 @@ export default {
         );
         const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
         let key = ""
-        for(let i = 0; i < 16; i++) {
+        for(let i = 0; i < 12; i++) {
           const rand = Math.floor(Math.random() * characters.length)
           key += characters[rand]
         }

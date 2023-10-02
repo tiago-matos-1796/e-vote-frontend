@@ -19,17 +19,31 @@
         <div class="row bg-blue-grey-2" style="min-height: 400px; width: 80%; padding: 24px;">
           <div id="parent" class="fit row wrap justify-center items-start content-start" style="overflow: hidden;">
             <div class=" bg-grey-6" style="overflow: auto;">
-              <q-card class="no-border-radius" style="min-height: 400px">
-                <q-card-section vertical align="center">
-                  <div class="q-ma-xl" style="max-width: 500px">
-                    <div class="text-h4">{{text}}</div>
-                  </div>
-                </q-card-section>
-                <q-card-section vertical align="center">
-                  <div class="q-ma-xl" style="max-width: 500px">
-                    <router-link to @click="goToLogin">
-                      <div class="text-h5">Return to login</div>
-                    </router-link>
+              <q-card class="no-border-radius">
+                <q-card-section>
+                  <div class="q-pa-md" style="max-width: 400px">
+
+                    <q-form
+                        @submit="onSubmit"
+                        @reset="onReset"
+                        class="q-gutter-md"
+                        enctype="multipart/form-data"
+                    >
+                      <q-input
+                          filled
+                          clear-icon="close"
+                          v-model="token"
+                          type="text"
+                          label="Token"
+                          lazy-rules
+                          :rules="[ val => !!val || 'Please insert your token']"
+                      />
+
+                      <div>
+                        <q-btn label="Register" type="submit" color="primary"/>
+                        <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm"/>
+                      </div>
+                    </q-form>
                   </div>
                 </q-card-section>
               </q-card>
@@ -45,7 +59,7 @@
 import {useRoute, useRouter} from 'vue-router'
 import {onMounted, ref} from "vue";
 import axios from "axios";
-import {useQuasar} from "quasar";
+import {QSpinnerGears, useQuasar} from "quasar";
 import api_routes from '../../config/routes.config'
 
 export default {
@@ -55,17 +69,18 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const text = ref('')
+    const token = ref('')
 
-    async function verify(token) {
-      const uri = `${api_routes.MAIN_URI}/users/verify/${token}`
-      return await axios.patch(uri, {}, {
+    async function verify(data) {
+      const uri = `${api_routes.MAIN_URI}/users/verify/`
+      return await axios.patch(uri, data, {
         headers: {
           "Content-type": "application/json"
         }
       }).then(function (response) {
-        text.value = 'Your account has successfully been activated'
+        return response
       }).catch(function (error) {
-        text.value = 'Could not verify your account, make sure to use correct link sent to you via email'
+        return error
       })
     }
 
@@ -76,6 +91,7 @@ export default {
         }
       }
       if(route.query.token) {
+        console.log(route.query)
         verify(route.query.token)
       } else {
         text.value = 'Could not verify your account, make sure to use correct link sent to you via email'
@@ -85,9 +101,57 @@ export default {
 
     return {
       text,
+      token,
       goToLogin() {
         router.push({name: 'Login'})
-      }
+      },
+      onSubmit() {
+        if(token.value) {
+          const data = {token: token.value}
+          $q.loading.show({
+            message: 'Verification in progress, please wait...',
+            spinner: QSpinnerGears,
+          })
+          verify(data).then(function (response) {
+            if(response.response) {
+              $q.notify({
+                color: 'red-10',
+                textColor: 'white',
+                icon: 'cancel',
+                message: `Token does not exist`
+              })
+            } else {
+              $q.notify({
+                color: 'green-4',
+                textColor: 'white',
+                icon: 'check',
+                message: 'Registered with success'
+              })
+              router.push({name: 'Login'})
+            }
+          }).catch(function (error) {
+            $q.notify({
+              color: 'red-10',
+              textColor: 'white',
+              icon: 'cancel',
+              message: `An error has occurred while registering, please try again later`
+            })
+          }).finally(() => {
+            $q.loading.hide()
+          })
+        } else {
+          $q.notify({
+            color: 'red-10',
+            textColor: 'white',
+            icon: 'cancel',
+            message: `Token is missing, please insert the token sent to you via email`
+          })
+        }
+      },
+
+      onReset() {
+        token.value = null
+      },
     }
   }
 }

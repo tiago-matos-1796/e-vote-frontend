@@ -95,9 +95,9 @@
                             </div>
                           </div>
                           <q-input filled v-model="electionKey" label="Election Key"
-                                   placeholder="Election Key" hint="Election key must be exactly 16 characters long with upper and lower case characters, special characters and digits. A password manager is recommended to safeguard this key" clear-icon="close"
+                                   placeholder="Election Key" hint="Election key must be at least 12 characters long with upper and lower case characters, special characters and digits. A password manager is recommended to safeguard this key" clear-icon="close"
                                    :type="isPwd ? 'password' : 'text'"
-                                   :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 16 || 'Election key must be 16 characters long',
+                                   :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 12 || 'Election key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits',]"
                           >
                             <template v-slot:append>
@@ -119,7 +119,7 @@
                                    placeholder="Election Key" hint="Confirm Election Key"
                                    clear-icon="close"
                                    :type="isPwd1 ? 'password' : 'text'"
-                                   :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 16 || 'Election key must be 16 characters long',
+                                   :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 12 || 'Election key must be 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits', val => val === electionKey || 'Election key must be the same as above']"
                           >
                             <template v-slot:append>
@@ -601,7 +601,7 @@ export default {
         );
         const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
         let key = ""
-        for(let i = 0; i < 16; i++) {
+        for(let i = 0; i < 12; i++) {
           const rand = Math.floor(Math.random() * characters.length)
           key += characters[rand]
         }
