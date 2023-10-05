@@ -593,6 +593,7 @@ export default {
                 console.log(response.data)
                 displayName.value = response.data.display_name
                 oldDisplayName.value = response.data.display_name
+                $q.cookies.set('token', response.data.token);
                 avatar.value = response.data.image ? `${api_routes.AVATAR_URI}/${response.data.image}` : `${api_routes.API_IMAGE_URI}/user-icon.jpg`
                 Notify.create({
                   color: 'green-4',
