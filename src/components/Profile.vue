@@ -166,7 +166,7 @@
                     <q-expansion-item
                         expand-separator
                         icon="key"
-                        label="Regenerate voting key"
+                        label="Regenerate vote key"
                     >
                       <q-card>
                         <q-card-section>
@@ -185,13 +185,13 @@
                                       clear-icon="close"
                                       :type="isVk ? 'password' : 'text'"
                                       v-model="voteKey"
-                                      label="New voting key"
-                                      hint="Voting key must be at least 12 characters long with upper and lower case characters, special characters and digits. A password manager is recommended to safeguard this key"
+                                      label="New vote key"
+                                      hint="Vote key must be at least 12 characters long with upper and lower case characters, special characters and digits. A password manager is recommended to safeguard this key"
                                       lazy-rules
                                       :rules="[
-              val => !!val || 'Please insert your voting key',
-              val => val.length >= 12 || 'Voting key must be at least 12 characters long',
-              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
+              val => !!val || 'Please insert your vote key',
+              val => val.length >= 12 || 'Vote key must be at least 12 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Vote Key must have upper and lower case characters, special characters and digits',
           ]"
                                   >
                                     <template v-slot:append>
@@ -200,7 +200,7 @@
                                           class="cursor-pointer"
                                           @click="generateVoteKey"
                                       ><q-tooltip>
-                                        Generate voting key
+                                        Generate vote key
                                       </q-tooltip></q-icon>
                                       <q-icon
                                           :name="isVk ? 'visibility_off' : 'visibility'"
@@ -215,14 +215,14 @@
                                       clear-icon="close"
                                       :type="isVk1 ? 'password' : 'text'"
                                       v-model="voteKeyConfirm"
-                                      label="Confirm new voting key"
-                                      hint="Confirm new voting key"
+                                      label="Confirm new vote key"
+                                      hint="Confirm new vote key"
                                       lazy-rules
                                       :rules="[
-              val => !!val || 'Please reinsert your voting key',
-              val => val.length >= 12 || 'Voting key must be at least 12 characters long',
-              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
-              val => val === voteKey || 'Key must the same in both fields'
+              val => !!val || 'Please reinsert your vote key',
+              val => val.length >= 12 || 'Vote key must be at least 12 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Vote Key must have upper and lower case characters, special characters and digits',
+              val => val === voteKey || 'Vote key must the same in both fields'
           ]"
                                   >
                                     <template v-slot:append>

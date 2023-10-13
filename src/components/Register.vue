@@ -108,13 +108,13 @@
                           clear-icon="close"
                           :type="isVk ? 'password' : 'text'"
                           v-model="voteKey"
-                          label="Voting Key"
+                          label="Vote Key"
                           lazy-rules
                           :rules="[
-              val => !!val || 'Please insert your voting key',
+              val => !!val || 'Please insert your vote key',
               val => val.length >= 12 || 'Voting key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
-              val => val !== password || 'Voting key must be different from your password'
+              val => val !== password || 'Vote key must be different from your password'
           ]"
                       >
                         <template v-slot:append>
@@ -123,7 +123,7 @@
                               class="cursor-pointer"
                               @click="generateVoteKey"
                           ><q-tooltip>
-                            Generate voting key
+                            Generate vote key
                           </q-tooltip></q-icon>
                           <q-icon
                               :name="isVk ? 'visibility_off' : 'visibility'"
@@ -138,12 +138,12 @@
                           clear-icon="close"
                           :type="isVk1 ? 'password' : 'text'"
                           v-model="voteKeyConfirm"
-                          label="Confirm Voting Key"
+                          label="Confirm vote key"
                           lazy-rules
                           :rules="[
-              val => !!val || 'Please reinsert your voting key',
-              val => val.length >= 12 || 'Voting key must be at least 12 characters long',
-              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Voting Key must have upper and lower case characters, special characters and digits',
+              val => !!val || 'Please reinsert your vote key',
+              val => val.length >= 12 || 'Vote key must be at least 12 characters long',
+              val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Vote Key must have upper and lower case characters, special characters and digits',
               val => val === voteKey || 'Both vote keys must be the same'
           ]"
                       >
