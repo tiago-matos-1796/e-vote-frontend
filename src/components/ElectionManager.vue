@@ -120,7 +120,7 @@
                                    :disable="isAfterEnd(props.row.endDate) || loading" label='' icon='data_thresholding'
                                    @click="showResults(props.row)">
                               <q-tooltip>
-                                {{ hasResults(props.row.results) ? 'Count election votes' : 'Recount election votes' }}
+                                {{ hasResults(props.row.results) ? 'Tally election votes' : 'Tally election votes again' }}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="results" color="info"
