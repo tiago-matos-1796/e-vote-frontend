@@ -883,7 +883,7 @@ export default {
           if (key.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$')) {
             const data = {key: key}
             $q.loading.show({
-              message: 'Counting election votes, please wait...',
+              message: 'Tallying election votes, please wait...',
               spinner: QSpinnerGears,
             })
             countVotes(id, data).then(function (response) {
@@ -895,14 +895,14 @@ export default {
                     color: 'red-10',
                     textColor: 'white',
                     icon: 'cancel',
-                    message: 'Cannot count election results; Please try again later'
+                    message: 'Cannot tally election votes; Please try again later'
                   })
                 } else {
                   Notify.create({
                     color: 'red-10',
                     textColor: 'white',
                     icon: 'cancel',
-                    message: 'Cannot count election results; Election key is not correct'
+                    message: 'Cannot tally election votes; Election key is not correct'
                   })
                 }
               } else {
@@ -912,7 +912,7 @@ export default {
                       color: 'green-4',
                       textColor: 'white',
                       icon: 'check',
-                      message: `Election results counted with success`
+                      message: `Election votes tallied with success`
                     })
                     Notify.create({
                       color: 'red-10',
@@ -925,7 +925,7 @@ export default {
                       color: 'green-4',
                       textColor: 'white',
                       icon: 'check',
-                      message: `Election results counted with success`
+                      message: `Election votes tallied with success`
                     })
                   }
                 }
@@ -943,7 +943,7 @@ export default {
                 color: 'red-10',
                 textColor: 'white',
                 icon: 'cancel',
-                message: 'Cannot count election results; Please try again later'
+                message: 'Cannot tally election votes; Please try again later'
               })
             }).finally(() => {
               $q.loading.hide()
@@ -953,7 +953,7 @@ export default {
               color: 'red-10',
               textColor: 'white',
               icon: 'cancel',
-              message: 'Cannot count election results; Election key must have upper and lower case characters, special characters and digits'
+              message: 'Cannot tally election votes; Election key must have upper and lower case characters, special characters and digits'
             })
           }
         } else {
@@ -961,7 +961,7 @@ export default {
             color: 'red-10',
             textColor: 'white',
             icon: 'cancel',
-            message: 'Cannot count election results; Election key must be at least 12 characters long'
+            message: 'Cannot tally election votes; Election key must be at least 12 characters long'
           })
         }
       },
