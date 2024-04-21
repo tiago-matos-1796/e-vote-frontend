@@ -55,24 +55,37 @@
                         @request="onRequest"
                     >
                       <template v-slot:top-right>
-                        <div class="q-gutter-lg-x-md">
-                          <q-toggle v-model="toggleBefore" @click="customSort" :disable="loading"
-                                    label="Show not started elections"/>
-                          <q-toggle v-model="toggleDuring" @click="customSort" :disable="loading"
-                                    label="Show ongoing elections"/>
-                          <q-toggle v-model="toggleAfter" @click="customSort" :disable="loading"
-                                    label="Show finished elections"/>
-                          <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
-                                   placeholder="Search by election title" @keyup.enter="customSort">
-                            <template v-slot:append>
-                              <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
-                              <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
-                            </template>
-                          </q-input>
-                          <q-checkbox v-model="toVote" @click="customSort" :disable="loading"
-                                      label="Show only elections yet to vote"/>
-                          <q-checkbox v-model="hasResults" @click="customSort" :disable="loading"
-                                      label="Show only elections with results"/>
+                        <div class="gt-md">
+                          <div class="q-gutter-lg-x-md">
+                            <q-toggle v-model="toggleBefore" @click="customSort" :disable="loading"
+                                      label="Show not started elections"/>
+                            <q-toggle v-model="toggleDuring" @click="customSort" :disable="loading"
+                                      label="Show ongoing elections"/>
+                            <q-toggle v-model="toggleAfter" @click="customSort" :disable="loading"
+                                      label="Show finished elections"/>
+                            <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
+                                     placeholder="Search by election title" @keyup.enter="customSort">
+                              <template v-slot:append>
+                                <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
+                                <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
+                              </template>
+                            </q-input>
+                            <q-checkbox v-model="toVote" @click="customSort" :disable="loading"
+                                        label="Show only elections yet to vote"/>
+                            <q-checkbox v-model="hasResults" @click="customSort" :disable="loading"
+                                        label="Show only elections with results"/>
+                          </div>
+                        </div>
+                        <div class="lt-lg">
+                          <q-btn
+                              flat
+                              dense
+                              round
+                              @click="filters = true"
+                              aria-label="Filters"
+                              icon="tune"
+                              class="q-mx-md"
+                          />
                         </div>
                       </template>
                       <template v-slot:body="props">
@@ -253,6 +266,48 @@
           />
         </div>
       </q-card-section>
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="filters">
+    <q-card style="width: 100%" class="q-px-sm q-pb-md">
+      <q-card-section>
+        <div class="text-h6">Filters</div>
+      </q-card-section>
+      <q-item dense>
+        <q-card-section>
+          <q-toggle v-model="toggleBefore" @click="customSort" :disable="loading"
+                    label="Show not started elections"/>
+        </q-card-section>
+        <q-card-section>
+          <q-toggle v-model="toggleDuring" @click="customSort" :disable="loading"
+                    label="Show ongoing elections"/>
+        </q-card-section>
+      </q-item>
+      <q-item dense>
+        <q-card-section>
+          <q-toggle v-model="toggleAfter" @click="customSort" :disable="loading"
+                    label="Show finished elections"/>
+        </q-card-section>
+        <q-card-section>
+          <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
+                   placeholder="Search by election title" @keyup.enter="customSort">
+            <template v-slot:append>
+              <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
+              <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
+            </template>
+          </q-input>
+        </q-card-section>
+      </q-item>
+      <q-item dense>
+        <q-card-section>
+          <q-checkbox v-model="toVote" @click="customSort" :disable="loading"
+                      label="Show only elections yet to vote"/>
+        </q-card-section>
+        <q-card-section>
+          <q-checkbox v-model="hasResults" @click="customSort" :disable="loading"
+                      label="Show only elections with results"/>
+        </q-card-section>
+      </q-item>
     </q-card>
   </q-dialog>
 </template>
@@ -495,6 +550,7 @@ export default {
       permission,
       leftDrawerOpen,
       toggleLeftDrawer,
+      filters: ref(false),
       filter,
       loading,
       pagination,

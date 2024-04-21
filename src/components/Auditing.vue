@@ -109,6 +109,7 @@
                                   v-model:pagination="electionsPagination"
                               >
                                 <template v-slot:top-right>
+                                  <div class="gt-md">
                                   <div class="q-gutter-lg-x-md">
                                     <q-toggle v-model="toggleNone" @click="customSort" label="Show none"/>
                                     <q-toggle v-model="toggleLow" @click="customSort" label="Show low"/>
@@ -121,6 +122,18 @@
                                         <q-icon name="search" @click="customSort" class="cursor-pointer"/>
                                       </template>
                                     </q-input>
+                                  </div>
+                                  </div>
+                                  <div class="lt-lg">
+                                    <q-btn
+                                        flat
+                                        dense
+                                        round
+                                        @click="filters = true"
+                                        aria-label="Filters"
+                                        icon="tune"
+                                        class="q-mx-md"
+                                    />
                                   </div>
                                 </template>
                               </q-table>
@@ -343,6 +356,40 @@
         <q-btn flat label="Confirm" color="primary" @click="denyFraud(selectedFraud)"/>
         <q-btn flat label="Cancel" color="negative" @click="denyReason=false;reason=''" v-close-popup/>
       </q-card-actions>
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="filters">
+    <q-card style="width: 100%" class="q-px-sm q-pb-md">
+      <q-card-section>
+        <div class="text-h6">Filters</div>
+      </q-card-section>
+      <q-item dense>
+        <q-card-section>
+          <q-toggle v-model="toggleNone" @click="customSort" label="Show none"/>
+        </q-card-section>
+        <q-card-section>
+          <q-toggle v-model="toggleLow" @click="customSort" label="Show low"/>
+        </q-card-section>
+      </q-item>
+      <q-item dense>
+        <q-card-section>
+          <q-toggle v-model="toggleMedium" @click="customSort" label="Show medium"/>
+        </q-card-section>
+        <q-card-section>
+          <q-toggle v-model="toggleHigh" @click="customSort" label="Show high"/>
+        </q-card-section>
+      </q-item>
+      <q-item dense>
+        <q-card-section>
+          <q-input dense debounce="400" color="primary" v-model="search"
+                   placeholder="Search by election" @keyup.enter="customSort">
+            <template v-slot:append>
+              <q-icon name="close" @click="clearSearch" class="cursor-pointer"/>
+              <q-icon name="search" @click="customSort" class="cursor-pointer"/>
+            </template>
+          </q-input>
+        </q-card-section>
+      </q-item>
     </q-card>
   </q-dialog>
 </template>
@@ -571,6 +618,7 @@ export default {
       electionTableRef,
       leftDrawerOpen,
       toggleLeftDrawer,
+      filters: ref(false),
       settings,
       filter,
       pagination,

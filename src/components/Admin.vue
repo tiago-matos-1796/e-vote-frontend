@@ -59,21 +59,34 @@
                         @request="onRequest"
                     >
                       <template v-slot:top-right>
-                        <div class="q-gutter-lg-x-md">
-                          <q-toggle v-model="toggleRegular" @click="customSort" :disable="loading"
-                                    label="Show regular"/>
-                          <q-toggle v-model="toggleManager" @click="customSort" :disable="loading"
-                                    label="Show manager"/>
-                          <q-toggle v-model="toggleAuditor" @click="customSort" :disable="loading"
-                                    label="Show auditor"/>
-                          <q-toggle v-model="toggleAdmin" @click="customSort" :disable="loading" label="Show admin"/>
-                          <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
-                                   placeholder="Search by email" @keyup.enter="customSort">
-                            <template v-slot:append>
-                              <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
-                              <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
-                            </template>
-                          </q-input>
+                        <div class="gt-md">
+                          <div class="q-gutter-lg-x-md">
+                            <q-toggle v-model="toggleRegular" @click="customSort" :disable="loading"
+                                      label="Show regular"/>
+                            <q-toggle v-model="toggleManager" @click="customSort" :disable="loading"
+                                      label="Show manager"/>
+                            <q-toggle v-model="toggleAuditor" @click="customSort" :disable="loading"
+                                      label="Show auditor"/>
+                            <q-toggle v-model="toggleAdmin" @click="customSort" :disable="loading" label="Show admin"/>
+                            <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
+                                     placeholder="Search by email" @keyup.enter="customSort">
+                              <template v-slot:append>
+                                <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
+                                <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
+                              </template>
+                            </q-input>
+                          </div>
+                        </div>
+                        <div class="lt-lg">
+                          <q-btn
+                              flat
+                              dense
+                              round
+                              @click="filters = true"
+                              aria-label="Filters"
+                              icon="tune"
+                              class="q-mx-md"
+                          />
                         </div>
                       </template>
                       <template v-slot:body="props">
@@ -358,11 +371,31 @@
 
               >
                 <template v-slot:top-right>
-                  <q-btn color="green" :disable="blacklistLoading" label="Add email to blacklist"
-                         @click="showNewBlacklisted"/>
-                  <q-btn class="q-ml-sm" color="negative" :disable="blacklistLoading"
-                         label="Remove selected emails from blacklist" @click="removeBlacklisted"/>
-                  <q-space/>
+                  <div class="gt-md">
+                    <q-btn color="green" :disable="blacklistLoading" label="Add email to blacklist"
+                           @click="showNewBlacklisted"/>
+                    <q-btn class="q-ml-sm" color="negative" :disable="blacklistLoading"
+                           label="Remove selected emails from blacklist" @click="removeBlacklisted"/>
+                    <q-space/>
+                  </div>
+                  <div class="lt-lg">
+                    <q-btn
+                        color="green"
+                        :disable="blacklistLoading"
+                        @click="showNewBlacklisted"
+                        aria-label="Add email to blacklist"
+                        icon="add_circle"
+                        class="q-ml-sm"
+                    />
+                    <q-btn
+                        color="negative"
+                        :disable="blacklistLoading"
+                        @click="removeBlacklisted"
+                        aria-label="Remove selected emails from blacklist"
+                        icon="cancel"
+                        class="q-ml-sm"
+                    />
+                  </div>
                 </template>
               </q-table>
             </div>
@@ -397,6 +430,43 @@
         <q-btn flat label="Confirm" color="primary" @click="insertBlacklisted"/>
         <q-btn flat label="Cancel" color="negative" @click="addBlacklisted=false" v-close-popup/>
       </q-card-actions>
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="filters">
+    <q-card style="width: 100%" class="q-px-sm q-pb-md">
+      <q-card-section>
+        <div class="text-h6">Filters</div>
+      </q-card-section>
+      <q-item dense>
+        <q-card-section>
+          <q-toggle v-model="toggleRegular" @click="customSort" :disable="loading"
+                    label="Show regular"/>
+        </q-card-section>
+        <q-card-section>
+          <q-toggle v-model="toggleManager" @click="customSort" :disable="loading"
+                    label="Show manager"/>
+        </q-card-section>
+      </q-item>
+      <q-item dense>
+        <q-card-section>
+          <q-toggle v-model="toggleAuditor" @click="customSort" :disable="loading"
+                    label="Show auditor"/>
+        </q-card-section>
+        <q-card-section>
+          <q-toggle v-model="toggleAdmin" @click="customSort" :disable="loading" label="Show admin"/>
+        </q-card-section>
+      </q-item>
+      <q-item dense>
+        <q-card-section>
+          <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
+                   placeholder="Search by email" @keyup.enter="customSort">
+            <template v-slot:append>
+              <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
+              <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
+            </template>
+          </q-input>
+        </q-card-section>
+      </q-item>
     </q-card>
   </q-dialog>
 </template>
@@ -653,6 +723,7 @@ export default {
       userPermission,
       leftDrawerOpen,
       toggleLeftDrawer,
+      filters: ref(false),
       filter,
       loading,
       pagination,

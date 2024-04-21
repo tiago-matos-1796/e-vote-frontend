@@ -228,6 +228,9 @@ export default {
                   if(response.response.status === 500) {
                     context.emit('closeBallotError')
                   }
+                  if(response.response.status === 400) {
+                    context.emit('closeBallotError')
+                  }
                 } else {
                   context.emit('closeBallot')
                 }
