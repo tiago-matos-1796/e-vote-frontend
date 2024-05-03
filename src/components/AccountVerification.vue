@@ -12,6 +12,9 @@
         <q-space/>
 
         <q-space/>
+        <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
+        </div>
       </q-toolbar>
     </q-header>
     <q-page-container class="GPL__page-container">
@@ -40,8 +43,8 @@
                       />
 
                       <div>
-                        <q-btn label="Register" type="submit" color="primary"/>
-                        <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm"/>
+                        <q-btn :label="$t('register')" type="submit" color="primary"/>
+                        <q-btn :label="$t('reset')" type="reset" color="negative" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
                   </div>
@@ -61,9 +64,11 @@ import {onMounted, ref} from "vue";
 import axios from "axios";
 import {QSpinnerGears, useQuasar} from "quasar";
 import api_routes from '../../config/routes.config'
+import LocaleChanger from "./Locale-Changer.vue";
 
 export default {
   name: "AccountVerification",
+  components: {LocaleChanger},
   setup() {
     const $q = useQuasar()
     const route = useRoute()

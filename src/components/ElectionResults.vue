@@ -1,10 +1,10 @@
 <template>
   <q-card class="bg-blue-grey-2 text-black">
     <q-bar>
-      <div class="text-h6">Results for election {{ title }}</div>
+      <div class="text-h6">{{$t('results-for') + " " + title}}</div>
       <q-space/>
       <q-btn dense flat icon="close" v-close-popup>
-        <q-tooltip class="bg-white text-primary">Close</q-tooltip>
+        <q-tooltip class="bg-white text-primary">{{ $t('close') }}</q-tooltip>
       </q-btn>
     </q-bar>
     <q-card-section class="q-pt-none">
@@ -18,14 +18,14 @@
                   <div class="q-pa-md example-row-equal-width">
                     <div v-if="detection" class="q-pa-md row justify-center items-start q-gutter-lg"
                          style="overflow: hidden;">
-                      <h5 style="color: red">Possible fraud detected. An audit is recommended.</h5></div>
+                      <h5 style="color: red">{{ $t('fraud-detection') }}</h5></div>
                     <div class="row">
                       <div class="col">
                         <q-card
                             class="my-card"
                         >
                           <q-card-section>
-                            <div class="text-h6">Abstention</div>
+                            <div class="text-h6">{{ $t('abstention') }}</div>
                           </q-card-section>
                           <pie-chart :data="abstentionData"></pie-chart>
                           <q-card-section class="q-pt-none" align="center">
@@ -38,7 +38,7 @@
                             class="my-card"
                         >
                           <q-card-section>
-                            <div class="text-h6">Votes</div>
+                            <div class="text-h6">{{ $t('votes') }}</div>
                           </q-card-section>
                           <pie-chart :data="voteData"></pie-chart>
                           <q-card-section class="q-pt-none">
@@ -52,7 +52,7 @@
                   <div class="q-pa-md">
                     <q-table
                         flat bordered
-                        title="Results"
+                        :title="$t('results')"
                         :rows="resultsRows"
                         :columns="resultsColumns"
                         row-key="candidate"
@@ -65,7 +65,7 @@
                   <div class="q-pa-md">
                     <q-table
                         flat bordered
-                        title="Voters"
+                        :title="$t('voters')"
                         :rows="voterResultsRows"
                         :columns="voterColumns"
                         row-key="email"
@@ -76,9 +76,9 @@
                   </div>
                 </q-card-section>
                 <q-card-actions align="center">
-                  <q-btn label="Download XLS" color="secondary" @click="getXls"/>
-                  <q-btn label="Download PDF" color="primary" @click="getPdf"/>
-                  <q-btn label="Close" color="negative" v-close-popup/>
+                  <q-btn :label="$t('download-xls')" color="secondary" @click="getXls"/>
+                  <q-btn :label="$t('download-pdf')" color="primary" @click="getPdf"/>
+                  <q-btn :label="$t('close')" color="negative" v-close-popup/>
                 </q-card-actions>
               </q-card>
             </div>

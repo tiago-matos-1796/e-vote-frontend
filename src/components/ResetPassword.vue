@@ -12,6 +12,9 @@
         <q-space/>
 
         <q-space/>
+        <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
+        </div>
       </q-toolbar>
     </q-header>
     <q-page-container class="GPL__page-container">
@@ -106,9 +109,11 @@ import {useQuasar} from "quasar";
 import {useRoute, useRouter} from 'vue-router'
 import axios from "axios";
 import api_routes from '../../config/routes.config'
+import LocaleChanger from "./Locale-Changer.vue";
 
 export default {
   name: "ForgotPassword",
+  components: {LocaleChanger},
   setup() {
     const $q = useQuasar()
     const password = ref(null)

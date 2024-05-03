@@ -12,6 +12,9 @@
         <q-space/>
 
         <q-space/>
+        <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
+        </div>
       </q-toolbar>
     </q-header>
     <q-page-container class="GPL__page-container">
@@ -22,12 +25,12 @@
               <q-card class="no-border-radius" style="min-height: 400px">
                 <q-card-section vertical align="center">
                   <div class="q-ma-xl" style="max-width: 500px">
-                    <div class="text-h2" style="color: darkred">Error</div>
+                    <div class="text-h2" style="color: darkred">{{ $t('error') }}</div>
                   </div>
                 </q-card-section>
                 <q-card-section vertical align="center">
                   <div class="q-ma-xl" style="max-width: 500px">
-                    <div class="text-h4">An error has occurred, please try again later</div>
+                    <div class="text-h4">{{ $t('error-description') }}</div>
                   </div>
                 </q-card-section>
               </q-card>
@@ -40,8 +43,11 @@
 </template>
 
 <script>
+import LocaleChanger from "./Locale-Changer.vue";
+
 export default {
-  name: "Error"
+  name: "Error",
+  components: {LocaleChanger}
 }
 </script>
 

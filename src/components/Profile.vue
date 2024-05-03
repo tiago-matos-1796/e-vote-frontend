@@ -24,11 +24,12 @@
         <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
               <img :src="avatar">
             </q-avatar>
-            <q-tooltip>Account</q-tooltip>
+            <q-tooltip>{{ $t('account') }}</q-tooltip>
           </q-btn>
         </div>
       </q-toolbar>
@@ -45,7 +46,7 @@
                     <q-expansion-item
                         expand-separator
                         icon="perm_identity"
-                        label="Account settings"
+                        :label="$t('account-settings')"
                         :caption="oldDisplayName"
                     >
                       <q-card>
@@ -68,7 +69,7 @@
                                       clear-icon="close"
                                       v-model="displayName"
                                       type="text"
-                                      label="Display name"
+                                      :label="$t('display-name')"
                                       lazy-rules
                                       :rules="[ val => !!val || 'Please insert your new display name']"
                                   />
@@ -79,8 +80,8 @@
                                       clear-icon="close"
                                       :type="isPwd ? 'password' : 'text'"
                                       v-model="password"
-                                      label="New password"
-                                      hint="Password must be at least 8 characters long with upper and lower case characters, special characters and digits"
+                                      :label="$t('new-password')"
+                                      :hint="$t('password-hint')"
                                       lazy-rules
                                       :rules="[
               val => !!val || 'Please insert your new password',
@@ -94,7 +95,7 @@
                                           class="cursor-pointer"
                                           @click="generatePassword"
                                       ><q-tooltip>
-                                        Generate password
+                                        {{ $t('generate-password') }}
                                       </q-tooltip></q-icon>
                                       <q-icon
                                           :name="isPwd ? 'visibility_off' : 'visibility'"
@@ -110,8 +111,8 @@
                                       clear-icon="close"
                                       :type="isPwdC ? 'password' : 'text'"
                                       v-model="passwordConfirm"
-                                      label="Confirm new password"
-                                      hint="Confirm new password"
+                                      :label="$t('new-password-confirm')"
+                                      :hint="$t('new-password-confirm')"
                                       lazy-rules
                                       :rules="[
               val => !!val || 'Please reinsert your new password',
@@ -128,9 +129,9 @@
                                       />
                                     </template>
                                   </q-input>
-                                  <q-toggle v-model="editImage" label="Change avatar?">
+                                  <q-toggle v-model="editImage" :label="$t('change-avatar')+'?'">
                                     <q-tooltip>
-                                      Toggle to change or remove current avatar
+                                      {{ $t('avatar-toggle') }}
                                     </q-tooltip>
                                   </q-toggle>
                                   <q-file
@@ -139,19 +140,19 @@
                                       filled
                                       clearable
                                       clear-icon="close"
-                                      label="Select image (max: 1MB)"
+                                      :label="$t('select-image') + ' (max: 1MB)'"
                                       accept=".jpg, .png, .svg"
                                       max-file-size="1048576"
                                       counter
                                       max-files="1"
                                       :disable="!editImage"
                                       :hide-hint="!editImage"
-                                      hint="Leave empty to remove avatar"
+                                      :hint="$t('leave-empty-avatar')"
                                       @rejected="onRejected"
                                   />
                                   <div>
-                                    <q-btn label="Confirm changes" icon="edit" color="primary" @click="submitChanges"/>
-                                    <q-btn label="Cancel" icon="close" color="negative" class="q-ml-sm"
+                                    <q-btn :label="$t('confirm-changes')" icon="edit" color="primary" @click="submitChanges"/>
+                                    <q-btn :label="$t('cancel')" icon="close" color="negative" class="q-ml-sm"
                                            @click="cancelChanges"/>
                                   </div>
                                 </q-form>
@@ -166,7 +167,7 @@
                     <q-expansion-item
                         expand-separator
                         icon="key"
-                        label="Regenerate vote key"
+                        :label="$t('regenerate-vote-key')"
                     >
                       <q-card>
                         <q-card-section>
@@ -185,8 +186,8 @@
                                       clear-icon="close"
                                       :type="isVk ? 'password' : 'text'"
                                       v-model="voteKey"
-                                      label="New vote key"
-                                      hint="Vote key must be at least 12 characters long with upper and lower case characters, special characters and digits. A password manager is recommended to safeguard this key"
+                                      :label="$t('new-vote-key')"
+                                      :hint="$t('new-vote-key-hint')"
                                       lazy-rules
                                       :rules="[
               val => !!val || 'Please insert your vote key',
@@ -200,7 +201,7 @@
                                           class="cursor-pointer"
                                           @click="generateVoteKey"
                                       ><q-tooltip>
-                                        Generate vote key
+                                        {{ $t('generate-vote-key') }}
                                       </q-tooltip></q-icon>
                                       <q-icon
                                           :name="isVk ? 'visibility_off' : 'visibility'"
@@ -215,8 +216,8 @@
                                       clear-icon="close"
                                       :type="isVk1 ? 'password' : 'text'"
                                       v-model="voteKeyConfirm"
-                                      label="Confirm new vote key"
-                                      hint="Confirm new vote key"
+                                      :label="$t('new-vote-key-confirm')"
+                                      :hint="$t('new-vote-key-confirm')"
                                       lazy-rules
                                       :rules="[
               val => !!val || 'Please reinsert your vote key',
@@ -234,8 +235,8 @@
                                     </template>
                                   </q-input>
                                   <div>
-                                    <q-btn label="Confirm changes" icon="edit" type="submit" color="primary"/>
-                                    <q-btn label="Cancel" icon="close" type="reset" color="negative" class="q-ml-sm"/>
+                                    <q-btn :label="$t('confirm-changes')" icon="edit" type="submit" color="primary"/>
+                                    <q-btn :label="$t('cancel')" icon="close" type="reset" color="negative" class="q-ml-sm"/>
                                   </div>
                                 </q-form>
 
@@ -249,7 +250,7 @@
                     <q-expansion-item
                         expand-separator
                         icon="cancel"
-                        label="Delete account"
+                        :label="$t('delete-account')"
                         header-class="text-red"
                     >
                       <q-card>
@@ -258,7 +259,7 @@
                             <q-card-section>
                               <div class="q-pa-md">
 
-                                <q-btn label="Delete account" icon="cancel" color="negative" @click="deleteConfirmDialog"/>
+                                <q-btn :label="$t('delete-account')" icon="cancel" color="negative" @click="deleteConfirmDialog"/>
 
                               </div>
                             </q-card-section>
@@ -276,16 +277,16 @@
       <q-dialog v-model="deleteConfirm">
         <q-card>
           <q-card-section>
-            <div class="text-h6">Delete account</div>
+            <div class="text-h6">{{ $t('delete-account') }}</div>
           </q-card-section>
 
           <q-card-section class="q-pt-none">
-            Are you sure you want to delete your account?
+            {{ $t('delete-account-confirm')+'?' }}
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat label="Confirm" color="primary" @click="onSubmitDelete"/>
-            <q-btn flat label="Cancel" color="negative" @click="deleteConfirm=false"/>
+            <q-btn flat :label="$t('confirm')" color="primary" @click="onSubmitDelete"/>
+            <q-btn flat :label="$t('cancel')" color="negative" @click="deleteConfirm=false"/>
           </q-card-actions>
         </q-card>
       </q-dialog>
@@ -294,25 +295,25 @@
           <q-btn v-if="permission" round flat color="grey-8" stack no-caps size="26px"
                  class="GPL__side-btn" @click="$router.push('elections')">
             <q-icon size="22px" name="ballot"/>
-            <div class="GPL__side-btn__label">Elections</div>
+            <div class="GPL__side-btn__label">{{ $t('elections') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'MANAGER' || permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
-            <div class="GPL__side-btn__label">Election Manager</div>
+            <div class="GPL__side-btn__label">{{ $t('election-manager') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check"/>
-            <div class="GPL__side-btn__label">Auditing</div>
+            <div class="GPL__side-btn__label">{{ $t('auditing') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'ADMIN'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('admin')">
             <q-icon size="22px" name="admin_panel_settings"/>
-            <div class="GPL__side-btn__label">Admin</div>
+            <div class="GPL__side-btn__label">{{ $t('admin') }}</div>
           </q-btn>
         </div>
       </q-page-sticky>
@@ -338,7 +339,7 @@
                 <q-icon name="ballot" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Elections</q-item-label>
+                <q-item-label>{{ $t('elections') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -350,7 +351,7 @@
                 <q-icon name="edit_document" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Election Manager</q-item-label>
+                <q-item-label>{{ $t('election-manager') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -362,7 +363,7 @@
                 <q-icon name="fact_check" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Auditing</q-item-label>
+                <q-item-label>{{ $t('auditing') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -374,7 +375,7 @@
                 <q-icon name="admin_panel_settings" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Admin</q-item-label>
+                <q-item-label>{{ $t('admin') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -397,7 +398,7 @@
           <div class="text-subtitle1 q-mt-md q-mb-xs">{{ displayName }}</div>
           <q-btn
               color="primary"
-              label="Profile"
+              :label="$t('profile')"
               push
               size="sm"
               v-close-popup
@@ -405,7 +406,7 @@
           />
           <q-btn
               color="negative"
-              label="Logout"
+              :label="$t('logout')"
               push
               size="sm"
               v-close-popup
@@ -423,9 +424,11 @@ import {Cookies, Notify, SessionStorage, useQuasar} from "quasar";
 import axios from "axios";
 import api_routes from '../../config/routes.config'
 import {useRouter} from "vue-router";
+import LocaleChanger from "./Locale-Changer.vue";
 
 export default {
   name: "Profile",
+  components: {LocaleChanger},
   setup() {
     const settings = ref(false)
     const $q = useQuasar()

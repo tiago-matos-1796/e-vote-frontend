@@ -12,6 +12,9 @@
         <q-space/>
 
         <q-space/>
+        <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
+        </div>
       </q-toolbar>
     </q-header>
     <q-page-container class="GPL__page-container">
@@ -22,14 +25,14 @@
               <q-card class="no-border-radius" style="min-height: 400px">
                 <q-card-section vertical align="center">
                   <div class="q-ma-xl" style="max-width: 500px">
-                    <div class="text-h2" style="color: darkred">Access denied</div>
+                    <div class="text-h2" style="color: darkred">{{$t('access-denied')}}</div>
                   </div>
                 </q-card-section>
                 <q-card-section vertical align="center">
                   <div class="q-ma-xl" style="max-width: 500px">
-                    <div class="text-h4">You do not have permission to access this page</div>
+                    <div class="text-h4">{{ $t('access-denied-description') }}</div>
                   </div>
-                  <router-link to="/">Go back</router-link>
+                  <router-link to="/">{{ $t('go-back') }}</router-link>
                 </q-card-section>
               </q-card>
             </div>
@@ -41,8 +44,11 @@
 </template>
 
 <script>
+import LocaleChanger from "./Locale-Changer.vue";
+
 export default {
-  name: "AccessDenied"
+  name: "AccessDenied",
+  components: {LocaleChanger}
 }
 </script>
 

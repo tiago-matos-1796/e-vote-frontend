@@ -22,13 +22,13 @@
         <q-space/>
 
         <q-space/>
-
         <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
               <img :src="avatar">
             </q-avatar>
-            <q-tooltip>Account</q-tooltip>
+            <q-tooltip>{{ $t('account') }}</q-tooltip>
           </q-btn>
         </div>
       </q-toolbar>
@@ -42,8 +42,8 @@
               <q-card class="no-border-radius">
                 <q-card-section>
                   <div class="q-pa-md row justify-left items-start q-gutter-lg">
-                    <div class="text-h6">Secure Vote Logs</div>
-                    <q-btn color="deep-orange" :disable="loading" icon="report" label="Fraudulent elections"
+                    <div class="text-h6">{{ $t('secure-vote-logs') }}</div>
+                    <q-btn color="deep-orange" :disable="loading" icon="report" :label="$t('fraudulent-elections')"
                            @click="showFrauds"/>
                   </div>
                 </q-card-section>
@@ -60,8 +60,8 @@
                             align="justify"
                             narrow-indicator
                         >
-                          <q-tab name="internalLogs" label="Internal Logs"/>
-                          <q-tab name="electionLogs" label="Election Logs"/>
+                          <q-tab name="internalLogs" :label="$t('internal-logs')"/>
+                          <q-tab name="electionLogs" :label="$t('election-logs')"/>
                         </q-tabs>
 
                         <q-separator/>
@@ -84,7 +84,7 @@
 
                                 <template v-slot:top-right>
                                   <q-input dense debounce="400" color="primary" v-model="filter"
-                                           placeholder="Search log">
+                                           :placeholder="$t('search-log')">
                                     <template v-slot:append>
                                       <q-icon name="search"/>
                                     </template>
@@ -111,12 +111,12 @@
                                 <template v-slot:top-right>
                                   <div class="gt-md">
                                   <div class="q-gutter-lg-x-md">
-                                    <q-toggle v-model="toggleNone" @click="customSort" label="Show none"/>
-                                    <q-toggle v-model="toggleLow" @click="customSort" label="Show low"/>
-                                    <q-toggle v-model="toggleMedium" @click="customSort" label="Show medium"/>
-                                    <q-toggle v-model="toggleHigh" @click="customSort" label="Show high"/>
+                                    <q-toggle v-model="toggleNone" @click="customSort" :label="$t('show-none')"/>
+                                    <q-toggle v-model="toggleLow" @click="customSort" :label="$t('show-low')"/>
+                                    <q-toggle v-model="toggleMedium" @click="customSort" :label="$t('show-medium')"/>
+                                    <q-toggle v-model="toggleHigh" @click="customSort" :label="$t('show-high')"/>
                                     <q-input dense debounce="400" color="primary" v-model="search"
-                                             placeholder="Search by election" @keyup.enter="customSort">
+                                             :placeholder="$t('search-election-title')" @keyup.enter="customSort">
                                       <template v-slot:append>
                                         <q-icon name="close" @click="clearSearch" class="cursor-pointer"/>
                                         <q-icon name="search" @click="customSort" class="cursor-pointer"/>
@@ -130,7 +130,7 @@
                                         dense
                                         round
                                         @click="filters = true"
-                                        aria-label="Filters"
+                                        :aria-label="$t('filters')"
                                         icon="tune"
                                         class="q-mx-md"
                                     />
@@ -154,25 +154,25 @@
           <q-btn v-if="permission" round flat color="grey-8" stack no-caps size="26px"
                  class="GPL__side-btn" @click="$router.push('elections')">
             <q-icon size="22px" name="ballot"/>
-            <div class="GPL__side-btn__label">Elections</div>
+            <div class="GPL__side-btn__label">{{ $t('elections') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'MANAGER' || permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
-            <div class="GPL__side-btn__label">Election Manager</div>
+            <div class="GPL__side-btn__label">{{ $t('election-manager') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check"/>
-            <div class="GPL__side-btn__label">Auditing</div>
+            <div class="GPL__side-btn__label">{{ $t('auditing') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'ADMIN'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('admin')">
             <q-icon size="22px" name="admin_panel_settings"/>
-            <div class="GPL__side-btn__label">Admin</div>
+            <div class="GPL__side-btn__label">{{ $t('admin') }}</div>
           </q-btn>
         </div>
       </q-page-sticky>
@@ -198,7 +198,7 @@
                 <q-icon name="ballot"/>
               </q-item-section>
               <q-item-section>
-                <q-item-label>Elections</q-item-label>
+                <q-item-label>{{ $t('elections') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -210,7 +210,7 @@
                 <q-icon name="edit_document"/>
               </q-item-section>
               <q-item-section>
-                <q-item-label>Election Manager</q-item-label>
+                <q-item-label>{{ $t('election-manager') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -222,7 +222,7 @@
                 <q-icon name="fact_check"/>
               </q-item-section>
               <q-item-section>
-                <q-item-label>Auditing</q-item-label>
+                <q-item-label>{{ $t('auditing') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -234,7 +234,7 @@
                 <q-icon name="admin_panel_settings"/>
               </q-item-section>
               <q-item-section>
-                <q-item-label>Admin</q-item-label>
+                <q-item-label>{{ $t('admin') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -257,7 +257,7 @@
           <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('display') }}</div>
           <q-btn
               color="primary"
-              label="Profile"
+              :label="$t('profile')"
               push
               size="sm"
               v-close-popup
@@ -265,7 +265,7 @@
           />
           <q-btn
               color="negative"
-              label="Logout"
+              :label="$t('logout')"
               push
               size="sm"
               v-close-popup
@@ -285,7 +285,7 @@
            style="overflow: hidden;">
         <q-card class="no-border-radius">
           <q-toolbar>
-            <q-toolbar-title><span class="text-weight-bold">Fraudulent Elections</span>
+            <q-toolbar-title><span class="text-weight-bold">{{ $t('fraudulent-elections') }}</span>
             </q-toolbar-title>
             <q-btn flat round dense icon="close" v-close-popup/>
           </q-toolbar>
@@ -318,7 +318,7 @@
                              :disable="fraudLoading" label='' icon='do_not_disturb_off'
                              @click="showReason(props.row)">
                         <q-tooltip>
-                          Deny fraud
+                          {{ $t('deny-fraud') }}
                         </q-tooltip>
                       </q-btn>
                     </q-td>
@@ -328,7 +328,7 @@
             </div>
           </q-card-section>
           <q-card-actions align="center">
-            <q-btn label="Close" color="negative"
+            <q-btn :label="$t('close')" color="negative"
                    v-close-popup/>
           </q-card-actions>
         </q-card>
@@ -338,7 +338,7 @@
   <q-dialog v-model="denyReason">
     <q-card>
       <q-card-section>
-        <div class="text-h6">Please insert the reason for the denial of fraud of election {{ selectedFraud.title }}
+        <div class="text-h6">{{$t('deny-reason') + " " + selectedFraud.title}}
         </div>
       </q-card-section>
 
@@ -346,43 +346,43 @@
         <q-form
             class="q-gutter-md"
         >
-          <q-input v-model="reason" type="email" filled label="Reason"
+          <q-input v-model="reason" type="email" filled :label="$t('reason')"
                    :rules="[ val => !!val || 'Field must not be empty']">
           </q-input>
         </q-form>
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat label="Confirm" color="primary" @click="denyFraud(selectedFraud)"/>
-        <q-btn flat label="Cancel" color="negative" @click="denyReason=false;reason=''" v-close-popup/>
+        <q-btn flat :label="$t('confirm')" color="primary" @click="denyFraud(selectedFraud)"/>
+        <q-btn flat :label="$t('cancel')" color="negative" @click="denyReason=false;reason=''" v-close-popup/>
       </q-card-actions>
     </q-card>
   </q-dialog>
   <q-dialog v-model="filters">
     <q-card style="width: 100%" class="q-px-sm q-pb-md">
       <q-card-section>
-        <div class="text-h6">Filters</div>
+        <div class="text-h6">{{ $t('filters') }}</div>
       </q-card-section>
       <q-item dense>
         <q-card-section>
-          <q-toggle v-model="toggleNone" @click="customSort" label="Show none"/>
+          <q-toggle v-model="toggleNone" @click="customSort" :label="$t('show-none')"/>
         </q-card-section>
         <q-card-section>
-          <q-toggle v-model="toggleLow" @click="customSort" label="Show low"/>
+          <q-toggle v-model="toggleLow" @click="customSort" :label="$t('show-low')"/>
         </q-card-section>
       </q-item>
       <q-item dense>
         <q-card-section>
-          <q-toggle v-model="toggleMedium" @click="customSort" label="Show medium"/>
+          <q-toggle v-model="toggleMedium" @click="customSort" :label="$t('show-medium')"/>
         </q-card-section>
         <q-card-section>
-          <q-toggle v-model="toggleHigh" @click="customSort" label="Show high"/>
+          <q-toggle v-model="toggleHigh" @click="customSort" :label="$t('show-high')"/>
         </q-card-section>
       </q-item>
       <q-item dense>
         <q-card-section>
           <q-input dense debounce="400" color="primary" v-model="search"
-                   placeholder="Search by election" @keyup.enter="customSort">
+                   :placeholder="$t('search-election-title')" @keyup.enter="customSort">
             <template v-slot:append>
               <q-icon name="close" @click="clearSearch" class="cursor-pointer"/>
               <q-icon name="search" @click="customSort" class="cursor-pointer"/>
@@ -400,6 +400,7 @@ import {Cookies, Notify, SessionStorage, useQuasar} from "quasar";
 import axios from "axios";
 import api_routes from "../../config/routes.config";
 import {useRouter} from "vue-router";
+import LocaleChanger from "./Locale-Changer.vue";
 
 const electionsColumns = [
   {
@@ -434,6 +435,7 @@ let originalRows = []
 
 export default {
   name: "Auditing",
+  components: {LocaleChanger},
 
   setup() {
     const $q = useQuasar()

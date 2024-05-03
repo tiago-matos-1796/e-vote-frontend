@@ -1,10 +1,10 @@
 <template>
   <q-card class="bg-blue-grey-2 text-black">
     <q-bar>
-      <div class="text-h6">Edit election {{ editElectionTitle }}</div>
+      <div class="text-h6">{{$t('edit-election') + " " + editElectionTitle}}</div>
       <q-space/>
       <q-btn dense flat icon="close" v-close-popup>
-        <q-tooltip class="bg-white text-primary">Close</q-tooltip>
+        <q-tooltip class="bg-white text-primary">{{ $t('close') }}</q-tooltip>
       </q-btn>
     </q-bar>
     <q-card-section class="q-pt-none">
@@ -18,21 +18,21 @@
                   <div class="q-pa-md">
                     <q-card class="no-border-radius">
                       <q-card-section>
-                        <div class="text-h6">Election Details</div>
+                        <div class="text-h6">{{ $t('election-details') }}</div>
                       </q-card-section>
                       <q-card-section>
                         <div class="q-pa-md">
                           <q-form
                               class="q-gutter-md" style="min-width: 400px; padding: 24px;"
                           >
-                            <q-input filled v-model="editElectionTitle" label="Election title"
-                                     placeholder="Election title"
+                            <q-input filled v-model="editElectionTitle" :label="$t('election-title')"
+                                     :placeholder="$t('election-title')"
                                      :rules="[ val => !!val || 'Election title must not be empty']"
                             ></q-input>
 
                             <div class="row">
                               <div class="col">
-                                <q-input filled v-model="editStartDate" label="Start date and time">
+                                <q-input filled v-model="editStartDate" :label="$t('election-start')">
                                   <template v-slot:prepend>
                                     <q-icon name="event" class="cursor-pointer">
                                       <q-popup-proxy cover transition-show="scale"
@@ -40,7 +40,7 @@
                                         <q-date v-model="editStartDate" mask="YYYY-MM-DD HH:mm"
                                                 :options="startDateOptions">
                                           <div class="row items-center justify-end">
-                                            <q-btn v-close-popup label="Close" color="primary"
+                                            <q-btn v-close-popup :label="$t('close')" color="primary"
                                                    flat/>
                                           </div>
                                         </q-date>
@@ -55,7 +55,7 @@
                                         <q-time v-model="editStartDate" mask="YYYY-MM-DD HH:mm"
                                                 format24h>
                                           <div class="row items-center justify-end">
-                                            <q-btn v-close-popup label="Close" color="primary"
+                                            <q-btn v-close-popup :label="$t('close')" color="primary"
                                                    flat/>
                                           </div>
                                         </q-time>
@@ -65,7 +65,7 @@
                                 </q-input>
                               </div>
                               <div class="col">
-                                <q-input filled v-model="editEndDate" label="End date and time"
+                                <q-input filled v-model="editEndDate" :label="$t('election-end')"
                                          :disable="allowEditEndDate"
                                          :rules="[ val => confirmDates(val) || 'End date must be after start date']">
                                   <template v-slot:prepend>
@@ -75,7 +75,7 @@
                                         <q-date v-model="editEndDate" mask="YYYY-MM-DD HH:mm"
                                                 :options="endDateOptions">
                                           <div class="row items-center justify-end">
-                                            <q-btn v-close-popup label="Close" color="primary"
+                                            <q-btn v-close-popup :label="$t('close')" color="primary"
                                                    flat/>
                                           </div>
                                         </q-date>
@@ -90,7 +90,7 @@
                                         <q-time v-model="editEndDate" mask="YYYY-MM-DD HH:mm"
                                                 format24h>
                                           <div class="row items-center justify-end">
-                                            <q-btn v-close-popup label="Close" color="primary"
+                                            <q-btn v-close-popup :label="$t('close')" color="primary"
                                                    flat/>
                                           </div>
                                         </q-time>
@@ -106,7 +106,7 @@
                     </q-card>
                     <q-card class="no-border-radius">
                       <q-card-section>
-                        <div class="text-h6">Candidates</div>
+                        <div class="text-h6">{{ $t('candidates') }}</div>
                       </q-card-section>
                       <q-card-section>
                         <div class="q-pa-md">
@@ -125,11 +125,11 @@
 
                             <template v-slot:top-right>
                               <q-btn color="green" :disable="editCandidateLoading"
-                                     label="Add candidate"
+                                     :label="$t('add-candidate')"
                                      @click="showEditNewCandidate"/>
                               <q-btn class="q-ml-sm" color="negative"
                                      :disable="editCandidateLoading"
-                                     label="Remove candidates" @click="editRemoveCandidate"/>
+                                     :label="$t('remove-candidate')" @click="editRemoveCandidate"/>
                               <q-space/>
                             </template>
                             <template v-slot:body="props">
@@ -141,14 +141,14 @@
                                   {{ props.row.name }}
                                 </q-td>
                                 <q-td key="image" :props="props">
-                                  {{ props.row.image ? typeof props.row.image === 'string' ? props.row.image : props.row.image.name : "No image" }}
+                                  {{ props.row.image ? typeof props.row.image === 'string' ? props.row.image : props.row.image.name : $t('no-image') }}
                                 </q-td>
                                 <q-td key="actions" :props="props">
                                   <q-btn square size="sm" name="edit" color="amber" icon='edit'
                                          :disable="candidateLoading"
                                          @click="openCandidateEdit(props.row)">
                                     <q-tooltip>
-                                      Edit candidate
+                                      {{ $t('edit-candidate') }}
                                     </q-tooltip>
                                   </q-btn>
                                 </q-td>
@@ -161,7 +161,7 @@
                     </q-card>
                     <q-card class="no-border-radius">
                       <q-card-section>
-                        <div class="text-h6">Voters</div>
+                        <div class="text-h6">{{ $t('voters') }}</div>
                       </q-card-section>
                       <q-card-section>
                         <div class="q-pa-md">
@@ -184,22 +184,22 @@
                               <q-btn
                                   color="positive"
                                   icon-right="unarchive"
-                                  label="Import voters from csv"
+                                  :label="$t('voters-import-csv')"
                                   @click="importCSV"
                               />
                               <q-btn
                                   class="q-ml-sm"
                                   color="primary"
                                   icon-right="archive"
-                                  label="Export voters to csv"
+                                  :label="$t('voters-export-csv')"
                                   @click="exportTable"
                               />
                             </template>
                             <template v-slot:top-right>
-                              <q-btn color="green" :disable="editVoterLoading" label="Add voter"
+                              <q-btn color="green" :disable="editVoterLoading" :label="$t('add-voter')"
                                      @click="editShowVoterAdd"/>
                               <q-btn class="q-ml-sm" color="negative" :disable="editVoterLoading"
-                                     label="Remove voter" @click="editRemoveVoters"/>
+                                     :label="$t('remove-voter')" @click="editRemoveVoters"/>
                               <q-space/>
                             </template>
                           </q-table>
@@ -208,7 +208,7 @@
                     </q-card>
                     <q-card class="no-border-radius">
                       <q-card-section>
-                        <div class="text-h6">Managers</div>
+                        <div class="text-h6">{{ $t('managers') }}</div>
                       </q-card-section>
                       <q-card-section>
                         <div class="q-pa-md">
@@ -226,10 +226,10 @@
                           >
 
                             <template v-slot:top-right>
-                              <q-btn color="green" :disable="managerLoading" label="Add manager"
+                              <q-btn color="green" :disable="managerLoading" :label="$t('add-manager')"
                                      @click="showManagerAdd"/>
                               <q-btn class="q-ml-sm" color="negative" :disable="managerLoading"
-                                     label="Remove manager" @click="editRemoveManagers"/>
+                                     :label="$t('remove-manager')" @click="editRemoveManagers"/>
                               <q-space/>
                             </template>
                           </q-table>
@@ -239,9 +239,9 @@
                   </div>
                 </q-card-section>
                 <q-card-actions align="center">
-                  <q-btn label="Confirm changes" type="submit" color="primary"
+                  <q-btn :label="$t('confirm-changes')" type="submit" color="primary"
                          @click="confirmElectionEdit(id)"/>
-                  <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
+                  <q-btn :label="$t('cancel')" type="reset" color="negative" v-close-popup/>
                 </q-card-actions>
               </q-card>
             </div>
@@ -253,7 +253,7 @@
   <q-dialog v-model="editAddCandidate">
     <q-card>
       <q-card-section>
-        <div class="text-h6">Please insert the name of the new candidate</div>
+        <div class="text-h6">{{ $t('please-insert-candidate') }}</div>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
@@ -265,7 +265,7 @@
           </q-input>
           <q-file
               v-model="editCandidateImage"
-              label="Choose image (max 2MB)"
+              :label="$t('choose-image') + ' (max 2MB)'"
               filled
               counter
               accept=".jpg, .png, .svg, image/*"
@@ -276,8 +276,8 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat label="Confirm" color="primary" @click="editInsertNewCandidate" v-close-popup/>
-        <q-btn flat label="Cancel" color="negative" @click="editAddCandidate=false" v-close-popup/>
+        <q-btn flat :label="$t('confirm')" color="primary" @click="editInsertNewCandidate" v-close-popup/>
+        <q-btn flat :label="$t('cancel')" color="negative" @click="editAddCandidate=false" v-close-popup/>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -299,7 +299,7 @@
             <div class="q-pa-md">
               <q-table
                   flat bordered
-                  title="Users"
+                  :title="$t('users')"
                   :rows="editUserRows"
                   :columns="userColumns"
                   row-key="id"
@@ -313,9 +313,9 @@
             </div>
           </q-card-section>
           <q-card-actions align="center">
-            <q-btn label="Add selected voters" type="submit" color="primary"
+            <q-btn :label="$t('add-selected-voters')" type="submit" color="primary"
                    @click="editInsertNewVoter"/>
-            <q-btn label="Cancel" type="reset" color="negative" @click="this.newVoterSelected = []"
+            <q-btn :label="$t('cancel')" type="reset" color="negative" @click="this.newVoterSelected = []"
                    v-close-popup/>
           </q-card-actions>
         </q-card>
@@ -340,7 +340,7 @@
             <div class="q-pa-md">
               <q-table
                   flat bordered
-                  title="Users"
+                  :title="$t('users')"
                   :rows="userManagerRows"
                   :columns="userColumns"
                   row-key="id"
@@ -354,9 +354,9 @@
             </div>
           </q-card-section>
           <q-card-actions align="center">
-            <q-btn label="Add selected voters" type="submit" color="primary"
+            <q-btn :label="$t('add-selected-voters')" type="submit" color="primary"
                    @click="editInsertNewManager"/>
-            <q-btn label="Cancel" type="reset" color="negative" @click="this.newManagerSelected = []"
+            <q-btn :label="$t('cancel')" type="reset" color="negative" @click="this.newManagerSelected = []"
                    v-close-popup/>
           </q-card-actions>
         </q-card>
@@ -366,7 +366,7 @@
   <q-dialog v-model="editCandidateDialog">
     <q-card>
       <q-card-section>
-        <div class="text-h6">Please edit candidate</div>
+        <div class="text-h6">{{ $t('please-edit-candidate') }}</div>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
@@ -376,12 +376,12 @@
           <q-input v-model="candidateName" type="text" filled hint="Candidate name"
                    :rules="[ val => !!val || 'Candidate name must not be empty']">
           </q-input>
-          <q-toggle v-model="editImage" label="Change image?"><q-tooltip>
-            Toggle to change or remove current image
+          <q-toggle v-model="editImage" :label="$t('change-image') + '?'"><q-tooltip>
+            {{ $t('image-toggle') }}
           </q-tooltip></q-toggle>
           <q-file
               v-model="candidateImage"
-              label="Choose image (max 2MB)"
+              :label="$t('choose-image') + ' (max 2MB)'"
               filled
               counter
               clearable
@@ -396,8 +396,8 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat label="Confirm" color="primary" @click="editCandidate"/>
-        <q-btn flat label="Cancel" color="negative" @click="editCandidateDialog=false; editImage=false" v-close-popup/>
+        <q-btn flat :label="$t('confirm')" color="primary" @click="editCandidate"/>
+        <q-btn flat :label="$t('cancel')" color="negative" @click="editCandidateDialog=false; editImage=false" v-close-popup/>
       </q-card-actions>
     </q-card>
   </q-dialog>

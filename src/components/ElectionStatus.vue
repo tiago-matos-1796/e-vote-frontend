@@ -1,10 +1,10 @@
 <template>
   <q-card class="bg-blue-grey-2 text-black">
     <q-bar>
-      <div class="text-h6">{{title}} status</div>
+      <div class="text-h6">{{$t('status') + " " + title}}</div>
       <q-space/>
       <q-btn dense flat icon="close" v-close-popup>
-        <q-tooltip class="bg-white text-primary">Close</q-tooltip>
+        <q-tooltip class="bg-white text-primary">{{ $t('close') }}</q-tooltip>
       </q-btn>
     </q-bar>
     <q-card-section class="q-pt-none">
@@ -24,7 +24,7 @@
                             class="my-card"
                         >
                           <q-card-section>
-                            <div class="text-h6">Submitted Votes</div>
+                            <div class="text-h6">{{ $t('submitted-votes') }}</div>
                           </q-card-section>
 
                           <q-card-section class="q-pt-none">
@@ -39,7 +39,7 @@
                   <div class="q-pa-md">
                     <q-table
                         flat bordered
-                        title="Voters"
+                        :title="$t('voters')"
                         :rows="statusRows"
                         :columns="voterColumns"
                         row-key="email"
@@ -50,7 +50,7 @@
                   </div>
                 </q-card-section>
                 <q-card-actions align="center">
-                  <q-btn label="Close" color="negative" v-close-popup/>
+                  <q-btn :label="$t('close')" color="negative" v-close-popup/>
                 </q-card-actions>
               </q-card>
             </div>

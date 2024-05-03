@@ -12,6 +12,9 @@
         <q-space/>
 
         <q-space/>
+        <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
+        </div>
       </q-toolbar>
     </q-header>
     <q-page-container class="GPL__page-container">
@@ -35,14 +38,14 @@
                           clear-icon="close"
                           v-model="email"
                           type="email"
-                          label="Email"
+                          :label="$t('email')"
                           lazy-rules
                           :rules="[ val => !!val || 'Please insert your email']"
                       />
 
                       <div>
-                        <q-btn label="Send email" type="submit" color="primary"/>
-                        <q-btn label="Reset" color="negative" type="reset" flat class="q-ml-sm"/>
+                        <q-btn :label="$t('send-email')" type="submit" color="primary"/>
+                        <q-btn :label="$t('reset')" color="negative" type="reset" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
                   </div>
@@ -62,9 +65,11 @@ import {useQuasar} from "quasar"
 import {useRouter} from 'vue-router'
 import axios from "axios";
 import api_routes from '../../config/routes.config'
+import LocaleChanger from "./Locale-Changer.vue";
 
 export default {
   name: "ForgotPassword",
+  components: {LocaleChanger},
   setup() {
     const $q = useQuasar()
     const email = ref(null)

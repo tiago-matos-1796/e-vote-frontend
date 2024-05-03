@@ -24,11 +24,12 @@
         <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
               <img :src="avatar">
             </q-avatar>
-            <q-tooltip>Account</q-tooltip>
+            <q-tooltip>{{$t('account')}}</q-tooltip>
           </q-btn>
         </div>
       </q-toolbar>
@@ -42,14 +43,14 @@
               <q-card class="no-border-radius">
                 <q-card-section>
                   <div class="q-pa-md q-gutter-sm">
-                    <q-btn color="green" :disable="loading" icon="add" label="Add election" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
+                    <q-btn color="green" :disable="loading" icon="add" :label="$t('add-election')" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
                            @click="showElectionWindow"/>
                   </div>
                   <div class="q-pa-md">
                     <q-table
                         flat bordered
                         ref="tableRef"
-                        title="Elections"
+                        :title="$t('elections')"
                         :rows="rows"
                         :columns="columns"
                         row-key="id"
@@ -63,13 +64,13 @@
                         <div class="gt-md">
                           <div class="q-gutter-lg-x-md">
                             <q-toggle v-model="toggleBefore" @click="customSortMain" :disable="loading"
-                                      label="Show not started elections"/>
+                                      :label="$t('not-started-elections')"/>
                             <q-toggle v-model="toggleDuring" @click="customSortMain" :disable="loading"
-                                      label="Show ongoing elections"/>
+                                      :label="$t('ongoing-elections')"/>
                             <q-toggle v-model="toggleAfter" @click="customSortMain" :disable="loading"
-                                      label="Show finished elections"/>
+                                      :label="$t('finished-elections')"/>
                             <q-input dense debounce="400" color="primary" v-model="searchMain" :disable="loading"
-                                     placeholder="Search by election title" @keyup.enter="customSortMain">
+                                     :placeholder="$t('search-election-title')" @keyup.enter="customSortMain">
                               <template v-slot:append>
                                 <q-icon name="close" @click="clearSearchMain" :disable="loading" class="cursor-pointer"/>
                                 <q-icon name="search" @click="customSortMain" :disable="loading" class="cursor-pointer"/>
@@ -83,7 +84,7 @@
                               dense
                               round
                               @click="filters = true"
-                              aria-label="Filters"
+                              :aria-label="$t('filters')"
                               icon="tune"
                               class="q-mx-md"
                           />
@@ -105,42 +106,42 @@
                                    :disable="isAfterStart(props.row.startDate) || loading" label='' icon='edit'
                                    @click="openmodel(props.row)">
                               <q-tooltip>
-                                Edit election
+                                {{ $t('edit-election') }}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="delete" color="negative" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
                                    :disable="isAfterStart(props.row.startDate) || loading" label='' icon='delete'
                                    @click="deleteElection(props.row)">
                               <q-tooltip>
-                                Delete election
+                                {{ $t('delete-election') }}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="renew" color="secondary" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
                                    :disable="isAfterStart(props.row.startDate) || loading" label='' icon='key'
                                    @click="regenerateKey(props.row)">
                               <q-tooltip>
-                                Regenerate election key
+                                {{ $t('regenerate-election-key') }}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="renew" color="positive"
                                    :disable="canStatus(props.row.startDate, props.row.endDate) || loading" label=''
                                    icon='query_stats' @click="openElectionStatus(props.row)">
                               <q-tooltip>
-                                Show election status
+                                {{ $t('election-status') }}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="results" color="primary" v-if="$q.sessionStorage.getItem('permission') === 'MANAGER'"
                                    :disable="isAfterEnd(props.row.endDate) || loading" label='' icon='data_thresholding'
                                    @click="showResults(props.row)">
                               <q-tooltip>
-                                {{ hasResults(props.row.results) ? 'Tally election votes' : 'Tally election votes again' }}
+                                {{ hasResults(props.row.results) ? $t('tally') : $t('tally-again') }}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="results" color="info"
                                    :disable="hasResults(props.row.results) || loading"
                                    label='' icon='summarize' @click="showElectionResults(props.row)">
                               <q-tooltip>
-                                Show election results
+                                {{ $t('view-results') }}
                               </q-tooltip>
                             </q-btn>
                           </q-td>
@@ -169,25 +170,25 @@
                     <q-dialog v-model="deleteConfirm">
                       <q-card>
                         <q-card-section>
-                          <div class="text-h6">Delete Election</div>
+                          <div class="text-h6">{{ $t('delete-election') }}</div>
                         </q-card-section>
 
                         <q-card-section class="q-pt-none">
-                          Are you sure you want to delete election {{ selected_row.title }}?
+                          {{$t('delete-account-confirm') + " " + selected_row.title + "?"}}
                         </q-card-section>
 
                         <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="removeElection(selected_row.id)"
+                          <q-btn flat :label="$t('confirm')" color="primary" @click="removeElection(selected_row.id)"
                                  v-close-popup/>
-                          <q-btn flat label="Cancel" color="negative" @click="deleteConfirm=false" v-close-popup/>
+                          <q-btn flat :label="$t('cancel')" color="negative" @click="deleteConfirm=false" v-close-popup/>
                         </q-card-actions>
                       </q-card>
                     </q-dialog>
                     <q-dialog v-model="renewKey">
                       <q-card>
                         <q-card-section>
-                          <div class="text-h6">Please insert the new election key for election
-                            {{ selected_row.title }}
+                          <div class="text-h6">
+                            {{$t('please-new-election-key') + " " + selected_row.title}}
                           </div>
                         </q-card-section>
 
@@ -195,7 +196,7 @@
                           <q-form
                               class="q-gutter-md"
                           >
-                            <q-input v-model="newElectionKey" filled label="New election key" hint="A password manager is recommended to safeguard this key"
+                            <q-input v-model="newElectionKey" filled :label="$t('new-election-key')" :hint="$t('election-key-hint')"
                                      :type="hideKey ? 'password' : 'text'"
                                      :rules="[ val => !!val || 'Election key must not be empty' ,val => val.length >= 12 || 'Election key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits',]"
@@ -206,7 +207,7 @@
                                     class="cursor-pointer"
                                     @click="generateVoteKey"
                                 ><q-tooltip>
-                                  Generate voting key
+                                  {{$t('generate-election-key')}}
                                 </q-tooltip></q-icon>
                                 <q-icon
                                     :name="hideKey ? 'visibility_off' : 'visibility'"
@@ -215,7 +216,7 @@
                                 />
                               </template>
                             </q-input>
-                            <q-input v-model="newElectionKey1" filled label="Confirm new election key"
+                            <q-input v-model="newElectionKey1" filled :label="$t('new-election-key-confirm')"
                                      :type="hideKey1 ? 'password' : 'text'"
                                      :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 12 || 'Election key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits', val => val === newElectionKey || 'Election key must be the same as above']"
@@ -232,15 +233,16 @@
                         </q-card-section>
 
                         <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="renewElectionKey(selected_row.id)"/>
-                          <q-btn flat label="Cancel" color="negative" @click="newElectionKey='';newElectionKey1='';renewKey=false;"/>
+                          <q-btn flat :label="$t('confirm')" color="primary" @click="renewElectionKey(selected_row.id)"/>
+                          <q-btn flat :label="$t('cancel')" color="negative" @click="newElectionKey='';newElectionKey1='';renewKey=false;"/>
                         </q-card-actions>
                       </q-card>
                     </q-dialog>
                     <q-dialog v-model="electionResults">
                       <q-card>
                         <q-card-section>
-                          <div class="text-h6">Please insert the election key for election {{ selected_row.title }}
+                          <div class="text-h6">
+                            {{$t('please-insert-election-key') + " " + selected_row.title}}
                           </div>
                         </q-card-section>
 
@@ -248,7 +250,7 @@
                           <q-form
                               class="q-gutter-md"
                           >
-                            <q-input v-model="resultsElectionKey" filled label="Election key"
+                            <q-input v-model="resultsElectionKey" filled :label="$t('election-key')"
                                      :type="hideResultsKey ? 'password' : 'text'"
                                      :rules="[ val => !!val || 'Election key must not be empty', val => val.length >= 12 || 'Election key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Election key must have upper and lower case characters, special characters and digits']"
@@ -265,8 +267,8 @@
                         </q-card-section>
 
                         <q-card-actions align="right">
-                          <q-btn flat label="Confirm" color="primary" @click="countElectionResults(selected_row.id)"/>
-                          <q-btn flat label="Cancel" color="negative"
+                          <q-btn flat :label="$t('confirm')" color="primary" @click="countElectionResults(selected_row.id)"/>
+                          <q-btn flat :label="$t('cancel')" color="negative"
                                  @click="resultsElectionKey='';electionResults=false"/>
                         </q-card-actions>
                       </q-card>
@@ -301,25 +303,25 @@
           <q-btn v-if="permission" round flat color="grey-8" stack no-caps size="26px"
                  class="GPL__side-btn" @click="$router.push('elections')">
             <q-icon size="22px" name="ballot"/>
-            <div class="GPL__side-btn__label">Elections</div>
+            <div class="GPL__side-btn__label">{{ $t('elections') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'MANAGER' || permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
-            <div class="GPL__side-btn__label">Election Manager</div>
+            <div class="GPL__side-btn__label">{{ $t('election-manager') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check"/>
-            <div class="GPL__side-btn__label">Auditing</div>
+            <div class="GPL__side-btn__label">{{ $t('auditing') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'ADMIN'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('admin')">
             <q-icon size="22px" name="admin_panel_settings"/>
-            <div class="GPL__side-btn__label">Admin</div>
+            <div class="GPL__side-btn__label">{{ $t('admin') }}</div>
           </q-btn>
         </div>
       </q-page-sticky>
@@ -345,7 +347,7 @@
                 <q-icon name="ballot" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Elections</q-item-label>
+                <q-item-label>{{ $t('elections') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -357,7 +359,7 @@
                 <q-icon name="edit_document" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Election Manager</q-item-label>
+                <q-item-label>{{ $t('election-manager') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -369,7 +371,7 @@
                 <q-icon name="fact_check" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Auditing</q-item-label>
+                <q-item-label>{{ $t('auditing') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -381,7 +383,7 @@
                 <q-icon name="admin_panel_settings" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Admin</q-item-label>
+                <q-item-label>{{ $t('admin') }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -404,7 +406,7 @@
           <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('display') }}</div>
           <q-btn
               color="primary"
-              label="Profile"
+              :label="$t('profile')"
               push
               size="sm"
               v-close-popup
@@ -412,7 +414,7 @@
           />
           <q-btn
               color="negative"
-              label="Logout"
+              :label="$t('logout')"
               push
               size="sm"
               v-close-popup
@@ -425,26 +427,26 @@
   <q-dialog v-model="filters">
     <q-card style="width: 100%" class="q-px-sm q-pb-md">
       <q-card-section>
-        <div class="text-h6">Filters</div>
+        <div class="text-h6">{{ $t('filters') }}</div>
       </q-card-section>
       <q-item dense>
         <q-card-section>
           <q-toggle v-model="toggleBefore" @click="customSortMain" :disable="loading"
-                    label="Show not started elections"/>
+                    :label="$t('not-started-elections')"/>
         </q-card-section>
         <q-card-section>
           <q-toggle v-model="toggleDuring" @click="customSortMain" :disable="loading"
-                    label="Show ongoing elections"/>
+                    :label="$t('ongoing-elections')"/>
         </q-card-section>
       </q-item>
       <q-item dense>
         <q-card-section>
           <q-toggle v-model="toggleAfter" @click="customSortMain" :disable="loading"
-                    label="Show finished elections"/>
+                    :label="$t('finished-elections')"/>
         </q-card-section>
         <q-card-section>
           <q-input dense debounce="400" color="primary" v-model="searchMain" :disable="loading"
-                   placeholder="Search by election title" @keyup.enter="customSortMain">
+                   :placeholder="$t('search-election-title')" @keyup.enter="customSortMain">
             <template v-slot:append>
               <q-icon name="close" @click="clearSearchMain" :disable="loading" class="cursor-pointer"/>
               <q-icon name="search" @click="customSortMain" :disable="loading" class="cursor-pointer"/>
@@ -468,6 +470,7 @@ import ElectionStatus from "./ElectionStatus.vue";
 import ElectionResults from "./ElectionResults.vue";
 import {useRouter} from "vue-router";
 import api_routes from "../../config/routes.config";
+import LocaleChanger from "./Locale-Changer.vue";
 
 const router = useRouter();
 
@@ -561,6 +564,7 @@ let originalRows = []
 export default {
   name: 'ElectionManager',
   components: {
+    LocaleChanger,
     ElectionResults,
     ElectionStatus,
     EditElection,

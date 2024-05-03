@@ -12,7 +12,9 @@
         <q-space/>
 
         <q-space/>
-
+        <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
+        </div>
       </q-toolbar>
     </q-header>
 
@@ -35,7 +37,7 @@
                           clear-icon="close"
                           v-model="email"
                           type="email"
-                          label="Email"
+                          :label="$t('email')"
                           lazy-rules
                           :rules="[ val => !!val || 'Please insert your email']"
                       />
@@ -45,7 +47,7 @@
                           clear-icon="close"
                           :type="isPwd ? 'password' : 'text'"
                           v-model="password"
-                          label="Password"
+                          :label="$t('password')"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please insert your password',
@@ -63,15 +65,15 @@
                       </q-input>
 
                       <div>
-                        <q-btn label="Login" type="submit" color="primary"/>
-                        <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm"/>
+                        <q-btn :label="$t('login')" type="submit" color="primary"/>
+                        <q-btn :label="$t('reset')" type="reset" color="negative" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
                     <p>
-                      <router-link to="register">Don't have an account?</router-link>
+                      <router-link to="register">{{$t('register-uri')}}</router-link>
                     </p>
                     <p>
-                      <router-link to="forgot-password">Forgot your password?</router-link>
+                      <router-link to="forgot-password">{{$t('password-recovery-uri')}}</router-link>
                     </p>
                   </div>
                 </q-card-section>
@@ -90,10 +92,12 @@ import {onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import axios from "axios";
 import api_routes from '../../config/routes.config'
+import LocaleChanger from "./Locale-Changer.vue";
 
 
 export default {
   name: 'Login',
+  components: {LocaleChanger},
 
   setup() {
     const $q = useQuasar()

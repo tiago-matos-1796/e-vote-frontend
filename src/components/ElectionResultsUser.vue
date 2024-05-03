@@ -1,10 +1,10 @@
 <template>
   <q-card class="bg-blue-grey-2 text-black">
     <q-bar>
-      <div class="text-h6">Results for election {{ title }}</div>
+      <div class="text-h6">{{$t('results-for') + " " + title}}}</div>
       <q-space/>
       <q-btn dense flat icon="close" v-close-popup>
-        <q-tooltip class="bg-white text-primary">Close</q-tooltip>
+        <q-tooltip class="bg-white text-primary">{{ $t('close') }}</q-tooltip>
       </q-btn>
     </q-bar>
     <q-card-section class="q-pt-none">
@@ -22,7 +22,7 @@
                             class="my-card"
                         >
                           <q-card-section>
-                            <div class="text-h6">Abstention</div>
+                            <div class="text-h6">{{ $t('abstention') }}</div>
                           </q-card-section>
                           <pie-chart :data="abstentionData"></pie-chart>
                           <q-card-section class="q-pt-none" align="center">
@@ -35,7 +35,7 @@
                             class="my-card"
                         >
                           <q-card-section>
-                            <div class="text-h6">Votes</div>
+                            <div class="text-h6">{{ $t('votes') }}</div>
                           </q-card-section>
                           <pie-chart :data="voteData"></pie-chart>
                           <q-card-section class="q-pt-none">
@@ -49,7 +49,7 @@
                   <div class="q-pa-md">
                     <q-table
                         flat bordered
-                        title="Results"
+                        :title="$t('results')"
                         :rows="resultsRows"
                         :columns="resultsColumns"
                         row-key="candidate"
@@ -61,7 +61,7 @@
                   </div>
                 </q-card-section>
                 <q-card-actions align="center">
-                  <q-btn label="Close" color="negative" v-close-popup/>
+                  <q-btn :label="$t('close')" color="negative" v-close-popup/>
                 </q-card-actions>
               </q-card>
             </div>

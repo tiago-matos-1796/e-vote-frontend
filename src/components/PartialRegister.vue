@@ -12,7 +12,9 @@
         <q-space/>
 
         <q-space/>
-
+        <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
+        </div>
       </q-toolbar>
     </q-header>
 
@@ -36,7 +38,7 @@
                           clear-icon="close"
                           v-model="token"
                           type="text"
-                          label="Display Name"
+                          label="Token"
                           lazy-rules
                           :rules="[ val => !!val || 'Please insert your token']"
                       />
@@ -45,7 +47,7 @@
                           clear-icon="close"
                           v-model="displayName"
                           type="text"
-                          label="Display Name"
+                          :label="$t('display-name')"
                           lazy-rules
                           :rules="[ val => !!val || 'Please insert your display name']"
                       />
@@ -55,7 +57,7 @@
                           clear-icon="close"
                           :type="isPwd ? 'password' : 'text'"
                           v-model="password"
-                          label="Password"
+                          :label="$t('password')"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please insert your password',
@@ -70,7 +72,7 @@
                               class="cursor-pointer"
                               @click="generatePassword"
                           ><q-tooltip>
-                            Generate password
+                            {{ $t('generate-password') }}
                           </q-tooltip></q-icon>
                           <q-icon
                               :name="isPwd ? 'visibility_off' : 'visibility'"
@@ -85,7 +87,7 @@
                           clear-icon="close"
                           :type="isPwd1 ? 'password' : 'text'"
                           v-model="passwordConfirm"
-                          label="Confirm password"
+                          :label="$t('password-confirm')"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please reinsert your password',
@@ -108,7 +110,7 @@
                           clear-icon="close"
                           :type="isVk ? 'password' : 'text'"
                           v-model="voteKey"
-                          label="Voting Key"
+                          :label="$t('vote-key')"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please insert your voting key',
@@ -123,7 +125,7 @@
                               class="cursor-pointer"
                               @click="generateVoteKey"
                           ><q-tooltip>
-                            Generate voting key
+                            {{ $t('generate-vote-key') }}
                           </q-tooltip></q-icon>
                           <q-icon
                               :name="isVk ? 'visibility_off' : 'visibility'"
@@ -138,7 +140,7 @@
                           clear-icon="close"
                           :type="isVk1 ? 'password' : 'text'"
                           v-model="voteKeyConfirm"
-                          label="Confirm Voting Key"
+                          :label="$t('confirm-vote-key')"
                           lazy-rules
                           :rules="[
               val => !!val || 'Please reinsert your voting key',
@@ -162,7 +164,7 @@
                           filled
                           clearable
                           clear-icon="close"
-                          label="Select image (max: 1MB)"
+                          :label="$t('select-image') + ' (max: 1MB)'"
                           accept=".jpg, .png, .svg"
                           max-file-size="1048576"
                           counter
@@ -173,8 +175,8 @@
 
 
                       <div>
-                        <q-btn label="Register" type="submit" color="primary"/>
-                        <q-btn label="Reset" type="reset" color="negative" flat class="q-ml-sm"/>
+                        <q-btn :label="$t('register')" type="submit" color="primary"/>
+                        <q-btn :label="$t('reset')" type="reset" color="negative" flat class="q-ml-sm"/>
                       </div>
                     </q-form>
                   </div>
@@ -194,9 +196,11 @@ import {useRoute, useRouter} from "vue-router";
 import {onMounted, ref} from "vue";
 import axios from "axios";
 import api_routes from '../../config/routes.config'
+import LocaleChanger from "./Locale-Changer.vue";
 
 export default {
   name: "PartialRegister",
+  components: {LocaleChanger},
   setup(){
     const $q = useQuasar()
     const router = useRouter();

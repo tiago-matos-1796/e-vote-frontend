@@ -49,9 +49,9 @@
           </div>
         </q-card-section>
         <q-card-actions align="center">
-          <q-btn label="Vote" type="submit" color="primary" @click="voteConfirm(selected)"
+          <q-btn :label="$t('vote')" type="submit" color="primary" @click="voteConfirm(selected)"
                  />
-          <q-btn label="Cancel" type="reset" color="negative" v-close-popup/>
+          <q-btn :label="$t('cancel')" type="reset" color="negative" v-close-popup/>
         </q-card-actions>
       </q-card>
     </div>
@@ -59,8 +59,8 @@
   <q-dialog v-model="sign">
     <q-card>
       <q-card-section>
-        <div class="text-h6">Please confirm your
-          {{ selected.length > 0 ? `vote on candidate ${selected[0].name}` : `blank vote` }}
+        <div class="text-h6">
+          {{$t('please-confirm-your') + " " + selected.length > 0 ? $t('vote-on-candidate') + " " + selected[0].name : $t('blank-vote')}}
         </div>
       </q-card-section>
 
@@ -68,7 +68,7 @@
         <q-form
             class="q-gutter-md"
         >
-          <q-input v-model="signatureKey" filled label="Voting key"
+          <q-input v-model="signatureKey" filled :label="$t('vote-key')"
                    :type="hideSignKey ? 'password' : 'text'"
                    :rules="[ val => !!val || 'Vote key must not be empty', val => val.length >= 12 || 'Vote key must be at least 12 characters long',
               val => val.match('^(?=(.*[a-z]){1,})(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\\-__+.]){1,}).{8,}$') || 'Vote key must have upper and lower case characters, special characters and digits']"
@@ -85,8 +85,8 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat label="Confirm" color="primary" @click="submitVote(selected_row.id)"/>
-        <q-btn flat label="Cancel" color="negative" @click="selected=[];signatureKey='';sign=false"/>
+        <q-btn flat :label="$t('confirm')" color="primary" @click="submitVote(selected_row.id)"/>
+        <q-btn flat :label="$t('cancel')" color="negative" @click="selected=[];signatureKey='';sign=false"/>
       </q-card-actions>
     </q-card>
   </q-dialog>

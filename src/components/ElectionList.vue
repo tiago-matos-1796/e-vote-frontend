@@ -24,11 +24,12 @@
         <q-space/>
 
         <div class="q-gutter-sm row items-center no-wrap">
+          <LocaleChanger></LocaleChanger>
           <q-btn v-if="$q.sessionStorage.getItem('permission')" round flat @click="openSettings">
             <q-avatar size="26px">
               <img :src="avatar">
             </q-avatar>
-            <q-tooltip>Account</q-tooltip>
+            <q-tooltip>{{$t('account')}}</q-tooltip>
           </q-btn>
         </div>
       </q-toolbar>
@@ -45,7 +46,7 @@
                     <q-table
                         flat bordered
                         ref="tableRef"
-                        title="My Elections"
+                        :title="$t('my-elections')"
                         :rows="rows"
                         :columns="columns"
                         row-key="id"
@@ -58,22 +59,22 @@
                         <div class="gt-md">
                           <div class="q-gutter-lg-x-md">
                             <q-toggle v-model="toggleBefore" @click="customSort" :disable="loading"
-                                      label="Show not started elections"/>
+                                      :label="$t('not-started-elections')"/>
                             <q-toggle v-model="toggleDuring" @click="customSort" :disable="loading"
-                                      label="Show ongoing elections"/>
+                                      :label="$t('ongoing-elections')"/>
                             <q-toggle v-model="toggleAfter" @click="customSort" :disable="loading"
-                                      label="Show finished elections"/>
+                                      :label="$t('finished-elections')"/>
                             <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
-                                     placeholder="Search by election title" @keyup.enter="customSort">
+                                     :placeholder="$t('search-election-title')" @keyup.enter="customSort">
                               <template v-slot:append>
                                 <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
                                 <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
                               </template>
                             </q-input>
                             <q-checkbox v-model="toVote" @click="customSort" :disable="loading"
-                                        label="Show only elections yet to vote"/>
+                                        :label="$t('yet-vote-elections')"/>
                             <q-checkbox v-model="hasResults" @click="customSort" :disable="loading"
-                                        label="Show only elections with results"/>
+                                        :label="$t('results-elections')"/>
                           </div>
                         </div>
                         <div class="lt-lg">
@@ -82,7 +83,7 @@
                               dense
                               round
                               @click="filters = true"
-                              aria-label="Filters"
+                              :aria-label="$t('filters')"
                               icon="tune"
                               class="q-mx-md"
                           />
@@ -104,7 +105,7 @@
                                    :disabled="canVote(props.row)  || loading" label=''
                                    icon='how_to_vote' @click="openBallot(props.row)">
                               <q-tooltip>
-                                Vote
+                                {{$t('vote')}}
                               </q-tooltip>
                             </q-btn>
                             <q-btn square size="sm" name="results" color="info"
@@ -112,7 +113,7 @@
                                    label=''
                                    icon='summarize' @click="showResults(props.row)">
                               <q-tooltip>
-                                Show election results
+                                {{$t('view-results')}}
                               </q-tooltip>
                             </q-btn>
                           </q-td>
@@ -147,25 +148,25 @@
           <q-btn v-if="permission" round flat color="grey-8" stack no-caps size="26px"
                  class="GPL__side-btn" @click="$router.push('elections')">
             <q-icon size="22px" name="ballot"/>
-            <div class="GPL__side-btn__label">Elections</div>
+            <div class="GPL__side-btn__label">{{ $t('elections') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'MANAGER' || permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('election-manager')">
             <q-icon size="22px" name="edit_document"/>
-            <div class="GPL__side-btn__label">Election Manager</div>
+            <div class="GPL__side-btn__label">{{ $t('election-manager') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'AUDITOR'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('auditing')">
             <q-icon size="22px" name="fact_check"/>
-            <div class="GPL__side-btn__label">Auditing</div>
+            <div class="GPL__side-btn__label">{{ $t('auditing') }}</div>
           </q-btn>
 
           <q-btn v-if="permission === 'ADMIN'" round flat color="grey-8" stack no-caps
                  size="26px" class="GPL__side-btn" @click="$router.push('admin')">
             <q-icon size="22px" name="admin_panel_settings"/>
-            <div class="GPL__side-btn__label">Admin</div>
+            <div class="GPL__side-btn__label">{{ $t('admin') }}</div>
           </q-btn>
         </div>
       </q-page-sticky>
@@ -191,7 +192,7 @@
               <q-icon name="ballot" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>Elections</q-item-label>
+              <q-item-label>{{ $t('elections') }}</q-item-label>
             </q-item-section>
           </q-item>
 
@@ -203,7 +204,7 @@
               <q-icon name="edit_document" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>Election Manager</q-item-label>
+              <q-item-label>{{ $t('election-manager') }}</q-item-label>
             </q-item-section>
           </q-item>
 
@@ -215,7 +216,7 @@
               <q-icon name="fact_check" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>Auditing</q-item-label>
+              <q-item-label>{{ $t('auditing') }}</q-item-label>
             </q-item-section>
           </q-item>
 
@@ -227,7 +228,7 @@
               <q-icon name="admin_panel_settings" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>Admin</q-item-label>
+              <q-item-label>{{ $t('admin') }}</q-item-label>
             </q-item-section>
           </q-item>
 
@@ -250,7 +251,7 @@
           <div class="text-subtitle1 q-mt-md q-mb-xs">{{ $q.sessionStorage.getItem('display') }}</div>
           <q-btn
               color="primary"
-              label="Profile"
+              :label="$t('profile')"
               push
               size="sm"
               v-close-popup
@@ -258,7 +259,7 @@
           />
           <q-btn
               color="negative"
-              label="Logout"
+              :label="$t('logout')"
               push
               size="sm"
               v-close-popup
@@ -271,26 +272,26 @@
   <q-dialog v-model="filters">
     <q-card style="width: 100%" class="q-px-sm q-pb-md">
       <q-card-section>
-        <div class="text-h6">Filters</div>
+        <div class="text-h6">{{$t('filters')}}</div>
       </q-card-section>
       <q-item dense>
         <q-card-section>
           <q-toggle v-model="toggleBefore" @click="customSort" :disable="loading"
-                    label="Show not started elections"/>
+                    :label="$t('not-started-elections')"/>
         </q-card-section>
         <q-card-section>
           <q-toggle v-model="toggleDuring" @click="customSort" :disable="loading"
-                    label="Show ongoing elections"/>
+                    :label="$t('ongoing-elections')"/>
         </q-card-section>
       </q-item>
       <q-item dense>
         <q-card-section>
           <q-toggle v-model="toggleAfter" @click="customSort" :disable="loading"
-                    label="Show finished elections"/>
+                    :label="$t('finished-elections')"/>
         </q-card-section>
         <q-card-section>
           <q-input dense debounce="400" color="primary" v-model="search" :disable="loading"
-                   placeholder="Search by election title" @keyup.enter="customSort">
+                   :placeholder="$t('search-election-title')" @keyup.enter="customSort">
             <template v-slot:append>
               <q-icon name="close" @click="clearSearch" :disable="loading" class="cursor-pointer"/>
               <q-icon name="search" @click="customSort" :disable="loading" class="cursor-pointer"/>
@@ -301,11 +302,11 @@
       <q-item dense>
         <q-card-section>
           <q-checkbox v-model="toVote" @click="customSort" :disable="loading"
-                      label="Show only elections yet to vote"/>
+                      :label="$t('yet-vote-elections')"/>
         </q-card-section>
         <q-card-section>
           <q-checkbox v-model="hasResults" @click="customSort" :disable="loading"
-                      label="Show only elections with results"/>
+                      :label="$t('results-elections')"/>
         </q-card-section>
       </q-item>
     </q-card>
@@ -322,6 +323,7 @@ import {useRouter} from "vue-router";
 import ElectionBallot from "@/components/ElectionBallot.vue";
 import ElectionResultsUser from "./ElectionResultsUser.vue";
 import api_routes from "../../config/routes.config";
+import LocaleChanger from "./Locale-Changer.vue";
 
 const router = useRouter();
 
@@ -418,6 +420,7 @@ let originalRows = []
 export default {
   name: 'ElectionList',
   components: {
+    LocaleChanger,
     ElectionResultsUser,
     ElectionBallot,
   },

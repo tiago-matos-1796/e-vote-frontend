@@ -38,6 +38,7 @@
     "vue-base-input": "^1.0.9",
     "vue-chartkick": "^1.1.0",
     "vue-cookies-reactive": "^2.1.1",
+    "vue-i18n": "^9.13.1",
     "vue-router": "^4.2.2"
   },
   "devDependencies": {
