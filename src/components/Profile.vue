@@ -423,6 +423,7 @@ import {Cookies, Notify, SessionStorage, useQuasar} from "quasar";
 import axios from "axios";
 import api_routes from '../../config/routes.config'
 import {useRouter} from "vue-router";
+import generator from "generate-password";
 
 export default {
   name: "Profile",
@@ -665,32 +666,22 @@ export default {
         })
       },
       generatePassword() {
-        let strongPassword = new RegExp(
-            "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
-        );
-        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
-        let key = ""
-        for(let i = 0; i < 12; i++) {
-          const rand = Math.floor(Math.random() * characters.length)
-          key += characters[rand]
-        }
-        if(strongPassword.test(key)) {
-          password.value = key
-        }
+        password.value = generator.generate({
+          length: 8,
+          numbers: true,
+          symbols: true,
+          exclude: '<>,;.:`´^~/|"',
+          strict: true
+        })
       },
       generateVoteKey() {
-        let strongPassword = new RegExp(
-            "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
-        );
-        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
-        let key = ""
-        for(let i = 0; i < 12; i++) {
-          const rand = Math.floor(Math.random() * characters.length)
-          key += characters[rand]
-        }
-        if(strongPassword.test(key)) {
-          voteKey.value = key
-        }
+        voteKey.value = generator.generate({
+          length: 12,
+          numbers: true,
+          symbols: true,
+          exclude: '<>,;.:`´^~/|"',
+          strict: true
+        })
       }
     }
   },

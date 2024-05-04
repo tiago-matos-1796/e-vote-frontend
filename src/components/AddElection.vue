@@ -362,6 +362,7 @@ import {v1} from "uuid";
 import axios from "axios";
 import {useRouter} from "vue-router";
 import api_routes from '../../config/routes.config'
+import generator from "generate-password";
 
 export default {
   name: 'AddElection',
@@ -596,18 +597,13 @@ export default {
         })
       },
       generateElectionKey() {
-        let strongPassword = new RegExp(
-            "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
-        );
-        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&()_+-=[]{}|?~"
-        let key = ""
-        for(let i = 0; i < 12; i++) {
-          const rand = Math.floor(Math.random() * characters.length)
-          key += characters[rand]
-        }
-        if(strongPassword.test(key)) {
-          electionKey.value = key
-        }
+        electionKey.value = generator.generate({
+          length: 12,
+          numbers: true,
+          symbols: true,
+          exclude: '<>,;.:`´^~/|"',
+          strict: true
+        })
       }
     }
   },
