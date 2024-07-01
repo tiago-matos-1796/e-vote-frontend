@@ -1,29 +1,38 @@
-# svm-frontend
+# Secure Vote Frontend
+Frontend application for Secure Vote.
 
-This template should help get you started developing with Vue 3 in Vite.
+## Requirements
 
-## Recommended IDE Setup
+* Secure Vote
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+## Setup
 
-## Customize configuration
+On **config** folder change all **localhost:8080** with the base URI of Secure Vote.
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+For example:
+**http://localhost:8080/avatars** to **http://my-uri/avatars**, where **my-uri** is the base uri of your Secure Vote.
 
-## Project Setup
+Change http to https, if applied.
 
-```sh
+## Installation
+
+Use the package manager [npm](https://www.npmjs.com) to install frontend application dependencies.
+
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+## Development
 
-```sh
-npm run dev
+Use the package manager [npm](https://www.npmjs.com) to start the frontend application in dev mode.
+
+```bash
+npm dev
 ```
+## Production
 
-### Compile and Minify for Production
+Use the package manager [npm](https://www.npmjs.com) to build the frontend application before deployment.
 
-```sh
-npm run build
+```bash
+npm build
 ```
