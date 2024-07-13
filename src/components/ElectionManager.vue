@@ -13,10 +13,10 @@
             class="q-mx-md"
         />
         <q-avatar>
-          <img src="src/assets/UAlg-ico.ico">
+          <img src="src/assets/ballot.ico">
         </q-avatar>
         <q-toolbar-title v-if="$q.screen.gt.sm" shrink class="row items-center no-wrap">
-          <span class="q-ml-sm">UAlg Secure Vote</span>
+          <span class="q-ml-sm">Secure Vote</span>
         </q-toolbar-title>
 
         <q-space/>
@@ -333,8 +333,8 @@
       <q-scroll-area class="fit">
         <q-toolbar class="GPL__toolbar">
           <q-toolbar-title class="row items-center text-grey-8">
-            <img class="q-pl-md" src="src/assets/UAlg-ico.ico">
-            <span class="q-ml-sm">UAlg Secure Vote</span>
+            <img class="q-pl-md" src="src/assets/ballot.ico">
+            <span class="q-ml-sm">Secure Vote</span>
           </q-toolbar-title>
         </q-toolbar>
 

@@ -13,10 +13,10 @@
             class="q-mx-md"
         />
         <q-avatar>
-          <img src="src/assets/UAlg-ico.ico">
+          <img src="src/assets/ballot.ico">
         </q-avatar>
         <q-toolbar-title v-if="$q.screen.gt.sm" shrink class="row items-center no-wrap">
-          <span class="q-ml-sm">UAlg Secure Vote</span>
+          <span class="q-ml-sm">Secure Vote</span>
         </q-toolbar-title>
 
         <q-space/>
